@@ -12,27 +12,37 @@ interface Message {
 }
 
 export function ComingSoonClient() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      sender: "concierge",
-      text: "Assalamu Alaikum! Welcome to Ayraa Collection. 🌸",
-      time: "19:07",
-    },
-    {
-      id: 2,
-      sender: "concierge",
-      text: "Our premium Pakistani Summer Lawn suitings, soft-finished luxury bed sheets, and handcrafted home textiles are launching soon. Exclusive pre-booking is now open!",
-      time: "19:08",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const [inputValue, setInputValue] = useState(
-    "Hi Ayraa, I am interested in pre-booking your Pakistani Summer Lawn Collection and Luxury Bed Sheets!"
+    "Hi, I am interested in your Pakistani Summer Lawn Collection and Luxury Bed Sheets!"
   );
   
   const [isRedirecting, setIsRedirecting] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Initialize mock messages dynamically on mount using real time
+  useEffect(() => {
+    const now = new Date();
+    const oneMinAgo = new Date(now.getTime() - 60000);
+    const oneMinAgoStr = oneMinAgo.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+    const nowStr = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+
+    setMessages([
+      {
+        id: 1,
+        sender: "concierge",
+        text: "Assalamu Alaikum! Welcome to Ayraa Collection. 🌸",
+        time: oneMinAgoStr,
+      },
+      {
+        id: 2,
+        sender: "concierge",
+        text: "Our premium Pakistani Summer Lawn suitings, soft-finished luxury bed sheets, and handcrafted home textiles are launching soon. Exclusive pre-booking is now open!",
+        time: "Just now",
+      },
+    ]);
+  }, []);
 
   // Auto scroll to bottom of chat when messages change
   useEffect(() => {
@@ -113,6 +123,8 @@ export function ComingSoonClient() {
       <main className={styles.content}>
         <h1 className={styles.brand}>Ayraa</h1>
         <hr className={styles.divider} />
+
+        <div className={styles.comingSoonBadge}>Launching Shortly</div>
         
         <div className={styles.glowRing}>
           <div className={styles.glowRingInner}>
@@ -121,10 +133,17 @@ export function ComingSoonClient() {
         </div>
 
         <h2 className={styles.title}>Pakistani Summer Lawn &amp; Luxury Bed Sheets</h2>
+
+        <div className={styles.launchProgressContainer}>
+          <span className={styles.launchProgressLabel}>Curating Collection</span>
+          <div className={styles.launchProgressBar}>
+            <div className={styles.launchProgressFill} />
+          </div>
+        </div>
         
         <p className={styles.subtitle}>
           Prepare your home and wardrobe for the season. We are curating our premium 
-          Summer Lawn collections, soft-finished luxury bed sheets, and handcrafted home textiles. Launching shortly.
+          Summer Lawn collections, soft-finished luxury bed sheets, and handcrafted home textiles.
         </p>
 
         {/* WhatsApp Chat Dialogue Box */}
