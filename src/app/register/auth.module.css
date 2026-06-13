@@ -1,0 +1,125 @@
+/* auth.module.css (Register Copy) */
+
+.pageWrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  transition: background-color var(--duration-slow) var(--ease-out),
+              color var(--duration-slow) var(--ease-out);
+}
+
+.mainContent {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 140px;
+  padding-bottom: 80px;
+  padding-inline: var(--space-6);
+}
+
+.card {
+  width: 100%;
+  max-width: 440px;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp var(--duration-normal) var(--ease-out) forwards;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: var(--space-10);
+  }
+}
+
+.title {
+  font-family: var(--font-headline);
+  font-size: var(--text-headline-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-gold);
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: var(--space-1);
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-sub);
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: var(--space-8);
+}
+
+.errorBox {
+  background-color: var(--color-error-bg);
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+  padding: var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  margin-bottom: var(--space-6);
+  text-align: center;
+  border-radius: var(--radius-sm);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.fieldContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.input {
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) 0;
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  outline: none;
+  border-radius: 0;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.input::placeholder {
+  color: var(--color-on-surface-muted);
+}
+
+.input:focus {
+  border-color: var(--color-gold);
+}
+
+.submitButtonWrapper {
+  margin-top: var(--space-2);
+}
+
+.footerText {
+  margin-top: var(--space-6);
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-sub);
+}
+
+.link {
+  font-weight: var(--weight-bold);
+  color: var(--color-gold);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.link:hover {
+  color: var(--color-gold-bright);
+}
