@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./coming-soon.module.css";
 
 interface Message {
@@ -19,7 +19,7 @@ export function ComingSoonClient() {
   );
   
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+
 
   // Initialize mock messages dynamically on mount using real time
   useEffect(() => {
@@ -44,10 +44,7 @@ export function ComingSoonClient() {
     ]);
   }, []);
 
-  // Auto scroll to bottom of chat when messages change
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+
 
   const handleChatStart = (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,7 +194,7 @@ export function ComingSoonClient() {
                 </div>
               </div>
             ))}
-            <div ref={chatEndRef} />
+
           </div>
 
           <form onSubmit={handleChatStart} className={styles.chatForm}>
