@@ -1,0 +1,140 @@
+/* maintenance.module.css */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #1c1b1b;
+  color: #fbf9f8;
+  padding: var(--space-8) var(--space-6);
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+
+.silkOverlay {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at center, rgba(233, 195, 73, 0.04) 0%, rgba(0,0,0,0.45) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  animation: fadeInUp var(--duration-slow) var(--ease-out) forwards;
+}
+
+.brand {
+  font-family: var(--font-headline);
+  font-size: 36px;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-widest);
+  color: var(--color-gold);
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.divider {
+  width: 80px;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  border: none;
+}
+
+.title {
+  font-family: var(--font-headline);
+  font-size: clamp(28px, 5vw, var(--text-headline-md));
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: #fbf9f8;
+  margin: 0;
+}
+
+.subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-body-md);
+  color: var(--color-on-surface-sub);
+  line-height: var(--leading-relaxed);
+  margin: 0;
+}
+
+/* Pulsing Clock / Gear Loader */
+.gearEmblem {
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-gold-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-block: var(--space-4);
+  position: relative;
+}
+
+.gearEmblemInner {
+  width: 84px;
+  height: 84px;
+  border-radius: var(--radius-full);
+  border: 1px dashed var(--color-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--color-gold-bright);
+  animation: spin 10s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.infoBox {
+  margin-top: var(--space-4);
+  background-color: rgba(233, 195, 73, 0.03);
+  border: 1px solid var(--color-gold-border);
+  padding: var(--space-4) var(--space-6);
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.infoItem {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-sub);
+  margin: 0;
+}
+
+.infoItem strong {
+  color: var(--color-gold);
+}
+
+.infoItem a {
+  color: var(--color-gold);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.infoItem a:hover {
+  color: var(--color-gold-bright);
+  text-decoration: underline;
+}
+
+.footer {
+  margin-top: var(--space-8);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  color: var(--color-on-surface-muted);
+}

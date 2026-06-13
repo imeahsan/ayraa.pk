@@ -2,6 +2,33 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const appMode = process.env.NEXT_PUBLIC_APP_MODE || "live";
+
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isApiRoute = pathname.startsWith("/api");
+  const isAuthCallback = pathname.startsWith("/auth/callback");
+  const isAuthRoute = pathname === "/login" || pathname === "/register";
+  const isSpecialPage = pathname === "/coming-soon" || pathname === "/maintenance";
+
+  // Check if we need to apply coming-soon / maintenance redirect
+  if (!isAdminRoute && !isApiRoute && !isAuthCallback && !isAuthRoute) {
+    if (appMode === "coming-soon") {
+      if (pathname !== "/coming-soon") {
+        return NextResponse.rewrite(new URL("/coming-soon", request.url));
+      }
+    } else if (appMode === "maintenance") {
+      if (pathname !== "/maintenance") {
+        return NextResponse.rewrite(new URL("/maintenance", request.url));
+      }
+    } else {
+      // If we are in live mode, prevent direct access to /coming-soon or /maintenance
+      if (isSpecialPage) {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+    }
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -30,11 +57,6 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
-  const isAuthRoute =
-    request.nextUrl.pathname === "/login" ||
-    request.nextUrl.pathname === "/register";
 
   // Check admin route protection
   if (isAdminRoute) {
