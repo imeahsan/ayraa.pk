@@ -60,9 +60,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // If DB call failed, fallback categories
   const fallbackCategories = categoriesList.length === 0 ? [
-    "ready-to-wear",
-    "formal",
-    "pret"
+    "lawn-prints", "lawn-3-piece", "lawn-2-piece", "lawn-ready-to-wear",
+    "garments", "intimate-wear", "sleep-wear",
+    "bedding", "single-bedsheets", "double-bedsheets",
+    "hijab-collection", "chiffon-hijabs", "printed-hijabs",
   ].map((slug) => ({
     url: `${baseUrl}/collections/${slug}`,
     lastModified: new Date(),
