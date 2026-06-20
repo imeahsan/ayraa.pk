@@ -359,3 +359,96 @@
 .buttonWrapper {
   margin-top: var(--space-2);
 }
+
+/* Promo Code Styles */
+.promoContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: 2px;
+}
+
+.promoForm {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.promoInput {
+  flex: 1;
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  outline: none;
+  border-radius: 0;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.promoInput:focus {
+  border-color: var(--color-gold);
+}
+
+.promoBtn {
+  background-color: var(--color-gold);
+  color: var(--color-bg);
+  border: none;
+  padding: 8px 16px;
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.promoBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.promoBtn:disabled {
+  background-color: var(--color-border);
+  color: var(--color-on-surface-muted);
+  cursor: not-allowed;
+}
+
+.promoApplied {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px dashed var(--color-gold);
+  background-color: var(--color-gold-muted);
+  padding: 8px 12px;
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+}
+
+.promoAppliedText {
+  color: var(--color-on-surface);
+}
+
+.promoRemoveBtn {
+  background: none;
+  border: none;
+  color: var(--color-error, #f87171);
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-body-sm);
+  cursor: pointer;
+}
+
+.promoRemoveBtn:hover {
+  text-decoration: underline;
+}
+
+.promoError {
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  color: var(--color-error, #f87171);
+  margin: 0;
+}
+
+.discountRow {
+  font-weight: var(--weight-semibold);
+}

@@ -5,12 +5,14 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { UserProfile } from "@/types";
+import { useToast } from "@/context/ToastContext";
 import styles from "./admin.module.css";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const toast = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -62,9 +64,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navLinks = [
     { name: "Dashboard", href: "/admin", icon: "📊" },
     { name: "Products", href: "/admin/products", icon: "📦" },
+    { name: "Sales Manager", href: "/admin/sales", icon: "🔥" },
     { name: "Orders", href: "/admin/orders", icon: "🛒" },
     { name: "Categories", href: "/admin/categories", icon: "🗂️" },
     { name: "Customers", href: "/admin/customers", icon: "👥" },
+    { name: "Promo Codes", href: "/admin/promos", icon: "🎫" },
     { name: "Settings", href: "/admin/settings", icon: "⚙️" },
   ];
 
@@ -122,7 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </h2>
           <div className={styles.topbarActions}>
             <span className={styles.dateBadge}>📅 Last 30 Days</span>
-            <button className={styles.topbarButton} onClick={() => alert("Report Exported")}>
+            <button className={styles.topbarButton} onClick={() => toast.success("Report Exported successfully!")}>
               Export Report
             </button>
           </div>

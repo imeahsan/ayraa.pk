@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
+import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
 import { ImageUploader, ImageItem } from "./ImageUploader";
@@ -15,6 +16,7 @@ interface ProductFormProps {
 export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
   const router = useRouter();
   const supabase = createClient();
+  const toast = useToast();
   const isEditing = !!productId;
 
   const [loading, setLoading] = useState(isEditing);
@@ -34,6 +36,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [isOnSale, setIsOnSale] = useState(false);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [deletedImageUrls, setDeletedImageUrls] = useState<string[]>([]);
 
@@ -83,6 +86,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           setDescription(p.description || "");
           setIsActive(p.is_active);
           setIsFeatured(p.is_featured);
+          setIsOnSale(p.is_on_sale || false);
 
           // Map images
           if (p.images) {
@@ -120,7 +124,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !price) {
-      alert("Name and Price are required.");
+      toast.error("Name and Price are required.");
       return;
     }
 
@@ -144,6 +148,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       description: description || null,
       is_active: isActive,
       is_featured: isFeatured,
+      is_on_sale: isOnSale,
     };
 
     try {
@@ -258,12 +263,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         await supabase.from("product_variants").insert(variantsPayload);
       }
 
+      toast.success("Product saved successfully!");
       router.push("/admin/products");
       router.refresh();
     } catch (err: any) {
       console.error("Failed to save product:", err);
       // Simulate success locally during workspace mocks run
-      alert("Product saved successfully (Simulated)");
+      toast.success("Product saved successfully (Simulated)");
       router.push("/admin/products");
     } finally {
       setSaving(false);
@@ -422,6 +428,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                   className={styles.checkboxInput}
                 />
                 <span>Featured (Display on homepage)</span>
+              </label>
+
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={isOnSale}
+                  onChange={(e) => setIsOnSale(e.target.checked)}
+                  className={styles.checkboxInput}
+                />
+                <span>On Sale (Display in sale section)</span>
               </label>
             </div>
           </div>

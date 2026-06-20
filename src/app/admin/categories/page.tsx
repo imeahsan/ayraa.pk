@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Category } from "@/types";
+import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
 
@@ -16,6 +17,7 @@ const MOCK_CATEGORIES: Category[] = [
 
 export default function AdminCategoriesPage() {
   const supabase = createClient();
+  const toast = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -139,6 +141,7 @@ export default function AdminCategoriesPage() {
           prev.map((c) => (c.id === editingCategory.id ? (data as Category) : c))
         );
         handleCancelEdit();
+        toast.success("Category updated successfully!");
       } else {
         const insertPayload = {
           ...payload,
@@ -158,6 +161,7 @@ export default function AdminCategoriesPage() {
         setDescription("");
         setCoverImageUrl(null);
         setCoverImageFile(null);
+        toast.success("Category created successfully!");
       }
     } catch (err) {
       console.error("Operation failed:", err);
@@ -179,12 +183,14 @@ export default function AdminCategoriesPage() {
           prev.map((c) => (c.id === editingCategory.id ? mockResult : c))
         );
         handleCancelEdit();
+        toast.success("Category updated successfully (Simulated)!");
       } else {
         setCategories((prev) => [...prev, mockResult]);
         setName("");
         setDescription("");
         setCoverImageUrl(null);
         setCoverImageFile(null);
+        toast.success("Category created successfully (Simulated)!");
       }
     } finally {
       setSaving(false);
@@ -199,7 +205,7 @@ export default function AdminCategoriesPage() {
       const { error } = await supabase.from("categories").delete().eq("id", id);
       
       if (error) {
-        alert(`Failed to delete: ${error.message}`);
+        toast.error(`Failed to delete: ${error.message}`);
       } else {
         // Clean up image file in storage
         if (targetCategory && targetCategory.image_url && targetCategory.image_url.includes("/storage/v1/object/public/products/")) {
@@ -207,10 +213,12 @@ export default function AdminCategoriesPage() {
           await supabase.storage.from("products").remove([pathToDelete]);
         }
         setCategories((prev) => prev.filter((c) => c.id !== id));
+        toast.success("Category deleted successfully!");
       }
     } catch (err) {
       // Local simulation if DB fails
       setCategories((prev) => prev.filter((c) => c.id !== id));
+      toast.success("Category deleted successfully (Simulated)!");
     }
   };
 

@@ -14,7 +14,9 @@ export async function placeOrder(
   cartItems: { product_id: string; variant_id: string | null; quantity: number; price: number }[],
   subtotal: number,
   shippingCost: number,
-  total: number
+  total: number,
+  promoCode?: string | null,
+  discountAmount?: number
 ): Promise<PlaceOrderResult> {
   try {
     const supabase = await createClient();
@@ -52,6 +54,8 @@ export async function placeOrder(
         contact_phone: formData.phone,
         contact_email: formData.email,
         city: formData.city,
+        promo_code: promoCode || null,
+        discount_amount: discountAmount || 0,
       })
       .select()
       .single();
