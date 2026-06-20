@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/storefront/Button/Button";
@@ -127,7 +128,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
           )}
 
           {/* Purchase Actions */}
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-3">
             <Button
               variant="luxury"
               size="lg"
@@ -137,6 +138,26 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
             >
               Add to Bag
             </Button>
+
+            {product.bedsheet_ar_status === "ready" && (
+              <Link href={`/product/${product.slug}/bedsheet-ar`} style={{ width: "100%" }}>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  fullWidth
+                  style={{
+                    borderColor: "var(--color-gold)",
+                    color: "var(--color-gold)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                >
+                  📷 Preview on My Bed
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Accordion Tabs */}

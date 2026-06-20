@@ -213,10 +213,19 @@ export default function AdminProductsPage() {
                         </span>
                       </td>
                       <td className={styles.tableTd}>
-                        <div style={{ display: "flex", gap: "12px" }}>
+                        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                           <Link href={`/admin/products/${p.id}`} className={styles.tableLink}>
                             Edit
                           </Link>
+                          {(p.category?.slug?.includes("bedsheet") || p.category?.slug === "bedding") && (
+                            <Link
+                              href={`/admin/products/${p.id}/bedsheet-ar`}
+                              className={styles.tableLink}
+                              style={{ color: "var(--color-gold)" }}
+                            >
+                              AR Config
+                            </Link>
+                          )}
                           <button
                             onClick={() => handleDelete(p.id)}
                             className="font-body text-sm font-bold text-error bg-transparent border-0 cursor-pointer transition-colors duration-200 hover:text-red-700"

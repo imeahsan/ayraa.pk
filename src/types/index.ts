@@ -39,6 +39,7 @@ export interface Product {
   created_at: string;
   images?: ProductImage[];
   variants?: ProductVariant[];
+  bedsheet_ar_status?: 'not_ready' | 'ready' | 'disabled';
 }
 
 export interface ProductImage {
