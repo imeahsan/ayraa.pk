@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Product } from "@/types";
 import { useCart } from "@/context/CartContext";
+import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import { SizeSelector } from "@/components/storefront/SizeSelector/SizeSelector";
 import { ImageGallery } from "@/components/storefront/ImageGallery/ImageGallery";
@@ -21,6 +22,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
   relatedProducts,
 }) => {
   const { addItem } = useCart();
+  const toast = useToast();
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   
@@ -35,7 +37,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
 
   const handleAddToCart = () => {
     if (variants.length > 0 && !selectedSize) {
-      alert("Please select a size first.");
+      toast.warning("Please select a size first.");
       return;
     }
 
@@ -48,6 +50,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     setTimeout(() => {
       addItem(product, selectedVariant, 1);
       setIsAdding(false);
+      toast.success(`${product.name} added to your bag!`);
     }, 600);
   };
 

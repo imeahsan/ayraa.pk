@@ -6,7 +6,7 @@ import { UserProfile } from "@/types";
 import styles from "../admin.module.css";
 
 // Fallback Mock Customers
-const MOCK_CUSTOMERS: (UserProfile & { orders_count?: number; total_spent?: number })[] = [
+const MOCK_CUSTOMERS: (UserProfile & { orders_count?: number; total_spent?: number; is_guest?: boolean })[] = [
   {
     id: "u1",
     email: "zahra@example.com",
@@ -41,42 +41,112 @@ const MOCK_CUSTOMERS: (UserProfile & { orders_count?: number; total_spent?: numb
 
 export default function AdminCustomersPage() {
   const supabase = createClient();
-  const [customers, setCustomers] = useState<(UserProfile & { orders_count?: number; total_spent?: number })[]>([]);
+  const [customers, setCustomers] = useState<(UserProfile & { orders_count?: number; total_spent?: number; is_guest?: boolean })[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const { data, error } = await supabase
+        // 1. Fetch registered customer profiles
+        const { data: profiles, error: pError } = await supabase
           .from("profiles")
           .select("*")
-          .eq("role", "customer")
+          .eq("role", "customer");
+
+        // 2. Fetch all orders
+        const { data: orders, error: oError } = await supabase
+          .from("orders")
+          .select("*")
           .order("created_at", { ascending: false });
 
-        if (error || !data || data.length === 0) {
-          setCustomers(MOCK_CUSTOMERS);
-        } else {
-          // Resolve order count & total spent for each profile
-          const resolved = await Promise.all(
-            data.map(async (profile) => {
-              const { data: oData } = await supabase
-                .from("orders")
-                .select("total")
-                .eq("user_id", profile.id);
-
-              const count = oData?.length || 0;
-              const total = oData?.reduce((acc, order) => acc + order.total, 0) || 0;
-
-              return {
-                ...profile,
-                orders_count: count,
-                total_spent: total,
-              };
-            })
-          );
-          setCustomers(resolved as any[]);
+        if (pError || oError) {
+          throw new Error(pError?.message || oError?.message || "Failed to load database content");
         }
+
+        const registeredProfiles = (profiles || []) as UserProfile[];
+        const allOrders = (orders || []) as any[];
+
+        // Maps to track orders for registered profiles
+        const profileOrdersMap: Record<string, any[]> = {};
+        registeredProfiles.forEach((p) => {
+          profileOrdersMap[p.id] = [];
+        });
+
+        // Track guest orders grouped by contact_phone
+        const normalizePhone = (ph: string) => ph ? ph.trim().replace(/[^0-9]/g, "") : "";
+        const guestOrdersByPhone: Record<string, { phone: string; orders: any[] }> = {};
+
+        allOrders.forEach((order) => {
+          // Find matching registered profile (by user_id, email, or normalized phone)
+          const matchedProfile = registeredProfiles.find((p) => {
+            if (order.user_id && p.id === order.user_id) return true;
+            if (order.contact_email && p.email && order.contact_email.toLowerCase() === p.email.toLowerCase()) return true;
+            if (order.contact_phone && p.phone && normalizePhone(order.contact_phone) === normalizePhone(p.phone)) return true;
+            return false;
+          });
+
+          if (matchedProfile) {
+            profileOrdersMap[matchedProfile.id].push(order);
+          } else if (order.contact_phone) {
+            const normPhone = normalizePhone(order.contact_phone);
+            if (normPhone) {
+              if (!guestOrdersByPhone[normPhone]) {
+                guestOrdersByPhone[normPhone] = {
+                  phone: order.contact_phone,
+                  orders: [],
+                };
+              }
+              guestOrdersByPhone[normPhone].orders.push(order);
+            }
+          }
+        });
+
+        // Map registered profiles to customer format
+        const registeredCustomers = registeredProfiles.map((profile) => {
+          const profileOrders = profileOrdersMap[profile.id] || [];
+          const count = profileOrders.length;
+          const total = profileOrders.reduce((acc, o) => acc + Number(o.total), 0);
+          return {
+            ...profile,
+            orders_count: count,
+            total_spent: total,
+            is_guest: false,
+          };
+        });
+
+        // Map guest groups to customer format
+        const guestCustomers = Object.keys(guestOrdersByPhone).map((normPhone) => {
+          const group = guestOrdersByPhone[normPhone];
+          const groupOrders = group.orders;
+          const count = groupOrders.length;
+          const total = groupOrders.reduce((acc, o) => acc + Number(o.total), 0);
+
+          const latestOrder = groupOrders[0];
+          const earliestOrder = groupOrders[groupOrders.length - 1];
+          const first_name = latestOrder.shipping_address?.first_name || "";
+          const last_name = latestOrder.shipping_address?.last_name || "";
+          const fullName = [first_name, last_name].filter(Boolean).join(" ") || "Guest Customer";
+
+          return {
+            id: `guest-${normPhone}`,
+            email: latestOrder.contact_email || "",
+            full_name: fullName,
+            phone: group.phone,
+            role: "customer" as const,
+            created_at: earliestOrder.created_at || latestOrder.created_at,
+            orders_count: count,
+            total_spent: total,
+            is_guest: true,
+          };
+        });
+
+        // Combine and sort by date descending
+        const combined = [...registeredCustomers, ...guestCustomers].sort((a, b) => {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+
+        setCustomers(combined);
       } catch (err) {
         console.error("Failed to load customers:", err);
         setCustomers(MOCK_CUSTOMERS);
@@ -92,7 +162,7 @@ export default function AdminCustomersPage() {
     return customers.filter(
       (c) =>
         c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (c.phone && c.phone.includes(searchTerm))
     );
   }, [customers, searchTerm]);
@@ -157,9 +227,16 @@ export default function AdminCustomersPage() {
                         <div style={{ width: "32px", height: "32px", borderRadius: "var(--radius-full)", backgroundColor: "var(--admin-bg)", color: "var(--color-gold)", fontWeight: "bold", fontSize: "14px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--admin-border)" }}>
                           {c.full_name?.charAt(0) || "C"}
                         </div>
-                        <span className={styles.tableTdHighlight}>
-                          {c.full_name || "Guest Customer"}
-                        </span>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                          <span className={styles.tableTdHighlight}>
+                            {c.full_name || "Guest Customer"}
+                          </span>
+                          {c.is_guest && (
+                            <span style={{ fontSize: "10px", color: "var(--color-gold)", border: "1px solid var(--color-gold-border)", padding: "1px 6px", borderRadius: "4px", backgroundColor: "var(--color-gold-muted)", width: "fit-content", marginTop: "2px", fontWeight: "bold", textTransform: "uppercase" }}>
+                              Guest
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className={styles.tableTd}>{c.email}</td>

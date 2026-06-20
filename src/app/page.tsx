@@ -161,6 +161,21 @@ export default async function Home() {
     featuredProducts = MOCK_PRODUCTS;
   }
 
+  let saleProducts: Product[] = [];
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*, category:categories(*), images:product_images(*)")
+      .eq("is_on_sale", true)
+      .eq("is_active", true);
+
+    if (!error && data) {
+      saleProducts = data as Product[];
+    }
+  } catch (err) {
+    console.error("Error fetching sale products:", err);
+  }
+
   try {
     const { data, error } = await supabase
       .from("categories")
@@ -174,13 +189,15 @@ export default async function Home() {
     console.error("Error fetching categories for homepage:", err);
   }
 
-  const pretCategory = categories.find((c) => c.slug === "pret");
-  const formalCategory = categories.find((c) => c.slug === "formal");
-  const rtwCategory = categories.find((c) => c.slug === "ready-to-wear");
+  const lawnPrintsCategory = categories.find((c) => c.slug === "lawn-prints");
+  const garmentsCategory = categories.find((c) => c.slug === "garments");
+  const beddingCategory = categories.find((c) => c.slug === "bedding");
+  const hijabCollectionCategory = categories.find((c) => c.slug === "hijab-collection");
 
-  const luxuryPretImage = pretCategory?.image_url || "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=800&auto=format&fit=crop&q=80";
-  const eidEditImage = formalCategory?.image_url || "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=800&auto=format&fit=crop&q=80";
-  const newArrivalsImage = rtwCategory?.image_url || "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80";
+  const lawnPrintsImage = lawnPrintsCategory?.image_url || "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80";
+  const garmentsImage = garmentsCategory?.image_url || "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=800&auto=format&fit=crop&q=80";
+  const beddingImage = beddingCategory?.image_url || "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=800&auto=format&fit=crop&q=80";
+  const hijabCollectionImage = hijabCollectionCategory?.image_url || "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80";
 
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
@@ -221,7 +238,7 @@ export default async function Home() {
               <Link href="/collections/lawn-prints" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
-                    src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80"
+                    src={lawnPrintsImage}
                     alt="Lawn Prints"
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
@@ -239,8 +256,8 @@ export default async function Home() {
               <Link href="/collections/garments" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
-                    src={eidEditImage}
-                    alt="Eid Edit"
+                    src={garmentsImage}
+                    alt="Garments"
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
                     className={styles.curatedImage}
@@ -257,8 +274,8 @@ export default async function Home() {
               <Link href="/collections/bedding" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
-                    src={luxuryPretImage}
-                    alt="Luxury Pret"
+                    src={beddingImage}
+                    alt="Bedding"
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
                     className={styles.curatedImage}
@@ -275,8 +292,8 @@ export default async function Home() {
               <Link href="/collections/hijab-collection" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
-                    src={newArrivalsImage}
-                    alt="New Arrivals"
+                    src={hijabCollectionImage}
+                    alt="Hijab Collection"
                     fill
                     sizes="(max-width: 768px) 50vw, 25vw"
                     className={styles.curatedImage}
@@ -304,6 +321,21 @@ export default async function Home() {
             <FeaturedSlider products={featuredProducts} />
           </div>
         </section>
+
+        {/* Sale Section */}
+        {saleProducts.length > 0 && (
+          <section className={styles.section} id="sale-pieces">
+            <div className="container">
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle} style={{ color: "var(--color-error, #dc2626)" }}>On Sale</h2>
+                <p className={styles.sectionDesc}>
+                  Special offers and discounts on selected items.
+                </p>
+              </div>
+              <FeaturedSlider products={saleProducts} />
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { StoreSettings } from "@/types";
+import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
 
@@ -21,6 +22,7 @@ const DEFAULT_SETTINGS: StoreSettings = {
 
 export default function AdminSettingsPage() {
   const supabase = createClient();
+  const toast = useToast();
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -77,13 +79,13 @@ export default function AdminSettingsPage() {
       if (error) {
         // Fallback local storage
         localStorage.setItem("ayra_store_settings", JSON.stringify(settings));
-        alert("Settings saved successfully (Locally)");
+        toast.success("Settings saved successfully (Locally)");
       } else {
-        alert("Settings updated successfully in Database.");
+        toast.success("Settings updated successfully in Database.");
       }
     } catch (err) {
       localStorage.setItem("ayra_store_settings", JSON.stringify(settings));
-      alert("Settings saved successfully (Locally)");
+      toast.success("Settings saved successfully (Locally)");
     } finally {
       setSaving(false);
     }

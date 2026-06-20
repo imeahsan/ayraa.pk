@@ -3,6 +3,7 @@ import { Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { ToastProvider } from "@/context/ToastContext";
 import { CartDrawer } from "@/components/storefront/CartDrawer/CartDrawer";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 
@@ -69,11 +70,13 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <CartProvider>
-            <OrganizationJsonLd baseUrl={baseUrl} />
-            {children}
-            <CartDrawer />
-          </CartProvider>
+          <ToastProvider>
+            <CartProvider>
+              <OrganizationJsonLd baseUrl={baseUrl} />
+              {children}
+              <CartDrawer />
+            </CartProvider>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -30,6 +30,7 @@ export interface Product {
   category?: Category;
   is_active: boolean;
   is_featured: boolean;
+  is_on_sale?: boolean;
   fabric: string | null;
   color: string | null;
   includes: string | null;
@@ -81,6 +82,8 @@ export interface Order {
   status_history?: OrderStatusHistory[];
   notes?: OrderNote[];
   user?: UserProfile;
+  promo_code?: string | null;
+  discount_amount?: number;
 }
 
 export interface OrderItem {
@@ -276,3 +279,17 @@ export type Prettify<T> = {
 } & {};
 
 export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
+
+// ---------- Promo Codes ----------
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  discount_type: 'percentage' | 'flat';
+  discount_value: number;
+  start_date: string | null;
+  end_date: string | null;
+  is_active: boolean;
+  applicable_category_ids: string[] | null;
+  created_at: string;
+}

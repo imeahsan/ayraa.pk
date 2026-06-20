@@ -4,15 +4,25 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { useToast } from "@/context/ToastContext";
 import { placeOrder } from "../actions/orders";
-import { CheckoutFormData, PAKISTAN_CITIES } from "@/types";
+import { CheckoutFormData, PAKISTAN_CITIES, PromoCode } from "@/types";
 import { Button } from "@/components/storefront/Button/Button";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./CheckoutForm.module.css";
 
 export const CheckoutForm: React.FC = () => {
+  const supabase = createClient();
   const { cart, clearCart } = useCart();
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+
+  // Promo code states
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   
   const [formData, setFormData] = useState<CheckoutFormData>({
     first_name: "",
@@ -44,6 +54,102 @@ export const CheckoutForm: React.FC = () => {
     if (errors[name as keyof CheckoutFormData]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
+  };
+
+  // Promo calculations
+  const getPromoDiscount = (): number => {
+    if (!appliedPromo) return 0;
+    
+    // Check if category restriction applies
+    if (appliedPromo.applicable_category_ids && appliedPromo.applicable_category_ids.length > 0) {
+      const eligibleItems = cart.items.filter(
+        (item) => item.product.category_id && appliedPromo.applicable_category_ids?.includes(item.product.category_id)
+      );
+      
+      const eligibleSubtotal = eligibleItems.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+      
+      if (appliedPromo.discount_type === "percentage") {
+        return Math.floor(eligibleSubtotal * (appliedPromo.discount_value / 100));
+      } else {
+        return Math.min(appliedPromo.discount_value, eligibleSubtotal);
+      }
+    } else {
+      // General discount
+      if (appliedPromo.discount_type === "percentage") {
+        return Math.floor(cart.subtotal * (appliedPromo.discount_value / 100));
+      } else {
+        return Math.min(appliedPromo.discount_value, cart.subtotal);
+      }
+    }
+  };
+
+  const discountAmount = getPromoDiscount();
+  const finalTotal = Math.max(0, cart.subtotal - discountAmount) + cart.shipping;
+
+  const handleApplyPromo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promoCodeInput.trim()) return;
+
+    setPromoError(null);
+    setIsValidatingPromo(true);
+    const codeString = promoCodeInput.trim().toUpperCase();
+
+    try {
+      const { data, error } = await supabase
+        .from("promo_codes")
+        .select("*")
+        .eq("code", codeString)
+        .eq("is_active", true)
+        .single();
+
+      if (error || !data) {
+        setPromoError("Invalid promo code.");
+        setAppliedPromo(null);
+        return;
+      }
+
+      const promo = data as PromoCode;
+
+      // Validate dates
+      const now = new Date();
+      if (promo.start_date && new Date(promo.start_date) > now) {
+        setPromoError("This promo is not active yet.");
+        setAppliedPromo(null);
+        return;
+      }
+      if (promo.end_date && new Date(promo.end_date) < now) {
+        setPromoError("This promo code has expired.");
+        setAppliedPromo(null);
+        return;
+      }
+
+      // Validate category requirements
+      if (promo.applicable_category_ids && promo.applicable_category_ids.length > 0) {
+        const hasEligibleItems = cart.items.some(
+          (item) => item.product.category_id && promo.applicable_category_ids?.includes(item.product.category_id)
+        );
+
+        if (!hasEligibleItems) {
+          setPromoError("This promo is not applicable to items in your cart.");
+          setAppliedPromo(null);
+          return;
+        }
+      }
+
+      setAppliedPromo(promo);
+      setPromoCodeInput("");
+    } catch (err) {
+      console.error("Promo validation error:", err);
+      setPromoError("Failed to validate promo code.");
+      setAppliedPromo(null);
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoError(null);
   };
 
   const validate = (): boolean => {
@@ -82,7 +188,9 @@ export const CheckoutForm: React.FC = () => {
       cartItemsPayload,
       cart.subtotal,
       cart.shipping,
-      cart.total
+      finalTotal,
+      appliedPromo?.code || null,
+      discountAmount
     );
 
     setIsLoading(false);
@@ -90,8 +198,9 @@ export const CheckoutForm: React.FC = () => {
     if (result.success && result.orderId) {
       setOrderId(result.orderId);
       clearCart();
+      toast.success("Order placed successfully!");
     } else {
-      alert(`Order placement failed: ${result.error || "Please try again."}`);
+      toast.error(`Order placement failed: ${result.error || "Please try again."}`);
     }
   };
 
@@ -314,11 +423,58 @@ export const CheckoutForm: React.FC = () => {
 
           <hr className={styles.divider} />
 
+          {/* Promo code box */}
+          <div className={styles.promoContainer}>
+            {!appliedPromo ? (
+              <div className={styles.promoForm}>
+                <input
+                  type="text"
+                  placeholder="Promo Code (e.g. SUMMER20)"
+                  value={promoCodeInput}
+                  onChange={(e) => setPromoCodeInput(e.target.value)}
+                  className={styles.promoInput}
+                  disabled={isValidatingPromo}
+                  style={{ textTransform: "uppercase" }}
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyPromo}
+                  className={styles.promoBtn}
+                  disabled={isValidatingPromo || !promoCodeInput.trim()}
+                >
+                  {isValidatingPromo ? "..." : "Apply"}
+                </button>
+              </div>
+            ) : (
+              <div className={styles.promoApplied}>
+                <span className={styles.promoAppliedText}>
+                  🎟️ <strong>{appliedPromo.code}</strong> applied
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRemovePromo}
+                  className={styles.promoRemoveBtn}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+            {promoError && <p className={styles.promoError}>{promoError}</p>}
+          </div>
+
+          <hr className={styles.divider} />
+
           <div className={styles.priceBreakdown}>
             <div className={styles.priceRow}>
               <span>Subtotal</span>
               <span>{formatPKR(cart.subtotal)}</span>
             </div>
+            {discountAmount > 0 && (
+              <div className={styles.priceRow} style={{ color: "var(--color-gold)", fontWeight: "bold" }}>
+                <span>Discount ({appliedPromo?.code})</span>
+                <span>-{formatPKR(discountAmount)}</span>
+              </div>
+            )}
             <div className={styles.priceRow}>
               <span>Shipping</span>
               <span>
@@ -328,7 +484,7 @@ export const CheckoutForm: React.FC = () => {
             <hr className={styles.divider} />
             <div className={styles.totalRow}>
               <span>Total</span>
-              <span className={styles.totalPrice}>{formatPKR(cart.total)}</span>
+              <span className={styles.totalPrice}>{formatPKR(finalTotal)}</span>
             </div>
           </div>
 

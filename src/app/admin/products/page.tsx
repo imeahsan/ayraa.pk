@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { Product } from "@/types";
+import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
 
@@ -71,6 +72,7 @@ const MOCK_PRODUCTS: Product[] = [
 
 export default function AdminProductsPage() {
   const supabase = createClient();
+  const toast = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -105,13 +107,15 @@ export default function AdminProductsPage() {
     try {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) {
-        alert(`Failed to delete: ${error.message}`);
+        toast.error(`Failed to delete: ${error.message}`);
       } else {
         setProducts((prev) => prev.filter((p) => p.id !== id));
+        toast.success("Product deleted successfully!");
       }
     } catch (err) {
       // Simulate delete locally if DB fails
       setProducts((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Product deleted successfully (Simulated)!");
     }
   };
 

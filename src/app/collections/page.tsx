@@ -32,9 +32,9 @@ export const metadata: Metadata = {
 
 const MOCK_CATEGORIES = [
   { name: "Lawn Prints",      slug: "lawn-prints",      image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80" },
-  { name: "Garments",         slug: "garments",         image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80" },
-  { name: "Bedding",          slug: "bedding",          image: "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?w=600&auto=format&fit=crop&q=80" },
-  { name: "Hijab Collection", slug: "hijab-collection", image: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80" },
+  { name: "Garments",         slug: "garments",         image: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80" },
+  { name: "Bedding",          slug: "bedding",          image: "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=600&auto=format&fit=crop&q=80" },
+  { name: "Hijab Collection", slug: "hijab-collection", image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&auto=format&fit=crop&q=80" },
 ];
 
 const MOCK_PRODUCTS: Product[] = [
@@ -183,6 +183,7 @@ export default async function CollectionsPage() {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
+      .is("parent_id", null)
       .order("sort_order", { ascending: true });
 
     if (!error && data && data.length > 0) {
@@ -217,9 +218,10 @@ export default async function CollectionsPage() {
 
   const getCategoryImage = (cat: Category) => {
     if (cat.image_url) return cat.image_url;
-    if (cat.slug === "ready-to-wear") return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80";
-    if (cat.slug === "formal") return "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80";
-    if (cat.slug === "pret") return "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=600&auto=format&fit=crop&q=80";
+    if (cat.slug === "lawn-prints") return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80";
+    if (cat.slug === "garments") return "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80";
+    if (cat.slug === "bedding") return "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=600&auto=format&fit=crop&q=80";
+    if (cat.slug === "hijab-collection") return "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&auto=format&fit=crop&q=80";
     return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=100&auto=format&fit=crop&q=80";
   };
 
