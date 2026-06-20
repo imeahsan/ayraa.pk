@@ -19,9 +19,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
       "@type": "ListItem",
       "position": index + 1,
       "name": item.label,
-      "item": typeof window !== "undefined" 
-        ? `${window.location.origin}${item.url}`
-        : `https://ayracollection.vercel.app${item.url}`,
+      "item": `https://ayracollection.vercel.app${item.url}`,
     })),
   };
 

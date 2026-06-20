@@ -3,10 +3,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
-import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { createClient } from "@/lib/supabase/server";
-import { Product } from "@/types";
+import { Product, Category } from "@/types";
 import styles from "./page.module.css";
+import { FeaturedSlider } from "@/components/storefront/FeaturedSlider/FeaturedSlider";
 
 export const dynamic = "force-dynamic";
 
@@ -140,15 +140,16 @@ const MOCK_PRODUCTS: Product[] = [
 
 export default async function Home() {
   let featuredProducts: Product[] = [];
+  let categories: Category[] = [];
+
+  const supabase = await createClient();
 
   try {
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
       .eq("is_featured", true)
-      .eq("is_active", true)
-      .limit(4);
+      .eq("is_active", true);
 
     if (error || !data || data.length === 0) {
       featuredProducts = MOCK_PRODUCTS;
@@ -159,6 +160,27 @@ export default async function Home() {
     console.error("Error fetching featured products:", err);
     featuredProducts = MOCK_PRODUCTS;
   }
+
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("is_active", true);
+
+    if (!error && data) {
+      categories = data as Category[];
+    }
+  } catch (err) {
+    console.error("Error fetching categories for homepage:", err);
+  }
+
+  const pretCategory = categories.find((c) => c.slug === "pret");
+  const formalCategory = categories.find((c) => c.slug === "formal");
+  const rtwCategory = categories.find((c) => c.slug === "ready-to-wear");
+
+  const luxuryPretImage = pretCategory?.image_url || "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=800&auto=format&fit=crop&q=80";
+  const eidEditImage = formalCategory?.image_url || "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=800&auto=format&fit=crop&q=80";
+  const newArrivalsImage = rtwCategory?.image_url || "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80";
 
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
@@ -199,7 +221,7 @@ export default async function Home() {
               <Link href="/collections/eid-edit" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
-                    src="https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=800&auto=format&fit=crop&q=80"
+                    src={eidEditImage}
                     alt="Eid Edit"
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
@@ -217,7 +239,7 @@ export default async function Home() {
               <Link href="/collections/luxury-pret" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
-                    src="https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=800&auto=format&fit=crop&q=80"
+                    src={luxuryPretImage}
                     alt="Luxury Pret"
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
@@ -235,7 +257,7 @@ export default async function Home() {
               <Link href="/collections/ready-to-wear" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
-                    src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80"
+                    src={newArrivalsImage}
                     alt="New Arrivals"
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
@@ -261,11 +283,7 @@ export default async function Home() {
                 Curated essentials for your wardrobe.
               </p>
             </div>
-            <div className={styles.featuredGrid}>
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <FeaturedSlider products={featuredProducts} />
           </div>
         </section>
       </main>

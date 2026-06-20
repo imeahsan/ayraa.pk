@@ -170,6 +170,8 @@ interface CategoryPageProps {
 const getCategory = cache(async (slug: string) => {
   try {
     const supabase = await createClient();
+    
+    // Look up by slug first
     const { data: categoryData, error } = await supabase
       .from("categories")
       .select("*")
@@ -178,6 +180,19 @@ const getCategory = cache(async (slug: string) => {
 
     if (categoryData && !error) {
       return categoryData;
+    }
+
+    // Fallback: If requesting 'luxury-pret', resolve using 'pret' category from DB
+    if (slug === "luxury-pret") {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("slug", "pret")
+        .single();
+
+      if (fallbackData && !fallbackError) {
+        return fallbackData;
+      }
     }
   } catch (err) {
     console.error("Error loading category from Supabase:", err);
@@ -221,18 +236,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   try {
     const supabase = await createClient();
 
-    // Query categories database
-    const { data: categoryData } = await supabase
-      .from("categories")
-      .select("id, name")
-      .eq("slug", slug)
-      .single();
-
-    if (categoryData) {
+    if (category) {
       const { data: productsData } = await supabase
         .from("products")
         .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
-        .eq("category_id", categoryData.id)
+        .eq("category_id", category.id)
         .eq("is_active", true);
 
       if (productsData && productsData.length > 0) {

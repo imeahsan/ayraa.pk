@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
+import { ImageUploader, ImageItem } from "./ImageUploader";
 
 interface ProductFormProps {
   productId?: string; // If editing
@@ -33,7 +34,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
   const [description, setDescription] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
-  const [imageUrls, setImageUrls] = useState("");
+  const [images, setImages] = useState<ImageItem[]>([]);
+  const [deletedImageUrls, setDeletedImageUrls] = useState<string[]>([]);
 
   // Stock quantities
   const [stockXS, setStockXS] = useState(0);
@@ -84,7 +86,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
 
           // Map images
           if (p.images) {
-            setImageUrls(p.images.map((img) => img.url).join(", "));
+            setImages(
+              [...p.images]
+                .sort((a, b) => a.sort_order - b.sort_order)
+                .map((img) => ({
+                  id: img.id,
+                  url: img.url,
+                }))
+            );
           }
 
           // Map variants
@@ -164,16 +173,61 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       const id = insertedProduct.id;
 
       // Handle product images save
-      // Clear old images
+      // 1. Delete removed images from storage bucket
+      if (deletedImageUrls.length > 0) {
+        const pathsToDelete = deletedImageUrls
+          .filter((url) => url.includes("/storage/v1/object/public/products/"))
+          .map((url) => {
+            const parts = url.split("/storage/v1/object/public/products/");
+            return parts[1];
+          });
+        if (pathsToDelete.length > 0) {
+          await supabase.storage.from("products").remove(pathsToDelete);
+        }
+      }
+
+      // 2. Upload new image files and collect all final URLs
+      const finalUrls: string[] = [];
+
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        if (img.file) {
+          const fileExt = img.file.name.split(".").pop() || "jpg";
+          const uniqueId = Math.random().toString(36).substring(2, 8);
+          const fileName = `${id}/${Date.now()}-${uniqueId}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("products")
+            .upload(fileName, img.file, {
+              cacheControl: "3600",
+              upsert: true,
+            });
+
+          if (uploadError) {
+            console.error("Error uploading file:", uploadError);
+            throw uploadError;
+          }
+
+          const { data: publicUrlData } = supabase.storage
+            .from("products")
+            .getPublicUrl(fileName);
+
+          if (!publicUrlData || !publicUrlData.publicUrl) {
+            throw new Error("Failed to get public URL for uploaded file.");
+          }
+
+          finalUrls.push(publicUrlData.publicUrl);
+        } else {
+          finalUrls.push(img.url);
+        }
+      }
+
+      // 3. Clear old images in DB
       await supabase.from("product_images").delete().eq("product_id", id);
 
-      const urls = imageUrls
-        .split(",")
-        .map((u) => u.trim())
-        .filter(Boolean);
-
-      if (urls.length > 0) {
-        const imagesPayload = urls.map((url, idx) => ({
+      // 4. Save new images in DB
+      if (finalUrls.length > 0) {
+        const imagesPayload = finalUrls.map((url, idx) => ({
           product_id: id,
           url,
           sort_order: idx + 1,
@@ -316,15 +370,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           <div className={styles.formCard}>
             <h3 className={styles.formCardTitle}>Product Images</h3>
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Image URLs (Comma separated)</label>
-              <textarea
-                value={imageUrls}
-                onChange={(e) => setImageUrls(e.target.value)}
-                placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
-                className={styles.formTextarea}
-                rows={3}
+              <ImageUploader
+                images={images}
+                onChange={setImages}
+                onDeleteImage={(url) => setDeletedImageUrls((prev) => [...prev, url])}
               />
-              <span className={styles.sidebarSubtitle} style={{ textTransform: "none", fontSize: "11px" }}>First URL will be used as the primary catalog cover image.</span>
+              <span className={styles.sidebarSubtitle} style={{ textTransform: "none", fontSize: "11px", marginTop: "8px" }}>
+                First image will be used as the primary catalog cover image. Reorder images using &larr; and &rarr; or set cover.
+              </span>
             </div>
           </div>
         </div>

@@ -7,7 +7,7 @@ import { Footer } from "@/components/storefront/Footer/Footer";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { createClient } from "@/lib/supabase/server";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
-import { Product } from "@/types";
+import { Product, Category } from "@/types";
 import styles from "./collections.module.css";
 
 export const dynamic = "force-dynamic";
@@ -157,9 +157,11 @@ const MOCK_PRODUCTS: Product[] = [
 
 export default async function CollectionsPage() {
   let products: Product[] = [];
+  let categories: Category[] = [];
+
+  const supabase = await createClient();
 
   try {
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
@@ -175,6 +177,50 @@ export default async function CollectionsPage() {
     console.error("Error fetching products:", err);
     products = MOCK_PRODUCTS;
   }
+
+  try {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("sort_order", { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      categories = data as Category[];
+    } else {
+      categories = MOCK_CATEGORIES.map((c, idx) => ({
+        id: `mock-cat-${idx}`,
+        name: c.name,
+        slug: c.slug,
+        description: "",
+        parent_id: null,
+        sort_order: idx + 1,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        image_url: c.image
+      }));
+    }
+  } catch (err) {
+    console.error("Error fetching categories:", err);
+    categories = MOCK_CATEGORIES.map((c, idx) => ({
+      id: `mock-cat-${idx}`,
+      name: c.name,
+      slug: c.slug,
+      description: "",
+      parent_id: null,
+      sort_order: idx + 1,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      image_url: c.image
+    }));
+  }
+
+  const getCategoryImage = (cat: Category) => {
+    if (cat.image_url) return cat.image_url;
+    if (cat.slug === "ready-to-wear") return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80";
+    if (cat.slug === "formal") return "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80";
+    if (cat.slug === "pret") return "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=600&auto=format&fit=crop&q=80";
+    return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=100&auto=format&fit=crop&q=80";
+  };
 
   const baseUrl = "https://ayraacollection.vercel.app";
   const breadcrumbItems = [
@@ -204,15 +250,15 @@ export default async function CollectionsPage() {
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Shop by Category</h2>
           <div className={styles.categoryGrid}>
-            {MOCK_CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <Link
-                key={cat.slug}
+                key={cat.id}
                 href={`/collections/${cat.slug}`}
                 className={styles.categoryCard}
               >
                 <div className={styles.categoryImageWrapper}>
                   <Image
-                    src={cat.image}
+                    src={getCategoryImage(cat)}
                     alt={cat.name}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
