@@ -355,3 +355,130 @@
   color: var(--color-gold);
   background-color: var(--color-gold-muted);
 }
+
+/* ─── Mega-Menu (Desktop) ─────────────────────────────────────────── */
+.megaMenuWrapper {
+  position: static;
+}
+
+.megaMenu {
+  position: fixed;
+  top: 80px; /* matches header height */
+  left: 0;
+  width: 100%;
+  background-color: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  z-index: var(--z-dropdown);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity var(--duration-fast) var(--ease-out),
+              visibility var(--duration-fast) var(--ease-out),
+              transform var(--duration-fast) var(--ease-out);
+}
+
+.megaMenuWrapper:hover .megaMenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.megaMenuInner {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-12);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-8);
+}
+
+.megaCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.megaParentLink {
+  font-family: var(--font-headline);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--color-gold);
+  text-decoration: none;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border-subtle);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.megaParentLink:hover {
+  color: var(--color-gold-bright);
+}
+
+.megaSubList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.megaSubLink {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-sub);
+  text-decoration: none;
+  padding: var(--space-1) 0;
+  transition: color var(--duration-fast) var(--ease-out);
+  display: block;
+}
+
+.megaSubLink:hover,
+.megaSubLinkActive {
+  color: var(--color-gold);
+}
+
+/* ─── Mobile Accordion ─────────────────────────────────────────────── */
+.mobileParentBtn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.chevron {
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.chevronOpen {
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-out);
+  transform: rotate(180deg);
+}
+
+.mobileSubList {
+  list-style: none;
+  background-color: var(--color-gold-muted);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.mobileSubLink {
+  display: block;
+  padding: var(--space-3) var(--space-8);
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-sub);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.mobileSubLink:hover,
+.mobileSubLinkActive {
+  color: var(--color-gold);
+}
+

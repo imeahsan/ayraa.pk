@@ -185,7 +185,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
       <Header />
-      
+
       <main className="grow pt-20 md:pt-16">
         {/* Hero Section */}
         <section className={styles.hero} id="hero-section">
@@ -199,73 +199,91 @@ export default async function Home() {
           <div className={styles.heroOverlay} />
           <div className={styles.heroContent}>
             <span className={styles.heroBadge} id="hero-badge">New Arrival</span>
-            <h1 className={styles.heroTitle}>The Summer Lawn Collection</h1>
-            <Link href="/collections/ready-to-wear" className={styles.heroBtn}>
+            <h1 className={styles.heroTitle}>New Lawn Prints — Summer Collection</h1>
+            <Link href="/collections/lawn-prints" className={styles.heroBtn}>
               Shop Now
             </Link>
           </div>
         </section>
 
-        {/* Curated Edits Section */}
+        {/* Shop by Category Section */}
         <section className={styles.section} id="curated-edits">
           <div className="container">
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Curated Edits</h2>
+              <h2 className={styles.sectionTitle}>Shop by Category</h2>
               <p className={styles.sectionDesc}>
-                Discover our latest collections designed for the modern muse.
+                From summer lawn prints to cosy bedding — explore every corner of Ayraa.
               </p>
             </div>
 
             <div className={styles.curatedGrid}>
-              {/* Eid Edit */}
-              <Link href="/collections/eid-edit" className={styles.curatedCard}>
+              {/* Lawn Prints */}
+              <Link href="/collections/lawn-prints" className={styles.curatedCard}>
+                <div className={styles.curatedImageWrapper}>
+                  <Image
+                    src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80"
+                    alt="Lawn Prints"
+                    fill
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className={styles.curatedImage}
+                  />
+                  <div className={styles.curatedOverlay} />
+                  <div className={styles.curatedContent}>
+                    <h3 className={styles.curatedTitle}>Lawn Prints</h3>
+                    <span className={styles.curatedLink}>Explore &rarr;</span>
+                  </div>
+                </div>
+              </Link>
+
+              {/* Garments */}
+              <Link href="/collections/garments" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
                     src={eidEditImage}
                     alt="Eid Edit"
                     fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                     className={styles.curatedImage}
                   />
                   <div className={styles.curatedOverlay} />
                   <div className={styles.curatedContent}>
-                    <h3 className={styles.curatedTitle}>Eid Edit</h3>
+                    <h3 className={styles.curatedTitle}>Garments</h3>
                     <span className={styles.curatedLink}>Explore &rarr;</span>
                   </div>
                 </div>
               </Link>
 
-              {/* Luxury Pret */}
-              <Link href="/collections/luxury-pret" className={styles.curatedCard}>
+              {/* Bedding */}
+              <Link href="/collections/bedding" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
                     src={luxuryPretImage}
                     alt="Luxury Pret"
                     fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                     className={styles.curatedImage}
                   />
                   <div className={styles.curatedOverlay} />
                   <div className={styles.curatedContent}>
-                    <h3 className={styles.curatedTitle}>Luxury Pret</h3>
+                    <h3 className={styles.curatedTitle}>Bedding</h3>
                     <span className={styles.curatedLink}>Explore &rarr;</span>
                   </div>
                 </div>
               </Link>
 
-              {/* New Arrivals */}
-              <Link href="/collections/ready-to-wear" className={styles.curatedCard}>
+              {/* Hijab Collection */}
+              <Link href="/collections/hijab-collection" className={styles.curatedCard}>
                 <div className={styles.curatedImageWrapper}>
                   <Image
                     src={newArrivalsImage}
                     alt="New Arrivals"
                     fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                     className={styles.curatedImage}
                   />
                   <div className={styles.curatedOverlay} />
                   <div className={styles.curatedContent}>
-                    <h3 className={styles.curatedTitle}>New Arrivals</h3>
+                    <h3 className={styles.curatedTitle}>Hijab Collection</h3>
                     <span className={styles.curatedLink}>Explore &rarr;</span>
                   </div>
                 </div>

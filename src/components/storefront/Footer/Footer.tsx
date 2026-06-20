@@ -35,27 +35,28 @@ export const Footer: React.FC = () => {
             <h4 className={styles.heading}>Collections</h4>
             <ul className={styles.list}>
               <li>
-                <Link href="/collections/ready-to-wear" className={styles.link}>
-                  Ready To Wear
+                <Link href="/collections/lawn-prints" className={styles.link}>
+                  Lawn Prints
                 </Link>
               </li>
               <li>
-                <Link href="/collections/formal" className={styles.link}>
-                  Luxury Formal
+                <Link href="/collections/garments" className={styles.link}>
+                  Garments
                 </Link>
               </li>
               <li>
-                <Link href="/collections/pret" className={styles.link}>
-                  Pret Collection
+                <Link href="/collections/bedding" className={styles.link}>
+                  Bedding
                 </Link>
               </li>
               <li>
-                <Link href="/collections/unstitched" className={styles.link}>
-                  Unstitched Suitings
+                <Link href="/collections/hijab-collection" className={styles.link}>
+                  Hijab Collection
                 </Link>
               </li>
             </ul>
           </div>
+
 
           {/* Links Column 2 */}
           <div className={styles.col}>

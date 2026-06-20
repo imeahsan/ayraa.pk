@@ -14,26 +14,27 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "All Collections",
-  description: "Explore the full Ayraa Collection — Ready to Wear, Luxury Formal, Lawn, and Pret. Experience centuries of hand-crafted heritage with contemporary lines.",
+  description: "Explore Ayraa's full range — Lawn Prints, Garments, Bedding and Hijab Collections. Premium quality crafted for every lifestyle.",
   alternates: {
     canonical: "/collections",
   },
   openGraph: {
-    title: "All Collections | Ayraa Collection",
-    description: "Explore the full Ayraa Collection — Ready to Wear, Luxury Formal, Lawn, and Pret.",
+    title: "All Collections | Ayraa",
+    description: "Explore Ayraa's full range — Lawn Prints, Garments, Bedding and Hijab Collections.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "All Collections | Ayraa Collection",
-    description: "Explore the full Ayraa Collection — Ready to Wear, Luxury Formal, Lawn, and Pret.",
+    title: "All Collections | Ayraa",
+    description: "Explore Ayraa's full range — Lawn Prints, Garments, Bedding and Hijab Collections.",
   },
 };
 
 const MOCK_CATEGORIES = [
-  { name: "Ready To Wear", slug: "ready-to-wear", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80" },
-  { name: "Luxury Formal", slug: "formal", image: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80" },
-  { name: "Pret Collection", slug: "pret", image: "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=600&auto=format&fit=crop&q=80" },
+  { name: "Lawn Prints",      slug: "lawn-prints",      image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80" },
+  { name: "Garments",         slug: "garments",         image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80" },
+  { name: "Bedding",          slug: "bedding",          image: "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?w=600&auto=format&fit=crop&q=80" },
+  { name: "Hijab Collection", slug: "hijab-collection", image: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80" },
 ];
 
 const MOCK_PRODUCTS: Product[] = [
