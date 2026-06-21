@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
-import { createClient } from "@/lib/supabase/server";
+import { createCacheClient } from "@/lib/supabase/cache-client";
 import { Product } from "@/types";
 import { CollectionClient } from "./CollectionClient";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
@@ -208,7 +208,7 @@ import { unstable_cache } from "next/cache";
 const getCachedCategory = unstable_cache(
   async (slug: string) => {
     try {
-      const supabase = await createClient();
+      const supabase = createCacheClient();
       const { data: categoryData, error } = await supabase
         .from("categories")
         .select("*")
@@ -241,7 +241,7 @@ const getCachedCategory = unstable_cache(
 
 const getCachedSubCategories = unstable_cache(
   async (categoryId: string) => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data: dbSubs } = await supabase
       .from("categories")
       .select("*")
@@ -255,7 +255,7 @@ const getCachedSubCategories = unstable_cache(
 
 const getCachedActiveCategoryIds = unstable_cache(
   async () => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const activeCategoryIds = new Set<string>();
     const { data: prodCats } = await supabase
       .from("products")
@@ -274,7 +274,7 @@ const getCachedActiveCategoryIds = unstable_cache(
 
 const getCachedCategoryProducts = unstable_cache(
   async (categoryId: string) => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data: productsData } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")

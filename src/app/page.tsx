@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
-import { createClient } from "@/lib/supabase/server";
+import { createCacheClient } from "@/lib/supabase/cache-client";
 import { Product, Category } from "@/types";
 import styles from "./page.module.css";
 import { FeaturedSlider } from "@/components/storefront/FeaturedSlider/FeaturedSlider";
@@ -201,7 +201,7 @@ const MOCK_SLIDES = [
 
 const getCachedHeroSlides = unstable_cache(
   async () => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data } = await supabase
       .from("hero_slides")
       .select("*")
@@ -215,7 +215,7 @@ const getCachedHeroSlides = unstable_cache(
 
 const getCachedFeaturedProducts = unstable_cache(
   async () => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data, error } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
@@ -231,7 +231,7 @@ const getCachedFeaturedProducts = unstable_cache(
 
 const getCachedNewArrivals = unstable_cache(
   async () => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
@@ -246,7 +246,7 @@ const getCachedNewArrivals = unstable_cache(
 
 const getCachedSaleProducts = unstable_cache(
   async () => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
@@ -260,7 +260,7 @@ const getCachedSaleProducts = unstable_cache(
 
 const getCachedDisplayCategories = unstable_cache(
   async () => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data } = await supabase
       .from("categories")
       .select("*")
@@ -276,7 +276,7 @@ const getCachedDisplayCategories = unstable_cache(
 
 const getCachedTestimonials = unstable_cache(
   async () => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data } = await supabase
       .from("product_reviews")
       .select("id, rating, comment, reviewer_name, product:products(name, slug)")

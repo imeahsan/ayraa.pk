@@ -1,6 +1,6 @@
 import React, { cache } from "react";
 import { Metadata } from "next";
-import { createClient } from "@/lib/supabase/server";
+import { createCacheClient } from "@/lib/supabase/cache-client";
 import { Product } from "@/types";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
@@ -199,7 +199,7 @@ interface ProductPageProps {
 const getCachedProduct = unstable_cache(
   async (slug: string): Promise<Product | null> => {
     try {
-      const supabase = await createClient();
+      const supabase = createCacheClient();
       const { data, error } = await supabase
         .from("products")
         .select("*, category:categories(*), images:product_images(*)")
@@ -223,7 +223,7 @@ const getCachedProduct = unstable_cache(
 
 const getCachedRelatedProducts = unstable_cache(
   async (categoryId: string, productId: string) => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data: related } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
@@ -239,7 +239,7 @@ const getCachedRelatedProducts = unstable_cache(
 
 const getCachedProductQuestions = unstable_cache(
   async (productId: string) => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data: qData } = await supabase
       .from("product_questions")
       .select("*")
@@ -254,7 +254,7 @@ const getCachedProductQuestions = unstable_cache(
 
 const getCachedProductReviews = unstable_cache(
   async (productId: string) => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data: rData } = await supabase
       .from("product_reviews")
       .select("*")
@@ -312,7 +312,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   // Load real-time variants to ensure accurate stock quantities
   try {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data: realTimeVariants } = await supabase
       .from("product_variants")
       .select("*")

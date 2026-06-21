@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
-import { createClient } from "@/lib/supabase/server";
+import { createCacheClient } from "@/lib/supabase/cache-client";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { Product, Category } from "@/types";
 import { AllProductsClient } from "./AllProductsClient";
@@ -164,7 +164,7 @@ import { unstable_cache } from "next/cache";
 
 const getCachedCollectionsProducts = unstable_cache(
   async () => {
-    const supabase = await createClient();
+    const supabase = createCacheClient();
     const { data, error } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
@@ -180,8 +180,8 @@ const getCachedCollectionsProducts = unstable_cache(
 
 const getCachedCollectionsCategories = unstable_cache(
   async () => {
-    const supabase = await createClient();
-    
+    const supabase = createCacheClient();
+
     const activeCategoryIds = new Set<string>();
     const { data: prodCats } = await supabase
       .from("products")

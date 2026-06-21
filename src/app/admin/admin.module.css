@@ -854,7 +854,7 @@
 
 .formSelect {
   width: 100%;
-  background-color: transparent;
+  background-color: var(--admin-sidebar);
   border: 1px solid var(--admin-border);
   color: var(--admin-text);
   font-family: var(--font-body);
@@ -868,6 +868,11 @@
 
 .formSelect:focus {
   border-color: var(--color-gold);
+}
+
+.formSelect option {
+  background-color: var(--admin-sidebar);
+  color: var(--admin-text);
 }
 
 .checkboxGroup {
