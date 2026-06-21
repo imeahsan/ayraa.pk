@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useARStore } from '@/lib/bedsheet-ar/store';
 import { CameraStream } from './CameraStream';
@@ -32,6 +31,7 @@ export default function BedsheetARExperience({
   
   const setCameraStatus = useARStore((state) => state.setCameraStatus);
   const setTextureUrl = useARStore((state) => state.setTextureUrl);
+  const setCorners = useARStore((state) => state.setCorners);
   const resetSettings = useARStore((state) => state.resetSettings);
   const resetCorners = useARStore((state) => state.resetCorners);
 
@@ -43,8 +43,6 @@ export default function BedsheetARExperience({
   
   // Capture result states
   const [captureBlob, setCaptureBlob] = useState<Blob | null>(null);
-  const [captureImageUrl, setCaptureImageUrl] = useState<string | null>(null);
-  const [showCaptureModal, setShowCaptureModal] = useState(false);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
@@ -64,6 +62,20 @@ export default function BedsheetARExperience({
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
+
+  // Pre-populate default corners in the center of the viewport on load
+  useEffect(() => {
+    if (dimensions.width > 0 && dimensions.height > 0 && corners.length === 0) {
+      const w = dimensions.width;
+      const h = dimensions.height;
+      setCorners([
+        { label: 'topLeft', x: w * 0.2, y: h * 0.3 },
+        { label: 'topRight', x: w * 0.8, y: h * 0.3 },
+        { label: 'bottomRight', x: w * 0.8, y: h * 0.7 },
+        { label: 'bottomLeft', x: w * 0.2, y: h * 0.7 }
+      ]);
+    }
+  }, [dimensions, corners.length, setCorners]);
 
   // 2. Fetch AR Texture details on mount — separate from cameraStatus
   useEffect(() => {
@@ -144,11 +156,6 @@ export default function BedsheetARExperience({
       });
 
       setCaptureBlob(blob);
-
-      // Create local URL for display in modal
-      const localUrl = URL.createObjectURL(blob);
-      setCaptureImageUrl(localUrl);
-      setShowCaptureModal(true);
 
       // Prepare form data for server upload
       const formData = new FormData();
@@ -270,32 +277,31 @@ export default function BedsheetARExperience({
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 overflow-hidden bg-black z-50 flex flex-col select-none"
+      className="ar-experience-container"
     >
       {/* 1. Header controls */}
-      <header className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent pt-safe flex items-center text-white" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-        <div className="flex items-center justify-between w-full px-4 py-3">
+      <header className="ar-header" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="ar-header-content">
           {/* Exit Button */}
           <button
             onClick={handleExit}
-            className="w-10 h-10 rounded-full bg-black/45 border border-white/10 flex items-center justify-center text-lg hover:bg-black/60 transition-colors flex-shrink-0"
-            style={{ touchAction: 'manipulation' }}
+            className="ar-exit-btn"
           >
             ✕
           </button>
 
           {/* Center text — fixed, no layout shift */}
-          <div className="text-center flex-1 mx-3 min-w-0">
-            <span className="font-body text-[10px] font-bold tracking-[0.25em] text-amber-500 uppercase block">
+          <div className="ar-header-title-container">
+            <span className="ar-header-subtitle">
               Ayra Live AR
             </span>
-            <span className="font-headline text-sm font-semibold text-white/90 block mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap">
+            <span className="ar-header-title">
               {productName}
             </span>
           </div>
 
           {/* Spacer to balance layout */}
-          <div className="w-10 h-10 flex-shrink-0" />
+          <div style={{ width: '40px', height: '40px' }} />
         </div>
       </header>
 
@@ -329,76 +335,20 @@ export default function BedsheetARExperience({
             </>
           )}
 
-          {/* Settings and capturing UI — z-50 to sit above everything including CornerSelector */}
+          {/* Settings and capturing UI */}
           {cameraStatus === 'ready' && (
             <ARControls
               onCapture={handleCapture}
+              onSave={handleDownload}
+              onShare={handleShare}
               onExit={handleExit}
               capturing={capturing}
+              captured={!!captureBlob}
             />
           )}
         </>
       )}
 
-      {/* 4. Captures Modal Popup */}
-      {showCaptureModal && captureImageUrl && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-6">
-          <div className="bg-[#1c1b1b] border border-white/10 rounded-2xl w-full max-w-sm overflow-hidden flex flex-col shadow-2xl relative">
-            
-            {/* Modal Header */}
-            <div className="p-4 border-b border-white/5 flex justify-between items-center">
-              <span className="font-headline text-sm font-bold text-white uppercase tracking-wider">
-                Preview Captured
-              </span>
-              <button
-                onClick={() => {
-                  setShowCaptureModal(false);
-                  if (captureImageUrl) URL.revokeObjectURL(captureImageUrl);
-                  setCaptureImageUrl(null);
-                  setCaptureBlob(null);
-                }}
-                className="text-white/60 hover:text-white text-lg font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Captured Image Frame */}
-            <div className="relative aspect-[3/4] bg-black w-full overflow-hidden">
-              <Image
-                src={captureImageUrl}
-                alt="Captured Bed Sheet Preview"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-
-            {/* Action Row */}
-            <div className="p-4 flex gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleShare}
-                style={{ flex: 1, color: 'white', borderColor: 'rgba(255,255,255,0.15)' }}
-              >
-                Share
-              </Button>
-              <Button
-                variant="luxury"
-                size="sm"
-                onClick={handleDownload}
-                style={{ flex: 1, fontWeight: 'bold' }}
-              >
-                Download
-              </Button>
-            </div>
-            
-            <p className="font-body text-[10px] text-white/30 text-center pb-4 px-4">
-              Image matches live preview cropping. Actual bedsheet may vary.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

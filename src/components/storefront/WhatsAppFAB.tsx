@@ -30,8 +30,8 @@ export const WhatsAppFAB: React.FC = () => {
     return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   };
 
-  // Do not render FAB on admin routes or if route is unknown yet
-  if (!pathname || pathname.startsWith("/admin")) {
+  // Do not render FAB on admin routes, AR preview page, or if route is unknown yet
+  if (!pathname || pathname.startsWith("/admin") || pathname.endsWith("/bedsheet-ar")) {
     return null;
   }
 

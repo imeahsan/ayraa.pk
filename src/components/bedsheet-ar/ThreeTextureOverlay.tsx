@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useARStore } from '@/lib/bedsheet-ar/store';
 import { CornerPoint } from '@/lib/bedsheet-ar/types';
@@ -38,6 +38,7 @@ export function ThreeTextureOverlay({ width, height }: ThreeTextureOverlayProps)
   const textureUrl = useARStore((state) => state.textureUrl);
   const corners = useARStore((state) => state.corners);
   const settings = useARStore((state) => state.settings);
+  const [textureLoaded, setTextureLoaded] = useState(false);
 
   // Keep references to update three.js scene on state change without reloading canvas
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -163,25 +164,35 @@ export function ThreeTextureOverlay({ width, height }: ThreeTextureOverlayProps)
   useEffect(() => {
     if (!textureUrl || !materialRef.current) return;
 
+    setTextureLoaded(false);
     const loader = new THREE.TextureLoader();
-    loader.load(textureUrl, (loadedTexture) => {
-      // Configure texture wrapping and repeat
-      loadedTexture.wrapS = THREE.RepeatWrapping;
-      loadedTexture.wrapT = THREE.RepeatWrapping;
-      loadedTexture.colorSpace = THREE.SRGBColorSpace;
+    loader.setCrossOrigin('anonymous');
+    loader.load(
+      textureUrl,
+      (loadedTexture) => {
+        // Configure texture wrapping and repeat
+        loadedTexture.wrapS = THREE.RepeatWrapping;
+        loadedTexture.wrapT = THREE.RepeatWrapping;
+        loadedTexture.colorSpace = THREE.SRGBColorSpace;
 
-      // Apply to material
-      if (materialRef.current) {
-        materialRef.current.map = loadedTexture;
-        materialRef.current.needsUpdate = true;
-      }
+        // Apply to material
+        if (materialRef.current) {
+          materialRef.current.map = loadedTexture;
+          materialRef.current.needsUpdate = true;
+        }
 
-      // Dispose of old texture if exists
-      if (textureRef.current) {
-        textureRef.current.dispose();
+        // Dispose of old texture if exists
+        if (textureRef.current) {
+          textureRef.current.dispose();
+        }
+        textureRef.current = loadedTexture;
+        setTextureLoaded(true);
+      },
+      undefined,
+      (err) => {
+        console.error('Error loading texture:', err);
       }
-      textureRef.current = loadedTexture;
-    });
+    );
   }, [textureUrl]);
 
   // Update geometry when corners change
@@ -191,7 +202,7 @@ export function ThreeTextureOverlay({ width, height }: ThreeTextureOverlayProps)
 
     if (!geometry || !mesh) return;
 
-    if (corners.length < 4) {
+    if (corners.length < 4 || !textureLoaded) {
       mesh.visible = false;
       return;
     }
@@ -200,11 +211,18 @@ export function ThreeTextureOverlay({ width, height }: ThreeTextureOverlayProps)
     const positions = geometry.attributes.position.array as Float32Array;
     let index = 0;
 
+    const tl = corners.find(c => c.label === 'topLeft') || corners[0];
+    const tr = corners.find(c => c.label === 'topRight') || corners[1];
+    const br = corners.find(c => c.label === 'bottomRight') || corners[2];
+    const bl = corners.find(c => c.label === 'bottomLeft') || corners[3];
+
     for (let j = 0; j <= GRID_SIZE; j++) {
       const v = j / GRID_SIZE;
       for (let i = 0; i <= GRID_SIZE; i++) {
         const u = i / GRID_SIZE;
-        const pt = bilerp(corners[0], corners[1], corners[2], corners[3], u, v);
+        // Mirror U axis: pass tr as first arg so u=0→topRight (screen right), u=1→topLeft (screen left)
+        // This corrects the horizontal flip caused by the orthographic camera setup
+        const pt = bilerp(tr, tl, bl, br, u, v);
         positions[index++] = pt.x;
         positions[index++] = pt.y;
         positions[index++] = 0;
@@ -213,7 +231,7 @@ export function ThreeTextureOverlay({ width, height }: ThreeTextureOverlayProps)
 
     geometry.attributes.position.needsUpdate = true;
     mesh.visible = true;
-  }, [corners]);
+  }, [corners, textureLoaded]);
 
   // Update settings (opacity, scale, rotation, repeat)
   useEffect(() => {
@@ -244,7 +262,7 @@ export function ThreeTextureOverlay({ width, height }: ThreeTextureOverlayProps)
       texture.rotation = settings.rotation;
       texture.needsUpdate = true;
     }
-  }, [settings]);
+  }, [settings, textureLoaded]);
 
   return <div ref={mountRef} className="absolute inset-0 z-10 pointer-events-none" />;
 }
