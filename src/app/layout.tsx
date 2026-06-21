@@ -41,6 +41,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "./",
   },
+  icons: {
+    icon: "/favicon.png",
+  },
   openGraph: {
     title: "Ayraa | Premium Eastern Luxury Fashion",
     description:
