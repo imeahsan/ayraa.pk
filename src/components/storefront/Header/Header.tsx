@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -61,10 +61,13 @@ export const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [menuCategories, setMenuCategories] = useState<NavCategory[]>(MOCK_CATEGORIES);
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
+  // Stable client ref — never recreated across renders
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -84,31 +87,40 @@ export const Header: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const sb = supabaseRef.current;
+
+    // Initial session check
     const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await sb.auth.getUser();
       if (user) {
-        const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+        const { data } = await sb.from("profiles").select("*").eq("id", user.id).single();
         setProfile(data as UserProfile);
       } else {
         setProfile(null);
       }
+      setAuthReady(true);
     };
     fetchUser();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_, session) => {
+
+    // Subscribe to auth changes (sign-in / sign-out)
+    const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const { data } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+        const { data } = await sb.from("profiles").select("*").eq("id", session.user.id).single();
         setProfile(data as UserProfile);
       } else {
         setProfile(null);
       }
+      setAuthReady(true);
     });
+
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseRef.current
           .from("categories")
           .select("*")
           .eq("is_active", true)
@@ -135,7 +147,8 @@ export const Header: React.FC = () => {
       }
     };
     fetchCategories();
-  }, [supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -240,23 +253,28 @@ export const Header: React.FC = () => {
               <Link href="/admin" className={styles.dashboardLink} title="Admin Panel">Dashboard</Link>
             )}
 
-            {profile ? (
-              <div className={styles.profileMenu}>
-                <button className={styles.profileBtn} aria-label="User Profile Menu" id="user-profile-btn">
-                  {profile.full_name?.split(" ")[0] || "Account"}
-                </button>
-                <div className={styles.profileDropdown}>
-                  <div className={styles.dropdownMenu}>
-                    {profile.role === "admin" && (
-                      <Link href="/admin" className={styles.dropdownItem}>Admin Panel</Link>
-                    )}
-                    <Link href="/orders" className={styles.dropdownItem}>My Orders</Link>
-                    <button onClick={handleSignOut} className={styles.dropdownItem}>Sign Out</button>
+            {authReady ? (
+              profile ? (
+                <div className={styles.profileMenu}>
+                  <button className={styles.profileBtn} aria-label="User Profile Menu" id="user-profile-btn">
+                    {profile.full_name?.split(" ")[0] || "Account"}
+                  </button>
+                  <div className={styles.profileDropdown}>
+                    <div className={styles.dropdownMenu}>
+                      {profile.role === "admin" && (
+                        <Link href="/admin" className={styles.dropdownItem}>Admin Panel</Link>
+                      )}
+                      <Link href="/orders" className={styles.dropdownItem}>My Orders</Link>
+                      <button onClick={handleSignOut} className={styles.dropdownItem}>Sign Out</button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className="premium-underline" id="login-link">Login</Link>
+              )
             ) : (
-              <Link href="/login" className="premium-underline" id="login-link">Login</Link>
+              // Placeholder same width as Login link to prevent layout shift
+              <span style={{ display: 'inline-block', width: '2.5rem' }} />
             )}
 
             {/* Bag Icon */}
@@ -359,9 +377,9 @@ export const Header: React.FC = () => {
           <li className={styles.mobileMenuItem}>
             <Link href="/contact" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Journal</Link>
           </li>
-          {!profile && (
+          {authReady && !profile && (
             <li className={styles.mobileMenuItem}>
-              <Link href="/login" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+              <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
             </li>
           )}
         </ul>

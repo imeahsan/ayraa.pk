@@ -43,12 +43,18 @@ function LoginContent() {
 
   const handleGoogleLogin = async () => {
     setError(null);
+    
+    // Set cookie to remember where to redirect after successful login
+    document.cookie = `sb-oauth-redirect-to=${encodeURIComponent(
+      redirectTo
+    )}; path=/; max-age=600; SameSite=Lax${
+      window.location.protocol === "https:" ? "; Secure" : ""
+    }`;
+
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(
-          redirectTo
-        )}`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
 
