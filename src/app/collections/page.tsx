@@ -156,33 +156,33 @@ const MOCK_PRODUCTS: Product[] = [
   },
 ];
 
-export default async function CollectionsPage() {
-  let products: Product[] = [];
-  let categories: Category[] = [];
+import { unstable_cache } from "next/cache";
 
-  const supabase = await createClient();
+// ... metadata ...
+// ... MOCK_CATEGORIES ...
+// ... MOCK_PRODUCTS ...
 
-  try {
+const getCachedCollectionsProducts = unstable_cache(
+  async () => {
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(12);
+    if (error) throw error;
+    return (data || []) as Product[];
+  },
+  ["collections-products-limit-12"],
+  { revalidate: 300 }
+);
 
-    if (error || !data || data.length === 0) {
-      products = MOCK_PRODUCTS;
-    } else {
-      products = data as Product[];
-    }
-  } catch (err) {
-    console.error("Error fetching products:", err);
-    products = MOCK_PRODUCTS;
-  }
-
-  // Fetch active category IDs
-  const activeCategoryIds = new Set<string>();
-  try {
+const getCachedCollectionsCategories = unstable_cache(
+  async () => {
+    const supabase = await createClient();
+    
+    const activeCategoryIds = new Set<string>();
     const { data: prodCats } = await supabase
       .from("products")
       .select("category_id")
@@ -192,27 +192,45 @@ export default async function CollectionsPage() {
         if (p.category_id) activeCategoryIds.add(p.category_id);
       });
     }
-  } catch (err) {
-    console.error("Failed to query active category IDs:", err);
-  }
 
-  const hasProductsRecursively = (catId: string, allCats: Category[]): boolean => {
-    if (activeCategoryIds.has(catId)) return true;
-    const children = allCats.filter((c) => c.parent_id === catId);
-    return children.some((child) => hasProductsRecursively(child.id, allCats));
-  };
-
-  try {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
       .order("sort_order", { ascending: true });
 
-    if (!error && data && data.length > 0) {
-      const allCats = data as Category[];
-      categories = allCats
-        .filter((cat) => cat.parent_id === null)
-        .filter((cat) => hasProductsRecursively(cat.id, allCats));
+    if (error || !data) throw error || new Error("Failed to load categories");
+
+    const allCats = data as Category[];
+    const hasProductsRecursively = (catId: string): boolean => {
+      if (activeCategoryIds.has(catId)) return true;
+      const children = allCats.filter((c) => c.parent_id === catId);
+      return children.some((child) => hasProductsRecursively(child.id));
+    };
+
+    return allCats
+      .filter((cat) => cat.parent_id === null)
+      .filter((cat) => hasProductsRecursively(cat.id));
+  },
+  ["collections-categories-filtered"],
+  { revalidate: 300 }
+);
+
+export default async function CollectionsPage() {
+  let products: Product[] = [];
+  let categories: Category[] = [];
+
+  try {
+    const data = await getCachedCollectionsProducts();
+    products = data.length > 0 ? data : MOCK_PRODUCTS;
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    products = MOCK_PRODUCTS;
+  }
+
+  try {
+    const data = await getCachedCollectionsCategories();
+    if (data && data.length > 0) {
+      categories = data;
     } else {
       categories = MOCK_CATEGORIES.map((c, idx) => ({
         id: `mock-cat-${idx}`,

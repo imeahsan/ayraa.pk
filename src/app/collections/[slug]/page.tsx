@@ -198,42 +198,97 @@ interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
-const getCategory = cache(async (slug: string) => {
-  try {
-    const supabase = await createClient();
+import { unstable_cache } from "next/cache";
 
-    // Look up by slug first
-    const { data: categoryData, error } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("slug", slug)
-      .single();
+// ... metadata ...
+// ... CATEGORY_NAMES ...
+// ... SUB_CATEGORIES ...
+// ... MOCK_PRODUCTS ...
 
-    if (categoryData && !error) {
-      return categoryData;
-    }
-
-    // Fallback: If requesting 'luxury-pret', resolve using 'pret' category from DB
-    if (slug === "luxury-pret") {
-      const { data: fallbackData, error: fallbackError } = await supabase
+const getCachedCategory = unstable_cache(
+  async (slug: string) => {
+    try {
+      const supabase = await createClient();
+      const { data: categoryData, error } = await supabase
         .from("categories")
         .select("*")
-        .eq("slug", "pret")
+        .eq("slug", slug)
         .single();
 
-      if (fallbackData && !fallbackError) {
-        return fallbackData;
+      if (categoryData && !error) {
+        return categoryData;
       }
+
+      if (slug === "luxury-pret") {
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("categories")
+          .select("*")
+          .eq("slug", "pret")
+          .single();
+
+        if (fallbackData && !fallbackError) {
+          return fallbackData;
+        }
+      }
+    } catch (err) {
+      console.error("Error loading category from Supabase:", err);
     }
-  } catch (err) {
-    console.error("Error loading category from Supabase:", err);
-  }
-  return null;
-});
+    return null;
+  },
+  ["category-by-slug"],
+  { revalidate: 300 }
+);
+
+const getCachedSubCategories = unstable_cache(
+  async (categoryId: string) => {
+    const supabase = await createClient();
+    const { data: dbSubs } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("parent_id", categoryId)
+      .order("sort_order", { ascending: true });
+    return dbSubs || [];
+  },
+  ["subcategories-by-parent-id"],
+  { revalidate: 300 }
+);
+
+const getCachedActiveCategoryIds = unstable_cache(
+  async () => {
+    const supabase = await createClient();
+    const activeCategoryIds = new Set<string>();
+    const { data: prodCats } = await supabase
+      .from("products")
+      .select("category_id")
+      .eq("is_active", true);
+    if (prodCats) {
+      prodCats.forEach((p) => {
+        if (p.category_id) activeCategoryIds.add(p.category_id);
+      });
+    }
+    return Array.from(activeCategoryIds);
+  },
+  ["active-category-ids-list"],
+  { revalidate: 300 }
+);
+
+const getCachedCategoryProducts = unstable_cache(
+  async (categoryId: string) => {
+    const supabase = await createClient();
+    const { data: productsData } = await supabase
+      .from("products")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
+      .eq("category_id", categoryId)
+      .eq("is_active", true);
+    return productsData || [];
+  },
+  ["category-products-by-id"],
+  { revalidate: 300 }
+);
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const category = await getCategory(slug);
+  const category = await getCachedCategory(slug);
   const name = category?.name || CATEGORY_NAMES[slug] || "Collection";
   const desc = category?.description || `Explore our premium range of ${name.toLowerCase()} at Ayraa.`;
 
@@ -249,7 +304,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
 
-  const category = await getCategory(slug);
+  const category = await getCachedCategory(slug);
   const categoryName = category?.name || CATEGORY_NAMES[slug];
 
   // 404 for completely unknown slugs
@@ -265,18 +320,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   ];
 
   // Fetch sub-categories dynamically from database
-  const supabase = await createClient();
   let subCategories: any[] = [];
   if (category) {
-    const { data: dbSubs } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("parent_id", category.id)
-      .order("sort_order", { ascending: true });
-    
-    if (dbSubs && dbSubs.length > 0) {
-      subCategories = dbSubs;
-    }
+    try {
+      const dbSubs = await getCachedSubCategories(category.id);
+      if (dbSubs && dbSubs.length > 0) {
+        subCategories = dbSubs;
+      }
+    } catch { /* ignore */ }
   }
 
   // Fallback to hardcoded SUB_CATEGORIES if database returns none
@@ -292,13 +343,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   // Fetch active product category IDs
   const activeCategoryIds = new Set<string>();
   try {
-    const { data: prodCats } = await supabase
-      .from("products")
-      .select("category_id")
-      .eq("is_active", true);
-    if (prodCats) {
-      prodCats.forEach((p) => {
-        if (p.category_id) activeCategoryIds.add(p.category_id);
+    const prodCatsList = await getCachedActiveCategoryIds();
+    if (prodCatsList) {
+      prodCatsList.forEach((catId) => {
+        activeCategoryIds.add(catId);
       });
     }
   } catch (err) {
@@ -385,14 +433,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   let products: Product[] = [];
 
   try {
-
     if (category) {
-      const { data: productsData } = await supabase
-        .from("products")
-        .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
-        .eq("category_id", category.id)
-        .eq("is_active", true);
-
+      const productsData = await getCachedCategoryProducts(category.id);
       if (productsData && productsData.length > 0) {
         products = productsData as Product[];
       }

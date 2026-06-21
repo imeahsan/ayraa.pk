@@ -9,6 +9,8 @@ import { Product, Category } from "@/types";
 import styles from "./page.module.css";
 import { FeaturedSlider } from "@/components/storefront/FeaturedSlider/FeaturedSlider";
 import { NewsletterCTA } from "@/components/storefront/NewsletterCTA/NewsletterCTA";
+import { HeroSlider } from "@/components/storefront/HeroSlider/HeroSlider";
+import { unstable_cache } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -185,50 +187,80 @@ const VALUE_PILLARS = [
   },
 ];
 
-export default async function Home() {
-  const supabase = await createClient();
+const MOCK_SLIDES = [
+  {
+    id: "slide1",
+    image_url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&auto=format&fit=crop&q=85",
+    badge: "Summer 2025",
+    title: "New Lawn Prints\nSummer Collection",
+    subtitle: "Heritage craftsmanship. Contemporary elegance.",
+    button_text: "Shop Collection",
+    button_link: "/collections/lawn-prints"
+  }
+];
 
-  // ── Featured products ──────────────────────────────
-  let featuredProducts: Product[] = [];
-  try {
+const getCachedHeroSlides = unstable_cache(
+  async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("hero_slides")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    return data || [];
+  },
+  ["hero-slides"],
+  { revalidate: 300 }
+);
+
+const getCachedFeaturedProducts = unstable_cache(
+  async () => {
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
       .eq("is_featured", true)
       .eq("is_active", true)
       .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data as Product[];
+  },
+  ["featured-products"],
+  { revalidate: 300 }
+);
 
-    featuredProducts = !error && data && data.length > 0 ? (data as Product[]) : MOCK_PRODUCTS;
-  } catch {
-    featuredProducts = MOCK_PRODUCTS;
-  }
-
-  // ── New arrivals (latest 8) ────────────────────────
-  let newArrivals: Product[] = [];
-  try {
+const getCachedNewArrivals = unstable_cache(
+  async () => {
+    const supabase = await createClient();
     const { data } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
       .eq("is_active", true)
       .order("created_at", { ascending: false })
       .limit(8);
-    if (data && data.length > 0) newArrivals = data as Product[];
-  } catch { /* ignore */ }
+    return (data || []) as Product[];
+  },
+  ["new-arrivals"],
+  { revalidate: 300 }
+);
 
-  // ── Sale products ──────────────────────────────────
-  let saleProducts: Product[] = [];
-  try {
+const getCachedSaleProducts = unstable_cache(
+  async () => {
+    const supabase = await createClient();
     const { data } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
       .eq("is_on_sale", true)
       .eq("is_active", true);
-    if (data) saleProducts = data as Product[];
-  } catch { /* ignore */ }
+    return (data || []) as Product[];
+  },
+  ["sale-products"],
+  { revalidate: 300 }
+);
 
-  // ── Active parent categories for mosaic ───────────
-  let displayCategories: Category[] = FALLBACK_CATEGORIES;
-  try {
+const getCachedDisplayCategories = unstable_cache(
+  async () => {
+    const supabase = await createClient();
     const { data } = await supabase
       .from("categories")
       .select("*")
@@ -236,7 +268,64 @@ export default async function Home() {
       .is("parent_id", null)
       .order("sort_order", { ascending: true })
       .limit(6);
-    if (data && data.length > 0) displayCategories = data as Category[];
+    return (data || []) as Category[];
+  },
+  ["homepage-categories"],
+  { revalidate: 300 }
+);
+
+const getCachedTestimonials = unstable_cache(
+  async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("product_reviews")
+      .select("id, rating, comment, reviewer_name, product:products(name, slug)")
+      .order("created_at", { ascending: false })
+      .limit(6);
+    return (data || []) as any[];
+  },
+  ["testimonials"],
+  { revalidate: 300 }
+);
+
+export default async function Home() {
+  // ── Hero slides ──────────────────────────────
+  let heroSlides = MOCK_SLIDES;
+  try {
+    const data = await getCachedHeroSlides();
+    if (data && data.length > 0) {
+      heroSlides = data;
+    }
+  } catch {
+    // Fallback to mock
+  }
+
+  // ── Featured products ──────────────────────────────
+  let featuredProducts: Product[] = [];
+  try {
+    const data = await getCachedFeaturedProducts();
+    featuredProducts = data && data.length > 0 ? data : MOCK_PRODUCTS;
+  } catch {
+    featuredProducts = MOCK_PRODUCTS;
+  }
+
+  // ── New arrivals (latest 8) ────────────────────────
+  let newArrivals: Product[] = [];
+  try {
+    newArrivals = await getCachedNewArrivals();
+  } catch { /* ignore */ }
+
+  // ── Sale products ──────────────────────────────────
+  let saleProducts: Product[] = [];
+  try {
+    saleProducts = await getCachedSaleProducts();
+  } catch { /* ignore */ }
+
+  // ── Active parent categories for mosaic ───────────
+  let displayCategories: Category[] = FALLBACK_CATEGORIES;
+  try {
+    const data = await getCachedDisplayCategories();
+    if (data && data.length > 0) displayCategories = data;
   } catch { /* ignore */ }
 
   // ── Testimonials / recent reviews ─────────────────
@@ -248,12 +337,7 @@ export default async function Home() {
     product?: { name: string; slug: string } | null;
   }[] = [];
   try {
-    const { data } = await supabase
-      .from("product_reviews")
-      .select("id, rating, comment, reviewer_name, product:products(name, slug)")
-      .order("created_at", { ascending: false })
-      .limit(6);
-    if (data && data.length > 0) testimonials = data as unknown as typeof testimonials;
+    testimonials = await getCachedTestimonials();
   } catch { /* ignore */ }
 
   // ── Category image helper ──────────────────────────
@@ -274,44 +358,8 @@ export default async function Home() {
 
       <main className="grow pt-20 md:pt-16">
 
-        {/* ──────── HERO ──────────────────────────────────── */}
-        <section className={styles.hero} id="hero-section">
-          <Image
-            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&auto=format&fit=crop&q=85"
-            alt="Ayraa Summer Collection"
-            fill
-            priority
-            sizes="100vw"
-            className={styles.heroImg}
-          />
-          {/* Gradient overlays */}
-          <div className={styles.heroOverlayTop} />
-          <div className={styles.heroOverlayBot} />
-
-          <div className={styles.heroContent}>
-            <span className={styles.heroBadge} id="hero-badge">Summer 2025</span>
-            <h1 className={styles.heroTitle}>
-              New Lawn Prints<br />
-              <em className={styles.heroTitleItalic}>Summer Collection</em>
-            </h1>
-            <p className={styles.heroSub}>
-              Heritage craftsmanship. Contemporary elegance.
-            </p>
-            <div className={styles.heroActions}>
-              <Link href="/collections/lawn-prints" className={styles.heroBtn}>
-                Shop Collection
-              </Link>
-              <Link href="/collections" className={styles.heroBtnGhost}>
-                Explore All
-              </Link>
-            </div>
-          </div>
-
-          {/* Scroll indicator */}
-          <div className={styles.scrollIndicator} aria-hidden="true">
-            <span className={styles.scrollLine} />
-          </div>
-        </section>
+        {/* ──────── HERO SLIDER ────────────────────────────── */}
+        <HeroSlider slides={heroSlides} />
 
         {/* ──────── SHOP BY CATEGORY ──────────────────────── */}
         <section className={styles.section} id="shop-by-category">

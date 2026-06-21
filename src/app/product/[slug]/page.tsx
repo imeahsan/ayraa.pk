@@ -188,33 +188,88 @@ const MOCK_PRODUCTS: Product[] = [
   },
 ];
 
+import { unstable_cache } from "next/cache";
+
 interface ProductPageProps {
   params: Promise<{
     slug: string;
   }>;
 }
 
-const getProduct = cache(async (slug: string): Promise<Product | null> => {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("products")
-      .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
-      .eq("slug", slug)
-      .single();
+const getCachedProduct = unstable_cache(
+  async (slug: string): Promise<Product | null> => {
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, category:categories(*), images:product_images(*)")
+        .eq("slug", slug)
+        .single();
 
-    if (data && !error) {
-      return data as Product;
+      if (data && !error) {
+        return {
+          ...data,
+          variants: []
+        } as Product;
+      }
+    } catch (err) {
+      console.error("Error loading product detail from Supabase:", err);
     }
-  } catch (err) {
-    console.error("Error loading product detail from Supabase:", err);
-  }
-  return MOCK_PRODUCTS.find((p) => p.slug === slug) || null;
-});
+    return MOCK_PRODUCTS.find((p) => p.slug === slug) || null;
+  },
+  ["product-by-slug"],
+  { revalidate: 300 }
+);
+
+const getCachedRelatedProducts = unstable_cache(
+  async (categoryId: string, productId: string) => {
+    const supabase = await createClient();
+    const { data: related } = await supabase
+      .from("products")
+      .select("*, category:categories(*), images:product_images(*)")
+      .eq("category_id", categoryId)
+      .neq("id", productId)
+      .eq("is_active", true)
+      .limit(4);
+    return related || [];
+  },
+  ["related-products-by-category"],
+  { revalidate: 300 }
+);
+
+const getCachedProductQuestions = unstable_cache(
+  async (productId: string) => {
+    const supabase = await createClient();
+    const { data: qData } = await supabase
+      .from("product_questions")
+      .select("*")
+      .eq("product_id", productId)
+      .eq("is_answered", true)
+      .order("created_at", { ascending: false });
+    return qData || [];
+  },
+  ["product-questions-by-id"],
+  { revalidate: 300 }
+);
+
+const getCachedProductReviews = unstable_cache(
+  async (productId: string) => {
+    const supabase = await createClient();
+    const { data: rData } = await supabase
+      .from("product_reviews")
+      .select("*")
+      .eq("product_id", productId)
+      .eq("is_approved", true)
+      .order("created_at", { ascending: false });
+    return rData || [];
+  },
+  ["product-reviews-by-id"],
+  { revalidate: 300 }
+);
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const product = await getCachedProduct(slug);
 
   if (!product) {
     return {
@@ -249,26 +304,37 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  let product = await getCachedProduct(slug);
 
   if (!product) {
     notFound();
   }
 
-  let relatedProducts: Product[] = [];
+  // Load real-time variants to ensure accurate stock quantities
   try {
     const supabase = await createClient();
-    // Query related products in same category
-    const { data: related } = await supabase
-      .from("products")
-      .select("*, category:categories(*), images:product_images(*)")
-      .eq("category_id", product.category_id)
-      .neq("id", product.id)
-      .eq("is_active", true)
-      .limit(4);
+    const { data: realTimeVariants } = await supabase
+      .from("product_variants")
+      .select("*")
+      .eq("product_id", product.id);
 
-    if (related) {
-      relatedProducts = related as Product[];
+    if (realTimeVariants) {
+      product = {
+        ...product,
+        variants: realTimeVariants,
+      };
+    }
+  } catch (err) {
+    console.error("Error loading real-time variants:", err);
+  }
+
+  let relatedProducts: Product[] = [];
+  try {
+    if (product.category_id) {
+      const related = await getCachedRelatedProducts(product.category_id, product.id);
+      if (related && related.length > 0) {
+        relatedProducts = related as Product[];
+      }
     }
   } catch (err) {
     console.error("Error loading related products from Supabase:", err);
@@ -298,14 +364,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   let questions: any[] = [];
   try {
-    const supabase = await createClient();
-    const { data: qData } = await supabase
-      .from("product_questions")
-      .select("*")
-      .eq("product_id", product.id)
-      .eq("is_answered", true)
-      .order("created_at", { ascending: false });
-
+    const qData = await getCachedProductQuestions(product.id);
     if (qData) {
       questions = qData;
     }
@@ -315,14 +374,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   let reviews: any[] = [];
   try {
-    const supabase = await createClient();
-    const { data: rData } = await supabase
-      .from("product_reviews")
-      .select("*")
-      .eq("product_id", product.id)
-      .eq("is_approved", true)
-      .order("created_at", { ascending: false });
-
+    const rData = await getCachedProductReviews(product.id);
     if (rData) {
       reviews = rData;
     }

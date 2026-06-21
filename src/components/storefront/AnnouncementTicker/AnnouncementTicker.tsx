@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import styles from "./AnnouncementTicker.module.css";
 
-const MESSAGES = [
+const FALLBACK_MESSAGES = [
   "Free shipping on orders above PKR 5,000",
   "Handcrafted Heritage Pieces",
   "New Summer Lawn Arrivals",
@@ -13,8 +14,31 @@ const MESSAGES = [
 ];
 
 export const AnnouncementTicker: React.FC = () => {
+  const [messages, setMessages] = useState<string[]>(FALLBACK_MESSAGES);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("ticker_announcements")
+          .select("message")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          setMessages(data.map(d => d.message));
+        }
+      } catch (err) {
+        console.error("Failed to fetch ticker announcements:", err);
+      }
+    };
+
+    fetchAnnouncements();
+  }, [supabase]);
+
   // Duplicate so the marquee loops seamlessly
-  const items = [...MESSAGES, ...MESSAGES];
+  const items = [...messages, ...messages];
 
   return (
     <div className={styles.ticker} aria-label="Announcements">
