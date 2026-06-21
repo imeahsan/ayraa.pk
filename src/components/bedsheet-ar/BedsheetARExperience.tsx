@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useARStore } from '@/lib/bedsheet-ar/store';
@@ -39,6 +39,7 @@ export default function BedsheetARExperience({
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [error, setError] = useState<string | null>(null);
   const [capturing, setCapturing] = useState(false);
+  const [textureLoading, setTextureLoading] = useState(true);
   
   // Capture result states
   const [captureBlob, setCaptureBlob] = useState<Blob | null>(null);
@@ -64,11 +65,20 @@ export default function BedsheetARExperience({
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
 
-  // 2. Fetch AR Texture details on mount
+  // 2. Fetch AR Texture details on mount — separate from cameraStatus
   useEffect(() => {
+    // Check for secure context first (camera requires HTTPS or localhost)
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      setError(
+        'Camera requires HTTPS. Please access this page via https:// or localhost. '
+        + 'If testing on mobile, use an HTTPS tunnel (e.g. ngrok) or connect over USB DevTools.'
+      );
+      setTextureLoading(false);
+      return;
+    }
+
     async function loadTexture() {
       try {
-        setCameraStatus('requesting');
         const res = await fetch(`/api/bedsheet-ar/assets/${productId}`);
         
         if (!res.ok) {
@@ -87,28 +97,30 @@ export default function BedsheetARExperience({
       } catch (err: any) {
         console.error("Failed to load AR asset:", err);
         setError(err.message || 'Error loading bedsheet preview data.');
+      } finally {
+        setTextureLoading(false);
       }
     }
 
     loadTexture();
 
     return () => {
-      // Clear store corners when user exits
+      // Clear store state when user exits
       resetCorners();
       setCameraStatus('idle');
     };
   }, [productId, setTextureUrl, resetSettings, resetCorners, setCameraStatus]);
 
-  // 3. Camera callbacks
-  const handleCameraReady = (video: HTMLVideoElement, stream: MediaStream) => {
+  // 3. Camera callbacks — memoized to avoid CameraStream restarting on each render
+  const handleCameraReady = useCallback((video: HTMLVideoElement, stream: MediaStream) => {
     videoElementRef.current = video;
     setCameraStatus('ready');
-  };
+  }, [setCameraStatus]);
 
-  const handleCameraError = (status: any, err: Error) => {
+  const handleCameraError = useCallback((status: any, err: Error) => {
     setCameraStatus(status);
     setError(err.message || 'Could not access the device camera.');
-  };
+  }, [setCameraStatus]);
 
   // 4. Capture compositing handler
   const handleCapture = async () => {
@@ -199,6 +211,23 @@ export default function BedsheetARExperience({
     </div>
   );
 
+  const renderHttpsError = () => (
+    <div className="absolute inset-0 bg-[#121111] z-50 flex flex-col items-center justify-center gap-6 text-white p-8 text-center">
+      <div className="text-5xl">🔒</div>
+      <div className="flex flex-col gap-2">
+        <h2 className="font-headline text-xl font-bold uppercase tracking-wider text-white">
+          HTTPS Required
+        </h2>
+        <p className="font-body text-sm text-white/50 max-w-md">
+          Camera access requires a secure (HTTPS) connection. Please open this link over HTTPS or on the same device as the server.
+        </p>
+      </div>
+      <Button variant="luxury" size="sm" onClick={handleExit} style={{ minWidth: '160px' }}>
+        Back to Product
+      </Button>
+    </div>
+  );
+
   const renderError = () => (
     <div className="absolute inset-0 bg-[#121111] z-50 flex flex-col items-center justify-center gap-6 text-white p-8 text-center">
       <div className="text-4xl">⚠️</div>
@@ -242,35 +271,39 @@ export default function BedsheetARExperience({
     <div
       ref={containerRef}
       className="fixed inset-0 overflow-hidden bg-black z-50 flex flex-col select-none"
-      style={{ touchAction: 'none' }}
     >
       {/* 1. Header controls */}
-      <header className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/80 to-transparent p-4 pt-6 flex justify-between items-center text-white pointer-events-none">
-        <div className="pointer-events-auto">
+      <header className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent pt-safe flex items-center text-white" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+        <div className="flex items-center justify-between w-full px-4 py-3">
+          {/* Exit Button */}
           <button
             onClick={handleExit}
-            className="w-10 h-10 rounded-full bg-black/45 border border-white/10 flex items-center justify-center text-lg hover:bg-black/60 transition-colors"
+            className="w-10 h-10 rounded-full bg-black/45 border border-white/10 flex items-center justify-center text-lg hover:bg-black/60 transition-colors flex-shrink-0"
+            style={{ touchAction: 'manipulation' }}
           >
             ✕
           </button>
-        </div>
-        
-        <div className="text-center">
-          <span className="font-body text-[10px] font-bold tracking-[0.25em] text-amber-500 uppercase block">
-            Ayra Live AR
-          </span>
-          <span className="font-headline text-sm font-semibold text-white/90 truncate max-w-[200px] block mt-0.5">
-            {productName}
-          </span>
-        </div>
 
-        <div className="w-10 h-10 invisible" /> {/* Spacer */}
+          {/* Center text — fixed, no layout shift */}
+          <div className="text-center flex-1 mx-3 min-w-0">
+            <span className="font-body text-[10px] font-bold tracking-[0.25em] text-amber-500 uppercase block">
+              Ayra Live AR
+            </span>
+            <span className="font-headline text-sm font-semibold text-white/90 block mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap">
+              {productName}
+            </span>
+          </div>
+
+          {/* Spacer to balance layout */}
+          <div className="w-10 h-10 flex-shrink-0" />
+        </div>
       </header>
 
       {/* 2. Interactive States overlay */}
-      {error && renderError()}
-      {cameraStatus === 'requesting' && renderLoading()}
-      {cameraStatus === 'permission_denied' && renderCameraPermissionDenied()}
+      {textureLoading && renderLoading()}
+      {!textureLoading && error && !error.includes('HTTPS') && renderError()}
+      {!textureLoading && error && error.includes('HTTPS') && renderHttpsError()}
+      {!textureLoading && !error && cameraStatus === 'permission_denied' && renderCameraPermissionDenied()}
 
       {/* 3. Live camera viewport */}
       {dimensions.width > 0 && dimensions.height > 0 && (
@@ -296,7 +329,7 @@ export default function BedsheetARExperience({
             </>
           )}
 
-          {/* Settings and capturing UI */}
+          {/* Settings and capturing UI — z-50 to sit above everything including CornerSelector */}
           {cameraStatus === 'ready' && (
             <ARControls
               onCapture={handleCapture}

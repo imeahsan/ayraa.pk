@@ -77,7 +77,7 @@ export async function POST(request: Request) {
       const originalPath = `bedsheets/${productId}/texture-original.webp`;
       const { error: originalUploadError } = await supabase.storage
         .from(bucketName)
-        .upload(originalPath, original.buffer, {
+        .upload(originalPath, Buffer.from(original.buffer), {
           contentType: original.mimeType,
           upsert: true,
         });
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
         const sizePath = `bedsheets/${productId}/texture-${size}.webp`;
         const { error: sizeUploadError } = await supabase.storage
           .from(bucketName)
-          .upload(sizePath, sizes[size].buffer, {
+          .upload(sizePath, Buffer.from(sizes[size].buffer), {
             contentType: sizes[size].mimeType,
             upsert: true,
           });

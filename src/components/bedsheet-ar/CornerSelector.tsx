@@ -89,12 +89,14 @@ export function CornerSelector({ width, height }: CornerSelectorProps) {
       className="absolute inset-0 z-20 cursor-crosshair select-none"
       style={{ width: `${width}px`, height: `${height}px` }}
     >
-      {/* Top Banner Guide */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 px-6 py-3 bg-black/75 backdrop-blur-md border border-white/10 rounded-full shadow-2xl z-30 pointer-events-none transition-all duration-300">
-        <p className="font-body text-xs font-bold tracking-wider text-white text-center uppercase whitespace-nowrap">
-          {getGuideMessage()}
-        </p>
-      </div>
+      {/* Top Banner Guide — positioned below the header bar, hide once all 4 pins placed */}
+      {corners.length < 4 && (
+        <div className="absolute left-1/2 -translate-x-1/2 px-6 py-3 bg-black/75 backdrop-blur-md border border-white/10 rounded-full shadow-2xl z-30 pointer-events-none transition-all duration-300" style={{ top: '80px' }}>
+          <p className="font-body text-xs font-bold tracking-wider text-white text-center uppercase whitespace-nowrap">
+            {getGuideMessage()}
+          </p>
+        </div>
+      )}
 
       {/* Render selected corner pins */}
       {corners.map((corner) => {

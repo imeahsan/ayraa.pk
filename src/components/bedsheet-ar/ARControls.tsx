@@ -24,7 +24,7 @@ export function ARControls({ onCapture, onExit, capturing }: ARControlsProps) {
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-30 bg-black/80 backdrop-blur-xl border-t border-white/10 p-5 pb-8 flex flex-col gap-4 text-white">
+    <div className="absolute bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-t border-white/10 p-5 pb-8 flex flex-col gap-4 text-white" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
       {/* 1. Placement Guide Mode (if less than 4 corners selected) */}
       {!isReady ? (
         <div className="flex flex-col items-center gap-3 py-2">
@@ -97,7 +97,7 @@ export function ARControls({ onCapture, onExit, capturing }: ARControlsProps) {
                 value={settings.opacity}
                 onChange={(e) => updateSettings({ opacity: parseFloat(e.target.value) })}
                 className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                style={{ accentColor: 'var(--color-gold)' }}
+                style={{ accentColor: 'var(--color-gold)', touchAction: 'none' }}
               />
             </div>
 
@@ -115,7 +115,7 @@ export function ARControls({ onCapture, onExit, capturing }: ARControlsProps) {
                 value={settings.scale}
                 onChange={(e) => updateSettings({ scale: parseFloat(e.target.value) })}
                 className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                style={{ accentColor: 'var(--color-gold)' }}
+                style={{ accentColor: 'var(--color-gold)', touchAction: 'none' }}
               />
             </div>
 
@@ -133,7 +133,7 @@ export function ARControls({ onCapture, onExit, capturing }: ARControlsProps) {
                 value={rotationDeg}
                 onChange={handleRotationChange}
                 className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer"
-                style={{ accentColor: 'var(--color-gold)' }}
+                style={{ accentColor: 'var(--color-gold)', touchAction: 'none' }}
               />
             </div>
           </div>
