@@ -249,13 +249,13 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
 
-  // 404 for completely unknown slugs
-  if (!CATEGORY_NAMES[slug]) {
-    notFound();
-  }
-
   const category = await getCategory(slug);
   const categoryName = category?.name || CATEGORY_NAMES[slug];
+
+  // 404 for completely unknown slugs
+  if (!categoryName) {
+    notFound();
+  }
 
   const baseUrl = "https://ayraa.pk";
   const breadcrumbItems = [
@@ -264,15 +264,59 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     { name: categoryName, item: `/collections/${slug}` },
   ];
 
-  // ── Parent category → show sub-category card grid ──────────────────────────
-  if (SUB_CATEGORIES[slug]) {
-    const subs = SUB_CATEGORIES[slug];
+  // Fetch sub-categories dynamically from database
+  const supabase = await createClient();
+  let subCategories: any[] = [];
+  if (category) {
+    const { data: dbSubs } = await supabase
+      .from("categories")
+      .select("*")
+      .eq("parent_id", category.id)
+      .order("sort_order", { ascending: true });
+    
+    if (dbSubs && dbSubs.length > 0) {
+      subCategories = dbSubs;
+    }
+  }
 
+  // Fallback to hardcoded SUB_CATEGORIES if database returns none
+  if (subCategories.length === 0 && SUB_CATEGORIES[slug]) {
+    subCategories = SUB_CATEGORIES[slug].map((sub, idx) => ({
+      id: `mock-sub-${idx}`,
+      name: sub.name,
+      slug: sub.slug,
+      image_url: sub.image,
+    }));
+  }
+
+  // Fetch active product category IDs
+  const activeCategoryIds = new Set<string>();
+  try {
+    const { data: prodCats } = await supabase
+      .from("products")
+      .select("category_id")
+      .eq("is_active", true);
+    if (prodCats) {
+      prodCats.forEach((p) => {
+        if (p.category_id) activeCategoryIds.add(p.category_id);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to query active category IDs:", err);
+  }
+
+  // Filter sub-categories to only show those containing products
+  if (subCategories.length > 0) {
+    subCategories = subCategories.filter((sub) => activeCategoryIds.has(sub.id));
+  }
+
+  // ── Parent category → show sub-category card grid ──────────────────────────
+  if (subCategories.length > 0) {
     return (
       <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
         <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
         <Header />
-        <main className="grow pt-24 pb-20">
+        <main className="grow pt-36 pb-20">
           <div className="container" style={{ maxWidth: "1400px", marginInline: "auto", paddingInline: "var(--space-8)" }}>
             {/* Heading */}
             <div style={{ textAlign: "center", marginBottom: "64px" }}>
@@ -288,9 +332,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </div>
 
             {/* Sub-category card grid */}
-            <div style={{ display: "grid", gridTemplateColumns: `repeat(${subs.length}, 1fr)`, gap: "28px" }}
+            <div style={{ display: "grid", gridTemplateColumns: `repeat(${subCategories.length}, 1fr)`, gap: "28px" }}
               className="sub-category-grid">
-              {subs.map((sub) => (
+              {subCategories.map((sub) => (
                 <Link
                   key={sub.slug}
                   href={`/collections/${sub.slug}`}
@@ -302,7 +346,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                   className="sub-category-card"
                 >
                   <Image
-                    src={sub.image}
+                    src={sub.image_url || "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80"}
                     alt={sub.name}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
@@ -341,7 +385,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   let products: Product[] = [];
 
   try {
-    const supabase = await createClient();
 
     if (category) {
       const { data: productsData } = await supabase

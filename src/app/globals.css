@@ -289,6 +289,9 @@ html.theme-light {
   --z-popover: 600;
   --z-tooltip: 700;
   --z-toast: 800;
+
+  /* Global Header height */
+  --header-height: 118px;
 }
 
 /* =============================================
@@ -693,8 +696,8 @@ html {
 .py-16 { padding-top: var(--space-16); padding-bottom: var(--space-16); }
 .py-24 { padding-top: var(--space-24); padding-bottom: var(--space-24); }
 .pt-3 { padding-top: var(--space-3); }
-.pt-16 { padding-top: var(--space-16); }
-.pt-20 { padding-top: var(--space-20); }
+.pt-16 { padding-top: var(--header-height, 118px); }
+.pt-20 { padding-top: var(--header-height, 118px); }
 .pb-1 { padding-bottom: var(--space-1); }
 
 /* Position */

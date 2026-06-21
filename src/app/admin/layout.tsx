@@ -67,6 +67,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: "Sales Manager", href: "/admin/sales", icon: "🔥" },
     { name: "Orders", href: "/admin/orders", icon: "🛒" },
     { name: "Categories", href: "/admin/categories", icon: "🗂️" },
+    { name: "Product Q&A", href: "/admin/qa", icon: "❓" },
+    { name: "Product Reviews", href: "/admin/reviews", icon: "⭐" },
     { name: "Customers", href: "/admin/customers", icon: "👥" },
     { name: "Promo Codes", href: "/admin/promos", icon: "🎫" },
     { name: "Settings", href: "/admin/settings", icon: "⚙️" },
@@ -125,10 +127,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {navLinks.find((l) => l.href === pathname)?.name || "Admin"}
           </h2>
           <div className={styles.topbarActions}>
-            <span className={styles.dateBadge}>📅 Last 30 Days</span>
-            <button className={styles.topbarButton} onClick={() => toast.success("Report Exported successfully!")}>
-              Export Report
-            </button>
+            <Link href="/" className={styles.topbarButton} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              🏪 View Storefront
+            </Link>
           </div>
         </header>
 

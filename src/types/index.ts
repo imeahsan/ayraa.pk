@@ -56,6 +56,7 @@ export interface ProductVariant {
   id: string;
   product_id: string;
   size: string;
+  color?: string;
   stock_quantity: number;
   is_available: boolean;
 }
@@ -176,6 +177,10 @@ export interface StoreSettings {
   meta_description: string;
   logo_url: string | null;
   favicon_url: string | null;
+  smtp_host?: string | null;
+  smtp_port?: number | null;
+  smtp_user?: string | null;
+  smtp_pass?: string | null;
 }
 
 // ---------- Admin Dashboard Types ----------

@@ -6,11 +6,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/lib/supabase/client";
-import { UserProfile } from "@/types";
+import { UserProfile, Category } from "@/types";
 import styles from "./Header.module.css";
 
 // ─── Category mega-menu structure ────────────────────────────────────────────
-const CATEGORIES = [
+interface NavCategory {
+  label: string;
+  href: string;
+  sub: Array<{ label: string; href: string }>;
+}
+
+const MOCK_CATEGORIES: NavCategory[] = [
   {
     label: "Lawn Prints",
     href: "/collections/lawn-prints",
@@ -46,6 +52,8 @@ const CATEGORIES = [
   },
 ];
 
+import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
+
 export const Header: React.FC = () => {
   const { cart, setCartOpen } = useCart();
   const { theme, toggleTheme } = useTheme();
@@ -53,12 +61,24 @@ export const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [menuCategories, setMenuCategories] = useState<NavCategory[]>(MOCK_CATEGORIES);
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      const scrolled = window.scrollY > 20;
+      setIsScrolled(scrolled);
+      document.documentElement.style.setProperty(
+        "--header-height",
+        scrolled ? "102px" : "118px"
+      );
+    };
+    
+    // Set initial height on mount
+    document.documentElement.style.setProperty("--header-height", "118px");
+    
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -85,6 +105,38 @@ export const Header: React.FC = () => {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("categories")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true });
+
+        if (!error && data && data.length > 0) {
+          const allCats = data as Category[];
+          const parents = allCats.filter((c) => c.parent_id === null);
+          const mapped = parents.map((parent) => {
+            const subs = allCats.filter((c) => c.parent_id === parent.id);
+            return {
+              label: parent.name,
+              href: `/collections/${parent.slug}`,
+              sub: subs.map((sub) => ({
+                label: sub.name,
+                href: `/collections/${sub.slug}`,
+              })),
+            };
+          });
+          setMenuCategories(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to load navigation categories:", err);
+      }
+    };
+    fetchCategories();
+  }, [supabase]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.refresh();
@@ -95,6 +147,7 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className={`${styles.header} ${isScrolled ? styles.scrolled : ""}`}>
+        <AnnouncementTicker />
         <div className={styles.container}>
           {/* Mobile menu toggle */}
           <button
@@ -124,23 +177,25 @@ export const Header: React.FC = () => {
                 {/* Mega-menu panel */}
                 <div className={styles.megaMenu} role="region" aria-label="Collections menu">
                   <div className={styles.megaMenuInner}>
-                    {CATEGORIES.map((cat) => (
+                    {menuCategories.map((cat) => (
                       <div key={cat.href} className={styles.megaCol}>
                         <Link href={cat.href} className={styles.megaParentLink}>
                           {cat.label}
                         </Link>
-                        <ul className={styles.megaSubList}>
-                          {cat.sub.map((sub) => (
-                            <li key={sub.href}>
-                              <Link
-                                href={sub.href}
-                                className={`${styles.megaSubLink} ${pathname === sub.href ? styles.megaSubLinkActive : ""}`}
-                              >
-                                {sub.label}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
+                        {cat.sub && cat.sub.length > 0 && (
+                          <ul className={styles.megaSubList}>
+                            {cat.sub.map((sub) => (
+                              <li key={sub.href}>
+                                <Link
+                                  href={sub.href}
+                                  className={`${styles.megaSubLink} ${pathname === sub.href ? styles.megaSubLinkActive : ""}`}
+                                >
+                                  {sub.label}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -238,50 +293,65 @@ export const Header: React.FC = () => {
         </div>
 
         <ul className={styles.mobileMenuList}>
-          {CATEGORIES.map((cat) => (
-            <li key={cat.href} className={styles.mobileMenuItem}>
-              {/* Parent row — tap to expand */}
-              <button
-                className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive} ${styles.mobileParentBtn}`}
-                onClick={() => setExpandedMobile(expandedMobile === cat.label ? null : cat.label)}
-                aria-expanded={expandedMobile === cat.label}
-              >
-                <span>{cat.label}</span>
-                <svg
-                  width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                  className={expandedMobile === cat.label ? styles.chevronOpen : styles.chevron}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {/* Sub-categories accordion */}
-              {expandedMobile === cat.label && (
-                <ul className={styles.mobileSubList}>
-                  <li>
-                    <Link
-                      href={cat.href}
-                      className={styles.mobileSubLink}
-                      onClick={() => setIsMobileMenuOpen(false)}
+          {menuCategories.map((cat) => {
+            const hasSubs = cat.sub && cat.sub.length > 0;
+            return (
+              <li key={cat.href} className={styles.mobileMenuItem}>
+                {hasSubs ? (
+                  <>
+                    {/* Parent row — tap to expand */}
+                    <button
+                      className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive} ${styles.mobileParentBtn}`}
+                      onClick={() => setExpandedMobile(expandedMobile === cat.label ? null : cat.label)}
+                      aria-expanded={expandedMobile === cat.label}
                     >
-                      All {cat.label}
-                    </Link>
-                  </li>
-                  {cat.sub.map((sub) => (
-                    <li key={sub.href}>
-                      <Link
-                        href={sub.href}
-                        className={`${styles.mobileSubLink} ${pathname === sub.href ? styles.mobileSubLinkActive : ""}`}
-                        onClick={() => setIsMobileMenuOpen(false)}
+                      <span>{cat.label}</span>
+                      <svg
+                        width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                        className={expandedMobile === cat.label ? styles.chevronOpen : styles.chevron}
                       >
-                        {sub.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Sub-categories accordion */}
+                    {expandedMobile === cat.label && (
+                      <ul className={styles.mobileSubList}>
+                        <li>
+                          <Link
+                            href={cat.href}
+                            className={styles.mobileSubLink}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            All {cat.label}
+                          </Link>
+                        </li>
+                        {cat.sub.map((sub) => (
+                          <li key={sub.href}>
+                            <Link
+                              href={sub.href}
+                              className={`${styles.mobileSubLink} ${pathname === sub.href ? styles.mobileSubLinkActive : ""}`}
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              {sub.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={cat.href}
+                    className={`${styles.mobileMenuLink} ${pathname === cat.href ? styles.mobileSubLinkActive : styles.mobileMenuLinkInactive}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {cat.label}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
 
           <li className={styles.mobileMenuItem}>
             <Link href="/about" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Heritage</Link>

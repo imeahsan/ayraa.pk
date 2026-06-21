@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { Order, OrderItem, CheckoutFormData, OrderStatus } from "@/types";
+import { sendOrderEmail } from "@/lib/email";
 
 interface PlaceOrderResult {
   success: boolean;
@@ -91,6 +92,27 @@ export async function placeOrder(
       console.error("Supabase Order Items insertion error:", itemsError);
       return { success: false, error: itemsError.message };
     }
+
+    // Fetch populated order items and send email asynchronously (non-blocking)
+    (async () => {
+      try {
+        const { data: populatedItems } = await supabase
+          .from("order_items")
+          .select(`
+            quantity,
+            unit_price,
+            product:products ( name ),
+            variant:product_variants ( size, color )
+          `)
+          .eq("order_id", orderId);
+
+        if (populatedItems) {
+          await sendOrderEmail(orderData, populatedItems);
+        }
+      } catch (err) {
+        console.error("Async email dispatch failed:", err);
+      }
+    })();
 
     // Deduct stock quantities for variants asynchronously
     for (const item of cartItems) {

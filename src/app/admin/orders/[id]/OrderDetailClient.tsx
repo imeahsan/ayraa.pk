@@ -386,18 +386,27 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
               </tr>
             </thead>
             <tbody>
-              {order.items?.map((item) => (
-                <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: "12px 0", fontSize: "14px" }}>
-                    <strong>{item.product?.name || "Unknown Product"}</strong>
-                    {item.product?.sku && <span style={{ fontSize: "11px", color: "#777", display: "block", marginTop: "2px" }}>SKU: {item.product.sku}</span>}
-                  </td>
-                  <td style={{ textAlign: "center", padding: "12px 0", fontSize: "14px" }}>{item.variant?.size || "—"}</td>
-                  <td style={{ textAlign: "right", padding: "12px 0", fontSize: "14px" }}>{formatPKR(item.unit_price)}</td>
-                  <td style={{ textAlign: "center", padding: "12px 0", fontSize: "14px" }}>{item.quantity}</td>
-                  <td style={{ textAlign: "right", padding: "12px 0", fontSize: "14px" }}>{formatPKR(item.unit_price * item.quantity)}</td>
-                </tr>
-              ))}
+              {order.items?.map((item) => {
+                const displayColor = item.variant?.color && item.variant.color !== "Standard"
+                  ? item.variant.color
+                  : (item.product?.color && item.product?.color !== "Standard" ? item.product.color : null);
+                const displaySize = item.variant?.size && !["Standard", "One Size", "OS"].includes(item.variant.size)
+                  ? item.variant.size
+                  : null;
+                return (
+                  <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
+                    <td style={{ padding: "12px 0", fontSize: "14px" }}>
+                      <strong>{item.product?.name || "Unknown Product"}</strong>
+                      {displayColor && <span style={{ fontSize: "11px", color: "#555", display: "block", marginTop: "2px" }}>Color: {displayColor}</span>}
+                      {item.product?.sku && <span style={{ fontSize: "11px", color: "#777", display: "block", marginTop: "2px" }}>SKU: {item.product.sku}</span>}
+                    </td>
+                    <td style={{ textAlign: "center", padding: "12px 0", fontSize: "14px" }}>{displaySize || "—"}</td>
+                    <td style={{ textAlign: "right", padding: "12px 0", fontSize: "14px" }}>{formatPKR(item.unit_price)}</td>
+                    <td style={{ textAlign: "center", padding: "12px 0", fontSize: "14px" }}>{item.quantity}</td>
+                    <td style={{ textAlign: "right", padding: "12px 0", fontSize: "14px" }}>{formatPKR(item.unit_price * item.quantity)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -470,9 +479,24 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
                         <h4 className={styles.orderItemName}>
                           {item.product?.name || "Unknown Product"}
                         </h4>
-                        {item.variant?.size && (
-                          <span className={styles.orderItemMeta}>Size: {item.variant.size}</span>
-                        )}
+                        {(() => {
+                          const displayColor = item.variant?.color && item.variant.color !== "Standard"
+                            ? item.variant.color
+                            : (item.product?.color && item.product?.color !== "Standard" ? item.product.color : null);
+                          const displaySize = item.variant?.size && !["Standard", "One Size", "OS"].includes(item.variant.size)
+                            ? item.variant.size
+                            : null;
+                          return (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              {displayColor && (
+                                <span className={styles.orderItemMeta}>Color: {displayColor}</span>
+                              )}
+                              {displaySize && (
+                                <span className={styles.orderItemMeta}>Size: {displaySize}</span>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <span className={styles.orderItemSubmeta}>
                           {formatPKR(item.unit_price)} × {item.quantity}
                         </span>

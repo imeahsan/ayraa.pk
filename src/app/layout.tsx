@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { CartDrawer } from "@/components/storefront/CartDrawer/CartDrawer";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
+import { WhatsAppFAB } from "@/components/storefront/WhatsAppFAB";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -75,6 +76,7 @@ export default function RootLayout({
               <OrganizationJsonLd baseUrl={baseUrl} />
               {children}
               <CartDrawer />
+              <WhatsAppFAB />
             </CartProvider>
           </ToastProvider>
         </ThemeProvider>

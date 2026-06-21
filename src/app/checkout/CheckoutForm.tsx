@@ -37,6 +37,40 @@ export const CheckoutForm: React.FC = () => {
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CheckoutFormData, string>>>({});
+  const [rememberMe, setRememberMe] = useState(false);
+
+  React.useEffect(() => {
+    // 1. Load remembered details if they exist
+    const saved = localStorage.getItem("ayra_checkout_remembered_details");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setFormData((prev) => ({
+          ...prev,
+          ...parsed,
+        }));
+        setRememberMe(true);
+      } catch (err) {
+        console.error("Failed to parse remembered details:", err);
+      }
+    }
+
+    // 2. Load user session email if authenticated
+    const getUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && user.email) {
+          setFormData((prev) => ({
+            ...prev,
+            email: prev.email || user.email || "",
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch authenticated user session:", err);
+      }
+    };
+    getUser();
+  }, [supabase]);
 
   const formatPKR = (amount: number) => {
     return Intl.NumberFormat("en-PK", {
@@ -196,6 +230,21 @@ export const CheckoutForm: React.FC = () => {
     setIsLoading(false);
 
     if (result.success && result.orderId) {
+      if (rememberMe) {
+        const detailsToSave = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          phone: formData.phone,
+          address_line_1: formData.address_line_1,
+          address_line_2: formData.address_line_2,
+          city: formData.city,
+          state: formData.state,
+          postal_code: formData.postal_code,
+        };
+        localStorage.setItem("ayra_checkout_remembered_details", JSON.stringify(detailsToSave));
+      } else {
+        localStorage.removeItem("ayra_checkout_remembered_details");
+      }
       setOrderId(result.orderId);
       clearCart();
       toast.success("Order placed successfully!");
@@ -358,6 +407,20 @@ export const CheckoutForm: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Remember Me checkbox */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "16px" }}>
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              style={{ width: "16px", height: "16px", accentColor: "var(--color-gold)", cursor: "pointer" }}
+            />
+            <label htmlFor="rememberMe" style={{ fontSize: "13px", color: "var(--color-on-surface-sub)", cursor: "pointer", userSelect: "none" }}>
+              Remember my details for next time
+            </label>
+          </div>
         </section>
 
         {/* Payment options */}
@@ -409,9 +472,23 @@ export const CheckoutForm: React.FC = () => {
                   </div>
                   <div className={styles.itemDetails}>
                     <h4 className={styles.itemName}>{item.product.name}</h4>
-                    <span className={styles.itemMeta}>
-                      Size: {item.variant?.size || "Standard"} | Qty: {item.quantity}
-                    </span>
+                    {(() => {
+                      const displayColor = item.variant?.color && item.variant.color !== "Standard"
+                        ? item.variant.color
+                        : (item.product.color && item.product.color !== "Standard" ? item.product.color : null);
+                      const displaySize = item.variant?.size && !["Standard", "One Size", "OS"].includes(item.variant.size)
+                        ? item.variant.size
+                        : null;
+                      return (
+                        <span className={styles.itemMeta}>
+                          {[
+                            displaySize ? `Size: ${displaySize}` : null,
+                            displayColor ? `Color: ${displayColor}` : null,
+                            `Qty: ${item.quantity}`
+                          ].filter(Boolean).join(" | ")}
+                        </span>
+                      );
+                    })()}
                     <span className={styles.itemPrice}>
                       {formatPKR(item.product.price * item.quantity)}
                     </span>

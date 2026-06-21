@@ -84,6 +84,31 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
     return filteredProducts.slice(0, limit);
   }, [filteredProducts, limit]);
 
+  const sentinelRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && filteredProducts.length > limit) {
+          // Trigger loading more products by incrementing limit
+          setLimit((prev) => prev + 6);
+        }
+      },
+      { rootMargin: "200px" } // Load before element hits viewport
+    );
+
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
+    }
+
+    return () => {
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+    };
+  }, [filteredProducts.length, limit]);
+
   return (
     <div className={styles.container}>
       <Breadcrumb
@@ -184,13 +209,28 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
               </div>
 
               {filteredProducts.length > limit && (
-                <div className={styles.loadMoreContainer}>
-                  <button
-                    onClick={() => setLimit((prev) => prev + 6)}
-                    className={styles.loadMoreBtn}
-                  >
-                    Load More
-                  </button>
+                <div
+                  ref={sentinelRef}
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    paddingBlock: "48px",
+                    color: "var(--color-gold)",
+                    fontFamily: "var(--font-body)",
+                    fontSize: "13px",
+                    letterSpacing: "2px",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  <style>{`
+                    @keyframes pulse-loader {
+                      0%, 100% { opacity: 0.5; transform: scale(0.98); }
+                      50% { opacity: 1; transform: scale(1.02); }
+                    }
+                  `}</style>
+                  <span style={{ animation: "pulse-loader 1.5s infinite ease-in-out" }}>
+                    Loading More...
+                  </span>
                 </div>
               )}
             </>

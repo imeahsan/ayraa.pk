@@ -1,16 +1,30 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Metadata } from "next";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { Product, Category } from "@/types";
 import styles from "./page.module.css";
 import { FeaturedSlider } from "@/components/storefront/FeaturedSlider/FeaturedSlider";
+import { NewsletterCTA } from "@/components/storefront/NewsletterCTA/NewsletterCTA";
 
 export const dynamic = "force-dynamic";
 
-// Mock products for fallback if database is empty/not seeded yet
+export const metadata: Metadata = {
+  title: "Ayraa Collection — Premium Eastern Luxury Wear",
+  description:
+    "Discover Ayraa's curated collection of premium lawn prints, pret, bedding and hijab essentials. Handcrafted heritage meets contemporary elegance.",
+  openGraph: {
+    title: "Ayraa Collection — Premium Eastern Luxury Wear",
+    description:
+      "Discover Ayraa's curated collection of premium lawn prints, pret, bedding and hijab essentials.",
+    type: "website",
+  },
+};
+
+// ─── Fallback mock data ────────────────────────────────────────────────────────
 const MOCK_PRODUCTS: Product[] = [
   {
     id: "p1",
@@ -38,14 +52,6 @@ const MOCK_PRODUCTS: Product[] = [
         alt_text: "Noir Silk Blouse",
         sort_order: 1,
         is_primary: true,
-      },
-      {
-        id: "img1-alt",
-        product_id: "p1",
-        url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Noir Silk Blouse back",
-        sort_order: 2,
-        is_primary: false,
       },
     ],
   },
@@ -138,204 +144,369 @@ const MOCK_PRODUCTS: Product[] = [
   },
 ];
 
-export default async function Home() {
-  let featuredProducts: Product[] = [];
-  let categories: Category[] = [];
+const FALLBACK_CATEGORIES = [
+  { id: "c1", name: "Lawn Prints", slug: "lawn-prints", description: null, image_url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 1, is_active: true, created_at: "" },
+  { id: "c2", name: "Garments", slug: "garments", description: null, image_url: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 2, is_active: true, created_at: "" },
+  { id: "c3", name: "Bedding", slug: "bedding", description: null, image_url: "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 3, is_active: true, created_at: "" },
+  { id: "c4", name: "Hijab Collection", slug: "hijab-collection", description: null, image_url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 4, is_active: true, created_at: "" },
+] as Category[];
 
+// Value pillars for brand story section
+const VALUE_PILLARS = [
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+        <path d="M2 17l10 5 10-5" />
+        <path d="M2 12l10 5 10-5" />
+      </svg>
+    ),
+    title: "Handcrafted Heritage",
+    desc: "Each piece is woven from centuries-old Eastern traditions, preserving craftsmanship with every stitch.",
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    ),
+    title: "Nationwide Delivery",
+    desc: "Fast, secure doorstep delivery to every corner of Pakistan — so elegance always reaches you.",
+  },
+  {
+    icon: (
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    ),
+    title: "Premium Fabrics",
+    desc: "Only the finest lawns, chiffons, silk, and satin — curated for quality that you can feel.",
+  },
+];
+
+export default async function Home() {
   const supabase = await createClient();
 
+  // ── Featured products ──────────────────────────────
+  let featuredProducts: Product[] = [];
   try {
     const { data, error } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
       .eq("is_featured", true)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      featuredProducts = MOCK_PRODUCTS;
-    } else {
-      featuredProducts = data as Product[];
-    }
-  } catch (err) {
-    console.error("Error fetching featured products:", err);
+    featuredProducts = !error && data && data.length > 0 ? (data as Product[]) : MOCK_PRODUCTS;
+  } catch {
     featuredProducts = MOCK_PRODUCTS;
   }
 
+  // ── New arrivals (latest 8) ────────────────────────
+  let newArrivals: Product[] = [];
+  try {
+    const { data } = await supabase
+      .from("products")
+      .select("*, category:categories(*), images:product_images(*)")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(8);
+    if (data && data.length > 0) newArrivals = data as Product[];
+  } catch { /* ignore */ }
+
+  // ── Sale products ──────────────────────────────────
   let saleProducts: Product[] = [];
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
       .eq("is_on_sale", true)
       .eq("is_active", true);
+    if (data) saleProducts = data as Product[];
+  } catch { /* ignore */ }
 
-    if (!error && data) {
-      saleProducts = data as Product[];
-    }
-  } catch (err) {
-    console.error("Error fetching sale products:", err);
-  }
-
+  // ── Active parent categories for mosaic ───────────
+  let displayCategories: Category[] = FALLBACK_CATEGORIES;
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("categories")
       .select("*")
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .is("parent_id", null)
+      .order("sort_order", { ascending: true })
+      .limit(6);
+    if (data && data.length > 0) displayCategories = data as Category[];
+  } catch { /* ignore */ }
 
-    if (!error && data) {
-      categories = data as Category[];
-    }
-  } catch (err) {
-    console.error("Error fetching categories for homepage:", err);
-  }
+  // ── Testimonials / recent reviews ─────────────────
+  let testimonials: {
+    id: string;
+    rating: number;
+    comment: string | null;
+    reviewer_name: string | null;
+    product?: { name: string; slug: string } | null;
+  }[] = [];
+  try {
+    const { data } = await supabase
+      .from("product_reviews")
+      .select("id, rating, comment, reviewer_name, product:products(name, slug)")
+      .order("created_at", { ascending: false })
+      .limit(6);
+    if (data && data.length > 0) testimonials = data as unknown as typeof testimonials;
+  } catch { /* ignore */ }
 
-  const lawnPrintsCategory = categories.find((c) => c.slug === "lawn-prints");
-  const garmentsCategory = categories.find((c) => c.slug === "garments");
-  const beddingCategory = categories.find((c) => c.slug === "bedding");
-  const hijabCollectionCategory = categories.find((c) => c.slug === "hijab-collection");
-
-  const lawnPrintsImage = lawnPrintsCategory?.image_url || "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80";
-  const garmentsImage = garmentsCategory?.image_url || "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=800&auto=format&fit=crop&q=80";
-  const beddingImage = beddingCategory?.image_url || "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=800&auto=format&fit=crop&q=80";
-  const hijabCollectionImage = hijabCollectionCategory?.image_url || "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80";
+  // ── Category image helper ──────────────────────────
+  const fallbackImgs: Record<string, string> = {
+    "lawn-prints": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80",
+    "garments": "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=800&auto=format&fit=crop&q=80",
+    "bedding": "https://images.unsplash.com/photo-1631049552057-403cdb8f0658?w=800&auto=format&fit=crop&q=80",
+    "hijab-collection": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80",
+  };
+  const getCatImg = (cat: Category) =>
+    cat.image_url ||
+    fallbackImgs[cat.slug] ||
+    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80";
 
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
       <Header />
 
       <main className="grow pt-20 md:pt-16">
-        {/* Hero Section */}
+
+        {/* ──────── HERO ──────────────────────────────────── */}
         <section className={styles.hero} id="hero-section">
           <Image
-            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop&q=80"
-            alt="The Summer Lawn Collection"
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&auto=format&fit=crop&q=85"
+            alt="Ayraa Summer Collection"
             fill
             priority
-            className="object-cover object-[center_30%] opacity-75 transition-opacity duration-500 ease-out"
+            sizes="100vw"
+            className={styles.heroImg}
           />
-          <div className={styles.heroOverlay} />
+          {/* Gradient overlays */}
+          <div className={styles.heroOverlayTop} />
+          <div className={styles.heroOverlayBot} />
+
           <div className={styles.heroContent}>
-            <span className={styles.heroBadge} id="hero-badge">New Arrival</span>
-            <h1 className={styles.heroTitle}>New Lawn Prints — Summer Collection</h1>
-            <Link href="/collections/lawn-prints" className={styles.heroBtn}>
-              Shop Now
-            </Link>
-          </div>
-        </section>
-
-        {/* Shop by Category Section */}
-        <section className={styles.section} id="curated-edits">
-          <div className="container">
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Shop by Category</h2>
-              <p className={styles.sectionDesc}>
-                From summer lawn prints to cosy bedding — explore every corner of Ayraa.
-              </p>
-            </div>
-
-            <div className={styles.curatedGrid}>
-              {/* Lawn Prints */}
-              <Link href="/collections/lawn-prints" className={styles.curatedCard}>
-                <div className={styles.curatedImageWrapper}>
-                  <Image
-                    src={lawnPrintsImage}
-                    alt="Lawn Prints"
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className={styles.curatedImage}
-                  />
-                  <div className={styles.curatedOverlay} />
-                  <div className={styles.curatedContent}>
-                    <h3 className={styles.curatedTitle}>Lawn Prints</h3>
-                    <span className={styles.curatedLink}>Explore &rarr;</span>
-                  </div>
-                </div>
+            <span className={styles.heroBadge} id="hero-badge">Summer 2025</span>
+            <h1 className={styles.heroTitle}>
+              New Lawn Prints<br />
+              <em className={styles.heroTitleItalic}>Summer Collection</em>
+            </h1>
+            <p className={styles.heroSub}>
+              Heritage craftsmanship. Contemporary elegance.
+            </p>
+            <div className={styles.heroActions}>
+              <Link href="/collections/lawn-prints" className={styles.heroBtn}>
+                Shop Collection
               </Link>
-
-              {/* Garments */}
-              <Link href="/collections/garments" className={styles.curatedCard}>
-                <div className={styles.curatedImageWrapper}>
-                  <Image
-                    src={garmentsImage}
-                    alt="Garments"
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className={styles.curatedImage}
-                  />
-                  <div className={styles.curatedOverlay} />
-                  <div className={styles.curatedContent}>
-                    <h3 className={styles.curatedTitle}>Garments</h3>
-                    <span className={styles.curatedLink}>Explore &rarr;</span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Bedding */}
-              <Link href="/collections/bedding" className={styles.curatedCard}>
-                <div className={styles.curatedImageWrapper}>
-                  <Image
-                    src={beddingImage}
-                    alt="Bedding"
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className={styles.curatedImage}
-                  />
-                  <div className={styles.curatedOverlay} />
-                  <div className={styles.curatedContent}>
-                    <h3 className={styles.curatedTitle}>Bedding</h3>
-                    <span className={styles.curatedLink}>Explore &rarr;</span>
-                  </div>
-                </div>
-              </Link>
-
-              {/* Hijab Collection */}
-              <Link href="/collections/hijab-collection" className={styles.curatedCard}>
-                <div className={styles.curatedImageWrapper}>
-                  <Image
-                    src={hijabCollectionImage}
-                    alt="Hijab Collection"
-                    fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className={styles.curatedImage}
-                  />
-                  <div className={styles.curatedOverlay} />
-                  <div className={styles.curatedContent}>
-                    <h3 className={styles.curatedTitle}>Hijab Collection</h3>
-                    <span className={styles.curatedLink}>Explore &rarr;</span>
-                  </div>
-                </div>
+              <Link href="/collections" className={styles.heroBtnGhost}>
+                Explore All
               </Link>
             </div>
           </div>
+
+          {/* Scroll indicator */}
+          <div className={styles.scrollIndicator} aria-hidden="true">
+            <span className={styles.scrollLine} />
+          </div>
         </section>
 
-        {/* Featured Pieces */}
+        {/* ──────── SHOP BY CATEGORY ──────────────────────── */}
+        <section className={styles.section} id="shop-by-category">
+          <div className={styles.sectionHeader}>
+            <span className={styles.overline}>Explore</span>
+            <h2 className={styles.sectionTitle}>Shop by Category</h2>
+            <p className={styles.sectionDesc}>
+              From summer lawn prints to cosy bedding — every corner of Ayraa, curated for you.
+            </p>
+          </div>
+
+          <div className={styles.mosaicGrid}>
+            {displayCategories.slice(0, 4).map((cat, i) => (
+              <Link
+                key={cat.id}
+                href={`/collections/${cat.slug}`}
+                className={`${styles.mosaicCard} ${i === 0 ? styles.mosaicCardHero : ""}`}
+              >
+                <div className={styles.mosaicImgWrapper}>
+                  <Image
+                    src={getCatImg(cat)}
+                    alt={cat.name}
+                    fill
+                    sizes={i === 0 ? "(max-width:767px) 100vw, 50vw" : "(max-width:767px) 100vw, 25vw"}
+                    className={styles.mosaicImg}
+                  />
+                </div>
+                <div className={styles.mosaicOverlay} />
+                <div className={styles.mosaicContent}>
+                  <h3 className={styles.mosaicTitle}>{cat.name}</h3>
+                  <span className={styles.mosaicCta}>Explore →</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* ──────── FEATURED PIECES ───────────────────────── */}
         <section className={styles.sectionElevated} id="featured-pieces">
           <div className="container">
             <div className={styles.sectionHeader}>
+              <span className={styles.overline}>Curated</span>
               <h2 className={styles.sectionTitle}>Featured Pieces</h2>
               <p className={styles.sectionDesc}>
-                Curated essentials for your wardrobe.
+                Handpicked essentials — timeless, refined, yours.
               </p>
             </div>
-            <FeaturedSlider products={featuredProducts} />
+            <FeaturedSlider products={featuredProducts} autoPlay={true} />
+            <div className={styles.sectionCta}>
+              <Link href="/collections" className={styles.textCta}>
+                View All Products →
+              </Link>
+            </div>
           </div>
         </section>
 
-        {/* Sale Section */}
-        {saleProducts.length > 0 && (
-          <section className={styles.section} id="sale-pieces">
-            <div className="container">
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle} style={{ color: "var(--color-error, #dc2626)" }}>On Sale</h2>
-                <p className={styles.sectionDesc}>
-                  Special offers and discounts on selected items.
-                </p>
+        {/* ──────── BRAND STORY ───────────────────────────── */}
+        <section className={styles.brandSection} id="brand-story">
+          <div className={styles.brandGrid}>
+            {/* Editorial image */}
+            <div className={styles.brandImgWrapper}>
+              <Image
+                src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=900&auto=format&fit=crop&q=80"
+                alt="Ayraa heritage craftsmanship"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className={styles.brandImg}
+              />
+              <div className={styles.brandImgOverlay} />
+              <div className={styles.brandImgBadge}>
+                <span>Est. 2018</span>
               </div>
-              <FeaturedSlider products={saleProducts} />
+            </div>
+
+            {/* Value pillars */}
+            <div className={styles.brandContent}>
+              <span className={styles.overline}>Why Ayraa</span>
+              <h2 className={styles.brandTitle}>
+                Woven with<br />
+                <em>Purpose & Pride</em>
+              </h2>
+              <p className={styles.brandDesc}>
+                At Ayraa, every thread tells a story. We bridge the gap between centuries-old
+                craftsmanship and modern sensibility — creating garments that honour heritage
+                while dressing today.
+              </p>
+
+              <div className={styles.pillars}>
+                {VALUE_PILLARS.map((pillar, i) => (
+                  <div key={i} className={styles.pillar}>
+                    <div className={styles.pillarIcon}>{pillar.icon}</div>
+                    <div>
+                      <h4 className={styles.pillarTitle}>{pillar.title}</h4>
+                      <p className={styles.pillarDesc}>{pillar.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Link href="/about" className={styles.brandLink}>
+                Our Story →
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ──────── NEW ARRIVALS ───────────────────────────── */}
+        {newArrivals.length > 0 && (
+          <section className={styles.section} id="new-arrivals">
+            <div className="container">
+              <div className={styles.sectionHeaderRow}>
+                <div>
+                  <span className={styles.overline}>Just In</span>
+                  <h2 className={styles.sectionTitle}>New Arrivals</h2>
+                </div>
+                <Link href="/collections" className={styles.textCta}>
+                  View All →
+                </Link>
+              </div>
+              <FeaturedSlider products={newArrivals} autoPlay={false} />
             </div>
           </section>
         )}
+
+        {/* ──────── SALE SECTION ──────────────────────────── */}
+        {saleProducts.length > 0 && (
+          <section className={styles.saleSection} id="sale-pieces">
+            <div className={styles.saleBanner}>
+              <span className={styles.saleBadge}>SALE</span>
+              <span className={styles.saleBannerText}>Limited Time Offers — Up to 30% Off</span>
+            </div>
+            <div className="container">
+              <div className={styles.sectionHeaderRow}>
+                <div>
+                  <span className={styles.overline} style={{ color: "#f87171" }}>Special Prices</span>
+                  <h2 className={styles.sectionTitle}>On Sale Now</h2>
+                </div>
+                <Link href="/collections" className={styles.textCta}>
+                  Shop All Sale →
+                </Link>
+              </div>
+              <FeaturedSlider products={saleProducts} autoPlay={false} />
+            </div>
+          </section>
+        )}
+
+        {/* ──────── TESTIMONIALS ──────────────────────────── */}
+        {testimonials.length > 0 && (
+          <section className={styles.sectionElevated} id="testimonials">
+            <div className="container">
+              <div className={styles.sectionHeader}>
+                <span className={styles.overline}>Reviews</span>
+                <h2 className={styles.sectionTitle}>What Our Customers Say</h2>
+              </div>
+              <div className={styles.testimonialsGrid}>
+                {testimonials.slice(0, 3).map((t) => (
+                  <div key={t.id} className={styles.testimonialCard}>
+                    {/* Stars */}
+                    <div className={styles.stars} aria-label={`${t.rating} out of 5 stars`}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <svg
+                          key={i}
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill={i < t.rating ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className={i < t.rating ? styles.starFilled : styles.starEmpty}
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                      ))}
+                    </div>
+                    <p className={styles.testimonialText}>
+                      &ldquo;{t.comment ? t.comment.slice(0, 160) + (t.comment.length > 160 ? "…" : "") : "Excellent quality!"}&rdquo;
+                    </p>
+                    <div className={styles.testimonialMeta}>
+                      <span className={styles.testimonialName}>{t.reviewer_name || "Anonymous"}</span>
+                      {t.product && (
+                        <Link href={`/product/${t.product.slug}`} className={styles.testimonialProduct}>
+                          {t.product.name}
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ──────── NEWSLETTER ────────────────────────────── */}
+        <NewsletterCTA />
+
       </main>
 
       <Footer />

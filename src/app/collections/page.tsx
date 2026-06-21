@@ -4,10 +4,10 @@ import Link from "next/link";
 import { Metadata } from "next";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
-import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { createClient } from "@/lib/supabase/server";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { Product, Category } from "@/types";
+import { AllProductsClient } from "./AllProductsClient";
 import styles from "./collections.module.css";
 
 export const dynamic = "force-dynamic";
@@ -167,6 +167,7 @@ export default async function CollectionsPage() {
       .from("products")
       .select("*, category:categories(*), images:product_images(*)")
       .eq("is_active", true)
+      .order("created_at", { ascending: false })
       .limit(12);
 
     if (error || !data || data.length === 0) {
@@ -179,15 +180,39 @@ export default async function CollectionsPage() {
     products = MOCK_PRODUCTS;
   }
 
+  // Fetch active category IDs
+  const activeCategoryIds = new Set<string>();
+  try {
+    const { data: prodCats } = await supabase
+      .from("products")
+      .select("category_id")
+      .eq("is_active", true);
+    if (prodCats) {
+      prodCats.forEach((p) => {
+        if (p.category_id) activeCategoryIds.add(p.category_id);
+      });
+    }
+  } catch (err) {
+    console.error("Failed to query active category IDs:", err);
+  }
+
+  const hasProductsRecursively = (catId: string, allCats: Category[]): boolean => {
+    if (activeCategoryIds.has(catId)) return true;
+    const children = allCats.filter((c) => c.parent_id === catId);
+    return children.some((child) => hasProductsRecursively(child.id, allCats));
+  };
+
   try {
     const { data, error } = await supabase
       .from("categories")
       .select("*")
-      .is("parent_id", null)
       .order("sort_order", { ascending: true });
 
     if (!error && data && data.length > 0) {
-      categories = data as Category[];
+      const allCats = data as Category[];
+      categories = allCats
+        .filter((cat) => cat.parent_id === null)
+        .filter((cat) => hasProductsRecursively(cat.id, allCats));
     } else {
       categories = MOCK_CATEGORIES.map((c, idx) => ({
         id: `mock-cat-${idx}`,
@@ -278,11 +303,7 @@ export default async function CollectionsPage() {
         {/* Product Grid */}
         <section className={styles.productSection}>
           <h2 className={styles.sectionTitle}>All Products</h2>
-          <div className={styles.productGrid}>
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <AllProductsClient initialProducts={products} gridClassName={styles.productGrid} />
         </section>
       </main>
 

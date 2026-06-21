@@ -109,11 +109,28 @@ export default function CartPage() {
                                 {item.product.name}
                               </Link>
                             </h3>
-                            {item.variant?.size && (
-                              <span className={styles.itemMeta}>
-                                Size: {item.variant.size}
-                              </span>
-                            )}
+                            {(() => {
+                              const displayColor = item.variant?.color && item.variant.color !== "Standard"
+                                ? item.variant.color
+                                : (item.product.color && item.product.color !== "Standard" ? item.product.color : null);
+                              const displaySize = item.variant?.size && !["Standard", "One Size", "OS"].includes(item.variant.size)
+                                ? item.variant.size
+                                : null;
+                              return (
+                                <>
+                                  {displayColor && (
+                                    <span className={styles.itemMeta}>
+                                      Color: {displayColor}
+                                    </span>
+                                  )}
+                                  {displaySize && (
+                                    <span className={styles.itemMeta}>
+                                      Size: {displaySize}
+                                    </span>
+                                  )}
+                                </>
+                              );
+                            })()}
                             <button
                               type="button"
                               className={styles.removeBtn}

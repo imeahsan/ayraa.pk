@@ -138,11 +138,28 @@ export const CartDrawer: React.FC = () => {
                         </button>
                       </div>
 
-                      {item.variant?.size && (
-                        <span className={styles.itemMeta}>
-                          Size: {item.variant.size}
-                        </span>
-                      )}
+                      {(() => {
+                        const displayColor = item.variant?.color && item.variant.color !== "Standard"
+                          ? item.variant.color
+                          : (item.product.color && item.product.color !== "Standard" ? item.product.color : null);
+                        const displaySize = item.variant?.size && !["Standard", "One Size", "OS"].includes(item.variant.size)
+                          ? item.variant.size
+                          : null;
+                        return (
+                          <>
+                            {displayColor && (
+                              <span className={styles.itemMeta}>
+                                Color: {displayColor}
+                              </span>
+                            )}
+                            {displaySize && (
+                              <span className={styles.itemMeta}>
+                                Size: {displaySize}
+                              </span>
+                            )}
+                          </>
+                        );
+                      })()}
 
                       <div className={styles.itemControls}>
                         <div className={styles.quantitySelector}>

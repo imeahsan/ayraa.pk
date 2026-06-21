@@ -18,6 +18,10 @@ const DEFAULT_SETTINGS: StoreSettings = {
   meta_description: "Luxury prêt-à-porter collection for women.",
   logo_url: null,
   favicon_url: null,
+  smtp_host: "smtp-relay.brevo.com",
+  smtp_port: 587,
+  smtp_user: "",
+  smtp_pass: "",
 };
 
 export default function AdminSettingsPage() {
@@ -62,7 +66,7 @@ export default function AdminSettingsPage() {
     const { name, value } = e.target;
     setSettings((prev) => ({
       ...prev,
-      [name]: name.includes("rate") || name.includes("threshold") ? Number(value) : value,
+      [name]: name.includes("rate") || name.includes("threshold") || name.includes("port") ? Number(value) : value,
     }));
   };
 
@@ -150,6 +154,66 @@ export default function AdminSettingsPage() {
                   onChange={handleInputChange}
                   className={styles.formInput}
                   required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SMTP Server Settings */}
+          <div className={styles.formCard}>
+            <h3 className={styles.formCardTitle}>SMTP Server Settings</h3>
+            <p style={{ fontSize: "12px", color: "var(--color-admin-text-sub)", marginBottom: "16px", opacity: 0.7 }}>
+              Configure the mail server credentials used to send order confirmations and email alerts.
+            </p>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px" }}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>SMTP Host</label>
+                <input
+                  type="text"
+                  name="smtp_host"
+                  value={settings.smtp_host || ""}
+                  onChange={handleInputChange}
+                  placeholder="e.g. smtp-relay.brevo.com"
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>SMTP Port</label>
+                <input
+                  type="number"
+                  name="smtp_port"
+                  value={settings.smtp_port || ""}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 587"
+                  className={styles.formInput}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "16px" }}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>SMTP Username (Login)</label>
+                <input
+                  type="text"
+                  name="smtp_user"
+                  value={settings.smtp_user || ""}
+                  onChange={handleInputChange}
+                  placeholder="e.g. user@smtp-provider.com"
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>SMTP Password (Key)</label>
+                <input
+                  type="password"
+                  name="smtp_pass"
+                  value={settings.smtp_pass || ""}
+                  onChange={handleInputChange}
+                  placeholder="••••••••••••••••"
+                  className={styles.formInput}
                 />
               </div>
             </div>
