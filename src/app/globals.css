@@ -31,6 +31,16 @@ html.theme-dark,
   --color-surface-container-high:#333232;
   --color-surface-container-highest:#3d3b3b;
 
+  /* --- Product Card & Wishlist Button (Dark Mode Defaults) --- */
+  --color-product-image-bg: var(--color-surface-container);
+  --color-wishlist-bg:      rgba(28, 27, 27, 0.55);
+  --color-wishlist-border:  var(--color-border);
+  --color-wishlist-color:   var(--color-on-surface);
+  --color-wishlist-hover-bg: var(--color-gold-muted);
+  --color-wishlist-active-bg: rgba(233, 195, 73, 0.14);
+  --color-badge-text:       #1c1b1b;
+
+
   /* --- Text colors (on dark) --- */
   --color-on-surface:       #fbf9f8;    /* pearl white — primary text */
   --color-on-surface-sub:   rgba(251, 249, 248, 0.7); /* muted text */
@@ -117,6 +127,16 @@ html.theme-light {
   --color-surface-container:#eeeeee;    /* surface-container */
   --color-surface-container-high:#e8e8e8; /* surface-container-high */
   --color-surface-container-highest:#e2e2e2; /* surface-container-highest */
+
+  /* --- Product Card & Wishlist Button (Light Mode) --- */
+  --color-product-image-bg: #f5f3ee;    /* warm pearl-ivory shade for card placeholder background */
+  --color-wishlist-bg:      rgba(255, 255, 255, 0.85); /* clean light background with blur */
+  --color-wishlist-border:  rgba(94, 96, 77, 0.15);
+  --color-wishlist-color:   var(--color-on-surface);
+  --color-wishlist-hover-bg: rgba(94, 96, 77, 0.08);
+  --color-wishlist-active-bg: rgba(94, 96, 77, 0.15);
+  --color-badge-text:       #ffffff;    /* high contrast white text on gold/olive-sage badge */
+
 
   /* --- Text colors (on light) --- */
   --color-on-surface:       #1a1c1c;    /* primary text */
@@ -524,6 +544,98 @@ button { cursor: pointer; }
 /* ---------- Theme Transition ---------- */
 html {
   transition: background-color var(--duration-slow) var(--ease-out);
+}
+
+/* ---------- Premium Circular Flower Loader ---------- */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg);
+  z-index: 99999;
+  transition: background-color var(--duration-normal) var(--ease-out);
+}
+
+.loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.loader-emblem {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader-flower {
+  position: absolute;
+  animation: spin-flower 12s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 12px var(--color-gold-muted));
+}
+
+.loader-orbit {
+  position: absolute;
+  animation: spin-orbit 24s linear infinite reverse;
+}
+
+.loader-brand {
+  font-family: var(--font-headline);
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.15em;
+  color: var(--color-on-surface);
+  text-transform: uppercase;
+  margin-top: 12px;
+  animation: pulse-text 2.5s ease-in-out infinite;
+}
+
+@keyframes spin-flower {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg) scale(1.05); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spin-orbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 0.55; letter-spacing: 0.15em; }
+  50% { opacity: 0.95; letter-spacing: 0.22em; }
+}
+
+/* ---------- Global Spinner / Loader ---------- */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid var(--color-gold);
+  border-radius: var(--radius-full);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ---------- Pulse Loader ---------- */
+.pulse-loader {
+  animation: pulse-loader 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse-loader {
+  0%, 100% { opacity: 0.5; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.02); }
 }
 
 /* ---------- Scrollbar Styling ---------- */

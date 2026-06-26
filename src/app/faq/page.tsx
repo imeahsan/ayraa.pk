@@ -142,7 +142,7 @@ export default function FaqPage() {
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
       <Header />
 
-      <main className="grow">
+      <main className="grow pt-20 md:pt-16">
         {/* Hero */}
         <div className={styles.hero}>
           <div className={styles.heroOverlay} />

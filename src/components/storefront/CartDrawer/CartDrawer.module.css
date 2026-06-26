@@ -129,7 +129,7 @@
   position: relative;
   width: 80px;
   aspect-ratio: 3 / 4;
-  background-color: var(--color-surface-container);
+  background-color: var(--color-product-image-bg);
   flex-shrink: 0;
   border: 1px solid var(--color-border-subtle);
 }

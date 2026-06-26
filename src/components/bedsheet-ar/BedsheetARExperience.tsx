@@ -211,7 +211,7 @@ export default function BedsheetARExperience({
   // Render status components
   const renderLoading = () => (
     <div className="absolute inset-0 bg-[#121111] z-50 flex flex-col items-center justify-center gap-4 text-white p-6">
-      <div className="w-10 h-10 border-4 border-white/10 border-t-amber-500 rounded-full animate-spin" />
+      <div className="loading-spinner" />
       <p className="font-body text-xs font-semibold tracking-wider text-white/70 uppercase">
         Initializing Live AR Experience...
       </p>

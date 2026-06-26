@@ -75,6 +75,12 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
       result.sort((a, b) => b.price - a.price);
     } else if (sortBy === "newest") {
       result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else if (sortBy === "best-sellers") {
+      result.sort((a, b) => {
+        if (a.is_featured && !b.is_featured) return -1;
+        if (!a.is_featured && b.is_featured) return 1;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
     }
 
     return result;
@@ -127,6 +133,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
+            <option value="best-sellers">Best Sellers</option>
             <option value="newest">Newest Arrivals</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
@@ -222,13 +229,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
                     textTransform: "uppercase",
                   }}
                 >
-                  <style>{`
-                    @keyframes pulse-loader {
-                      0%, 100% { opacity: 0.5; transform: scale(0.98); }
-                      50% { opacity: 1; transform: scale(1.02); }
-                    }
-                  `}</style>
-                  <span style={{ animation: "pulse-loader 1.5s infinite ease-in-out" }}>
+                  <span className="pulse-loader">
                     Loading More...
                   </span>
                 </div>

@@ -35,8 +35,9 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
 
             const { data, error } = await supabase
               .from("products")
-              .select("*, category:categories(*), images:product_images(*)")
+              .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
               .eq("is_active", true)
+              .gt("variants.stock_quantity", 0)
               .order("created_at", { ascending: false })
               .range(from, to);
 
@@ -99,13 +100,7 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
             textTransform: "uppercase",
           }}
         >
-          <style>{`
-            @keyframes pulse-loader {
-              0%, 100% { opacity: 0.5; transform: scale(0.98); }
-              50% { opacity: 1; transform: scale(1.02); }
-            }
-          `}</style>
-          <span style={{ animation: "pulse-loader 1.5s infinite ease-in-out" }}>
+          <span className="pulse-loader">
             Loading More Products...
           </span>
         </div>

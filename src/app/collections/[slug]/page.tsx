@@ -259,8 +259,9 @@ const getCachedActiveCategoryIds = unstable_cache(
     const activeCategoryIds = new Set<string>();
     const { data: prodCats } = await supabase
       .from("products")
-      .select("category_id")
-      .eq("is_active", true);
+      .select("category_id, variants:product_variants!inner(*)")
+      .eq("is_active", true)
+      .gt("variants.stock_quantity", 0);
     if (prodCats) {
       prodCats.forEach((p) => {
         if (p.category_id) activeCategoryIds.add(p.category_id);
@@ -277,9 +278,10 @@ const getCachedCategoryProducts = unstable_cache(
     const supabase = createCacheClient();
     const { data: productsData } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
       .eq("category_id", categoryId)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .gt("variants.stock_quantity", 0);
     return productsData || [];
   },
   ["category-products-by-id"],
@@ -364,7 +366,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
         <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
         <Header />
-        <main className="grow pt-36 pb-20">
+        <main className="grow pt-20 md:pt-16 pb-20">
           <div className="container" style={{ maxWidth: "1400px", marginInline: "auto", paddingInline: "var(--space-8)" }}>
             {/* Heading */}
             <div style={{ textAlign: "center", marginBottom: "64px" }}>
@@ -403,7 +405,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                   />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,27,27,0.92) 0%, rgba(28,27,27,0.1) 60%, transparent 100%)", zIndex: 10 }} />
                   <div style={{ position: "absolute", bottom: "32px", left: "32px", right: "32px", zIndex: 20 }}>
-                    <h2 style={{ fontFamily: "var(--font-headline)", fontSize: "var(--text-title-lg)", color: "var(--color-gold)", marginBottom: "var(--space-2)" }}>
+                    <h2 style={{ fontFamily: "var(--font-headline)", fontSize: "var(--text-title-lg)", color: "#e9c349", marginBottom: "var(--space-2)" }}>
                       {sub.name}
                     </h2>
                     <span style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-label)", fontWeight: "var(--weight-bold)", textTransform: "uppercase", letterSpacing: "var(--tracking-widest)", color: "rgba(251,249,248,0.8)" }}>
@@ -457,7 +459,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
       <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
       <Header />
-      <main className="grow">
+      <main className="grow pt-20 md:pt-16">
         <CollectionClient
           initialProducts={products}
           categoryName={categoryName}

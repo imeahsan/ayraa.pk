@@ -167,15 +167,16 @@ const getCachedCollectionsProducts = unstable_cache(
     const supabase = createCacheClient();
     const { data, error } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
       .eq("is_active", true)
+      .gt("variants.stock_quantity", 0)
       .order("created_at", { ascending: false })
       .limit(12);
     if (error) throw error;
     return (data || []) as Product[];
   },
   ["collections-products-limit-12"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["products"] }
 );
 
 const getCachedCollectionsCategories = unstable_cache(
@@ -185,8 +186,9 @@ const getCachedCollectionsCategories = unstable_cache(
     const activeCategoryIds = new Set<string>();
     const { data: prodCats } = await supabase
       .from("products")
-      .select("category_id")
-      .eq("is_active", true);
+      .select("category_id, variants:product_variants!inner(*)")
+      .eq("is_active", true)
+      .gt("variants.stock_quantity", 0);
     if (prodCats) {
       prodCats.forEach((p) => {
         if (p.category_id) activeCategoryIds.add(p.category_id);
@@ -212,7 +214,7 @@ const getCachedCollectionsCategories = unstable_cache(
       .filter((cat) => hasProductsRecursively(cat.id));
   },
   ["collections-categories-filtered"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["categories"] }
 );
 
 export default async function CollectionsPage() {

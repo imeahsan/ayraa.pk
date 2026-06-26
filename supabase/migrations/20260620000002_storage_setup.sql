@@ -9,6 +9,12 @@ ON CONFLICT (id) DO NOTHING;
 
 -- RLS Policies on storage.objects for the 'products' bucket
 
+-- Drop policies if they exist to prevent migration failure
+DROP POLICY IF EXISTS "Public read products images" ON storage.objects;
+DROP POLICY IF EXISTS "Admin upload product images" ON storage.objects;
+DROP POLICY IF EXISTS "Admin update product images" ON storage.objects;
+DROP POLICY IF EXISTS "Admin delete product images" ON storage.objects;
+
 -- 1. Enable public read access for storefront
 CREATE POLICY "Public read products images" ON storage.objects
     FOR SELECT USING (bucket_id = 'products');

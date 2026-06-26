@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { Product } from "@/types";
+import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
@@ -74,21 +74,30 @@ export default function AdminProductsPage() {
   const supabase = createClient();
   const toast = useToast();
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchProductsAndCategories = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: productsData, error: productsError } = await supabase
           .from("products")
           .select("*, category:categories(*), images:product_images(*)")
           .order("created_at", { ascending: false });
 
-        if (error || !data || data.length === 0) {
+        if (productsError || !productsData || productsData.length === 0) {
           setProducts(MOCK_PRODUCTS);
         } else {
-          setProducts(data as Product[]);
+          setProducts(productsData as Product[]);
+        }
+
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from("categories")
+          .select("*");
+
+        if (!categoriesError && categoriesData) {
+          setCategories(categoriesData as Category[]);
         }
       } catch (err) {
         console.error("Failed to fetch products:", err);
@@ -98,7 +107,7 @@ export default function AdminProductsPage() {
       }
     };
 
-    fetchProducts();
+    fetchProductsAndCategories();
   }, [supabase]);
 
   const handleDelete = async (id: string) => {
@@ -109,6 +118,10 @@ export default function AdminProductsPage() {
       if (error) {
         toast.error(`Failed to delete: ${error.message}`);
       } else {
+        // Trigger on-demand cache revalidation for storefront
+        await fetch("/api/revalidate?tag=products").catch(() => {});
+        await fetch("/api/revalidate?tag=categories").catch(() => {});
+
         setProducts((prev) => prev.filter((p) => p.id !== id));
         toast.success("Product deleted successfully!");
       }
@@ -167,7 +180,7 @@ export default function AdminProductsPage() {
                 <tr>
                   <th className={styles.tableTh}>Product</th>
                   <th className={styles.tableTh}>SKU</th>
-                  <th className={styles.tableTh}>Category</th>
+                  <th className={styles.tableTh}>Collection</th>
                   <th className={styles.tableTh}>Price</th>
                   <th className={styles.tableTh}>Status</th>
                   <th className={styles.tableTh}>Actions</th>
@@ -177,6 +190,14 @@ export default function AdminProductsPage() {
                 {filteredProducts.map((p) => {
                   const primaryImage =
                     p.images?.find((img) => img.is_primary) || p.images?.[0];
+                  
+                  const displayCategoryName = (() => {
+                    if (!p.category) return "Unassigned";
+                    const cat = p.category;
+                    const parent = cat.parent_id ? categories.find((c) => c.id === cat.parent_id) : null;
+                    return parent ? `${parent.name} › ${cat.name}` : cat.name;
+                  })();
+
                   return (
                     <tr key={p.id} className={styles.tableTr}>
                       <td className={styles.tableTd}>
@@ -205,7 +226,7 @@ export default function AdminProductsPage() {
                       <td className={styles.tableTd}>
                         <span className={styles.dateBadge} style={{ padding: "4px 8px" }}>{p.sku || "N/A"}</span>
                       </td>
-                      <td className={styles.tableTd}>{p.category?.name || "Uncategorized"}</td>
+                      <td className={styles.tableTd}>{displayCategoryName}</td>
                       <td className={`${styles.tableTd} ${styles.tableTdHighlight}`}>{formatPKR(p.price)}</td>
                       <td className={styles.tableTd}>
                         <span

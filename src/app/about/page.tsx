@@ -36,7 +36,7 @@ export default function AboutPage() {
       <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
       <Header />
       
-      <main className="grow">
+      <main className="grow pt-20 md:pt-16">
         <div className={styles.hero}>
           <Image
             src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop&q=80"

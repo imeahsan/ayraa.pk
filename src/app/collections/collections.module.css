@@ -146,7 +146,7 @@
 }
 
 .categoryCard:hover .categoryTitle {
-  color: var(--color-gold);
+  color: #e9c349;
 }
 
 .productSection {

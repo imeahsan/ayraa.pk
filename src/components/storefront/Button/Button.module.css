@@ -72,7 +72,7 @@
 
 .luxury:hover:not(:disabled) {
   background-color: var(--color-gold);
-  color: #1c1b1b;
+  color: var(--color-badge-text);
   box-shadow: 0 0 15px rgba(233, 195, 73, 0.3);
 }
 

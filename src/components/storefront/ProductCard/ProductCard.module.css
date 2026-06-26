@@ -6,14 +6,50 @@
   transition: transform var(--duration-normal) var(--ease-out);
 }
 
+.media {
+  position: relative;
+}
+
 .imageWrapper {
+  display: block;
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
   overflow: hidden;
-  background-color: var(--color-surface-container);
+  background-color: var(--color-product-image-bg);
   border: 1px solid var(--color-border-subtle);
   transition: border-color var(--duration-normal) var(--ease-out);
+}
+
+.wishlistButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 12;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: 1px solid var(--color-wishlist-border);
+  background-color: var(--color-wishlist-bg);
+  color: var(--color-wishlist-color);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.wishlistButton:hover {
+  border-color: var(--color-gold-border);
+  color: var(--color-gold);
+  background-color: var(--color-wishlist-hover-bg);
+}
+
+.wishlistButtonActive {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  background-color: var(--color-wishlist-active-bg);
 }
 
 .card:hover .imageWrapper {
@@ -51,7 +87,7 @@
   top: 12px;
   left: 12px;
   background-color: var(--color-gold);
-  color: #1c1b1b;
+  color: var(--color-badge-text);
   padding: 4px 10px;
   font-family: var(--font-body);
   font-size: 10px;

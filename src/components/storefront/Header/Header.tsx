@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/lib/supabase/client";
 import { UserProfile, Category } from "@/types";
@@ -56,6 +57,7 @@ import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
 
 export const Header: React.FC = () => {
   const { cart, setCartOpen } = useCart();
+  const { wishlistCount, wishlistReady, isLoggedIn, openLoginModal } = useWishlist();
   const { theme, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -91,30 +93,51 @@ export const Header: React.FC = () => {
 
     // Initial session check
     const fetchUser = async () => {
-      const { data: { user } } = await sb.auth.getUser();
-      if (user) {
-        const { data } = await sb.from("profiles").select("*").eq("id", user.id).single();
-        setProfile(data as UserProfile);
-      } else {
+      try {
+        const { data: { user } } = await sb.auth.getUser();
+        if (user) {
+          const { data, error } = await sb.from("profiles").select("*").eq("id", user.id).single();
+          if (error) {
+            console.error("Error fetching profile:", error);
+            setProfile(null);
+          } else {
+            setProfile(data as UserProfile);
+          }
+        } else {
+          setProfile(null);
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
         setProfile(null);
+      } finally {
+        setAuthReady(true);
       }
-      setAuthReady(true);
     };
     fetchUser();
 
     // Subscribe to auth changes (sign-in / sign-out)
     const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const { data } = await sb.from("profiles").select("*").eq("id", session.user.id).single();
-        setProfile(data as UserProfile);
-      } else {
+      try {
+        if (session?.user) {
+          const { data, error } = await sb.from("profiles").select("*").eq("id", session.user.id).single();
+          if (error) {
+            console.error("Error fetching profile on auth change:", error);
+            setProfile(null);
+          } else {
+            setProfile(data as UserProfile);
+          }
+        } else {
+          setProfile(null);
+        }
+      } catch (err) {
+        console.error("Auth change callback failed:", err);
         setProfile(null);
+      } finally {
+        setAuthReady(true);
       }
-      setAuthReady(true);
     });
 
     return () => subscription.unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -147,12 +170,20 @@ export const Header: React.FC = () => {
       }
     };
     fetchCategories();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.refresh();
+  };
+
+  const handleWishlistClick = () => {
+    if (!wishlistReady) return;
+    if (isLoggedIn) {
+      router.push("/wishlist");
+      return;
+    }
+    openLoginModal();
   };
 
   const totalItemCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
@@ -273,8 +304,29 @@ export const Header: React.FC = () => {
                 <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className="premium-underline" id="login-link">Login</Link>
               )
             ) : (
-              // Placeholder same width as Login link to prevent layout shift
-              <span style={{ display: 'inline-block', width: '2.5rem' }} />
+              // Placeholder with a tiny spinner to prevent layout shift and show loading state
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2.5rem' }}>
+                <span className={styles.miniSpinner} aria-hidden="true" />
+              </span>
+            )}
+
+            {wishlistReady ? (
+              <button
+                className={styles.iconBtn}
+                onClick={handleWishlistClick}
+                aria-label={`Open wishlist with ${wishlistCount} items`}
+                id="wishlist-toggle-btn"
+                title="Wishlist"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 22l7.78-8.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+                </svg>
+                {wishlistCount > 0 && <span className={styles.wishlistBadge}>{wishlistCount}</span>}
+              </button>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2.5rem' }}>
+                <span className={styles.miniSpinner} aria-hidden="true" />
+              </span>
             )}
 
             {/* Bag Icon */}

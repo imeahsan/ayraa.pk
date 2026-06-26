@@ -226,10 +226,11 @@ const getCachedRelatedProducts = unstable_cache(
     const supabase = createCacheClient();
     const { data: related } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
       .eq("category_id", categoryId)
       .neq("id", productId)
       .eq("is_active", true)
+      .gt("variants.stock_quantity", 0)
       .limit(4);
     return related || [];
   },

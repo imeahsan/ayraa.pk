@@ -35,7 +35,7 @@ export default function ContactClient() {
     <div className="flex flex-col min-h-screen bg-surface">
       <Header />
       
-      <main className="grow">
+      <main className="grow pt-20 md:pt-16">
         <div className={styles.container}>
           <h1 className={styles.pageTitle}>
             Contact Us

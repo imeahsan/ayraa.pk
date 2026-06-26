@@ -4,6 +4,7 @@ import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ToastProvider } from "@/context/ToastContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { CartDrawer } from "@/components/storefront/CartDrawer/CartDrawer";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import { WhatsAppFAB } from "@/components/storefront/WhatsAppFAB";
@@ -76,10 +77,12 @@ export default function RootLayout({
         <ThemeProvider>
           <ToastProvider>
             <CartProvider>
-              <OrganizationJsonLd baseUrl={baseUrl} />
-              {children}
-              <CartDrawer />
-              <WhatsAppFAB />
+              <WishlistProvider>
+                <OrganizationJsonLd baseUrl={baseUrl} />
+                {children}
+                <CartDrawer />
+                <WhatsAppFAB />
+              </WishlistProvider>
             </CartProvider>
           </ToastProvider>
         </ThemeProvider>

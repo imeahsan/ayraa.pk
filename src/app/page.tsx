@@ -210,7 +210,7 @@ const getCachedHeroSlides = unstable_cache(
     return data || [];
   },
   ["hero-slides"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["hero-slides"] }
 );
 
 const getCachedFeaturedProducts = unstable_cache(
@@ -218,15 +218,16 @@ const getCachedFeaturedProducts = unstable_cache(
     const supabase = createCacheClient();
     const { data, error } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
       .eq("is_featured", true)
       .eq("is_active", true)
+      .gt("variants.stock_quantity", 0)
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data as Product[];
   },
   ["featured-products"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["products"] }
 );
 
 const getCachedNewArrivals = unstable_cache(
@@ -234,14 +235,15 @@ const getCachedNewArrivals = unstable_cache(
     const supabase = createCacheClient();
     const { data } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
       .eq("is_active", true)
+      .gt("variants.stock_quantity", 0)
       .order("created_at", { ascending: false })
       .limit(8);
     return (data || []) as Product[];
   },
   ["new-arrivals"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["products"] }
 );
 
 const getCachedSaleProducts = unstable_cache(
@@ -249,13 +251,14 @@ const getCachedSaleProducts = unstable_cache(
     const supabase = createCacheClient();
     const { data } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
       .eq("is_on_sale", true)
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .gt("variants.stock_quantity", 0);
     return (data || []) as Product[];
   },
   ["sale-products"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["products"] }
 );
 
 const getCachedDisplayCategories = unstable_cache(
@@ -266,12 +269,11 @@ const getCachedDisplayCategories = unstable_cache(
       .select("*")
       .eq("is_active", true)
       .is("parent_id", null)
-      .order("sort_order", { ascending: true })
-      .limit(6);
+      .order("sort_order", { ascending: true });
     return (data || []) as Category[];
   },
   ["homepage-categories"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["categories"] }
 );
 
 const getCachedTestimonials = unstable_cache(
@@ -285,7 +287,7 @@ const getCachedTestimonials = unstable_cache(
     return (data || []) as any[];
   },
   ["testimonials"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["reviews"] }
 );
 
 export default async function Home() {
@@ -372,7 +374,7 @@ export default async function Home() {
           </div>
 
           <div className={styles.mosaicGrid}>
-            {displayCategories.slice(0, 4).map((cat, i) => (
+            {displayCategories.map((cat, i) => (
               <Link
                 key={cat.id}
                 href={`/collections/${cat.slug}`}

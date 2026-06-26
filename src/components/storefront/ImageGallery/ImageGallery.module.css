@@ -1,7 +1,7 @@
 .fallback {
   width: 100%;
   aspect-ratio: 3 / 4;
-  background-color: var(--color-surface-container-high);
+  background-color: var(--color-product-image-bg);
 }
 
 .gallery {
@@ -87,7 +87,7 @@
   position: relative;
   aspect-ratio: 3 / 4;
   overflow: hidden;
-  background-color: var(--color-surface-container);
+  background-color: var(--color-product-image-bg);
   cursor: zoom-in;
   border-radius: var(--radius-none);
 }

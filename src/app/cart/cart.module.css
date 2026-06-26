@@ -158,7 +158,7 @@
   position: relative;
   width: 90px;
   aspect-ratio: 3 / 4;
-  background-color: var(--color-surface-container);
+  background-color: var(--color-product-image-bg);
   flex-shrink: 0;
   border-radius: var(--radius-none);
   overflow: hidden;

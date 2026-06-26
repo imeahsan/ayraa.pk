@@ -21,6 +21,7 @@ export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [parentId, setParentId] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -57,6 +58,7 @@ export default function AdminCategoriesPage() {
     setEditingCategory(category);
     setName(category.name);
     setDescription(category.description || "");
+    setParentId(category.parent_id || "");
     setCoverImageUrl(category.image_url || null);
     setCoverImageFile(null); // Reset any selected file
   };
@@ -65,6 +67,7 @@ export default function AdminCategoriesPage() {
     setEditingCategory(null);
     setName("");
     setDescription("");
+    setParentId("");
     setCoverImageUrl(null);
     setCoverImageFile(null);
   };
@@ -123,6 +126,7 @@ export default function AdminCategoriesPage() {
         name,
         slug,
         description: description || null,
+        parent_id: parentId || null,
         image_url: finalImageUrl,
         is_active: true,
       };
@@ -141,7 +145,8 @@ export default function AdminCategoriesPage() {
           prev.map((c) => (c.id === editingCategory.id ? (data as Category) : c))
         );
         handleCancelEdit();
-        toast.success("Category updated successfully!");
+        await fetch("/api/revalidate?tag=categories").catch(() => {});
+        toast.success("Collection updated successfully!");
       } else {
         const insertPayload = {
           ...payload,
@@ -159,9 +164,11 @@ export default function AdminCategoriesPage() {
         setCategories((prev) => [...prev, data as Category]);
         setName("");
         setDescription("");
+        setParentId("");
         setCoverImageUrl(null);
         setCoverImageFile(null);
-        toast.success("Category created successfully!");
+        await fetch("/api/revalidate?tag=categories").catch(() => {});
+        toast.success("Collection created successfully!");
       }
     } catch (err) {
       console.error("Operation failed:", err);
@@ -171,7 +178,7 @@ export default function AdminCategoriesPage() {
         name,
         slug,
         description,
-        parent_id: null,
+        parent_id: parentId || null,
         sort_order: isEditing ? editingCategory.sort_order : categories.length + 1,
         is_active: true,
         created_at: new Date().toISOString(),
@@ -183,14 +190,15 @@ export default function AdminCategoriesPage() {
           prev.map((c) => (c.id === editingCategory.id ? mockResult : c))
         );
         handleCancelEdit();
-        toast.success("Category updated successfully (Simulated)!");
+        toast.success("Collection updated successfully (Simulated)!");
       } else {
         setCategories((prev) => [...prev, mockResult]);
         setName("");
         setDescription("");
+        setParentId("");
         setCoverImageUrl(null);
         setCoverImageFile(null);
-        toast.success("Category created successfully (Simulated)!");
+        toast.success("Collection created successfully (Simulated)!");
       }
     } finally {
       setSaving(false);
@@ -198,7 +206,7 @@ export default function AdminCategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this category?")) return;
+    if (!confirm("Are you sure you want to delete this collection?")) return;
 
     try {
       const targetCategory = categories.find((c) => c.id === id);
@@ -212,28 +220,29 @@ export default function AdminCategoriesPage() {
           const pathToDelete = targetCategory.image_url.split("/storage/v1/object/public/products/")[1];
           await supabase.storage.from("products").remove([pathToDelete]);
         }
+        await fetch("/api/revalidate?tag=categories").catch(() => {});
         setCategories((prev) => prev.filter((c) => c.id !== id));
-        toast.success("Category deleted successfully!");
+        toast.success("Collection deleted successfully!");
       }
     } catch (err) {
       // Local simulation if DB fails
       setCategories((prev) => prev.filter((c) => c.id !== id));
-      toast.success("Category deleted successfully (Simulated)!");
+      toast.success("Collection deleted successfully (Simulated)!");
     }
   };
 
   return (
     <div className={styles.pageLayout}>
       <div className={styles.twoColLayout}>
-        {/* Left: Add/Edit Category Form */}
+        {/* Left: Add/Edit Collection Form */}
         <div className={styles.sidebarFormCol}>
           <div className={styles.formCard}>
             <h3 className={styles.formCardTitle}>
-              {editingCategory ? `Edit Category: ${editingCategory.name}` : "Add Category"}
+              {editingCategory ? `Edit Collection: ${editingCategory.name}` : "Add Collection"}
             </h3>
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Category Name *</label>
+                <label className={styles.formLabel}>Collection Name *</label>
                 <input
                   type="text"
                   value={name}
@@ -251,6 +260,25 @@ export default function AdminCategoriesPage() {
                   className={styles.formTextarea}
                   rows={3}
                 />
+              </div>
+
+              {/* Parent Collection dropdown selector */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Parent Collection</label>
+                <select
+                  value={parentId}
+                  onChange={(e) => setParentId(e.target.value)}
+                  className={styles.formSelect}
+                >
+                  <option value="" className={styles.filterOption}>None (Create as Parent Collection)</option>
+                  {categories
+                    .filter((c) => c.parent_id === null && (!editingCategory || c.id !== editingCategory.id))
+                    .map((parent) => (
+                      <option key={parent.id} value={parent.id} className={styles.filterOption}>
+                        {parent.name}
+                      </option>
+                    ))}
+                </select>
               </div>
 
               {/* Cover Image Upload field */}
@@ -337,7 +365,7 @@ export default function AdminCategoriesPage() {
 
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "12px" }}>
                 <Button type="submit" variant="luxury" fullWidth isLoading={saving}>
-                  {editingCategory ? "Save Changes" : "Create Category"}
+                  {editingCategory ? "Save Changes" : "Create Collection"}
                 </Button>
                 {editingCategory && (
                   <Button type="button" variant="outline" fullWidth onClick={handleCancelEdit}>
@@ -349,10 +377,10 @@ export default function AdminCategoriesPage() {
           </div>
         </div>
 
-        {/* Right: Categories list table with Thumbnails */}
+        {/* Right: Collections list table with Thumbnails */}
         <div className={styles.mainFormCol}>
           {loading ? (
-            <p className="font-body text-sm text-admin-text-sub text-center py-12">Loading categories...</p>
+            <p className="font-body text-sm text-admin-text-sub text-center py-12">Loading collections...</p>
           ) : (
             <div className={styles.tableCard}>
               <div className={styles.tableResponsive}>
@@ -369,6 +397,7 @@ export default function AdminCategoriesPage() {
                   <tbody>
                     {categories.map((c) => {
                       const displayImage = c.image_url || DUMMY_CATEGORY_IMAGE;
+                      const parentCategory = c.parent_id ? categories.find((p) => p.id === c.parent_id) : null;
                       return (
                         <tr key={c.id} className={styles.tableTr}>
                           <td className={styles.tableTd}>
@@ -384,7 +413,14 @@ export default function AdminCategoriesPage() {
                               }}
                             />
                           </td>
-                          <td className={`${styles.tableTd} ${styles.tableTdHighlight}`}>{c.name}</td>
+                          <td className={`${styles.tableTd} ${styles.tableTdHighlight}`}>
+                            {parentCategory && (
+                              <div style={{ fontSize: "10px", color: "var(--color-gold)", textTransform: "uppercase", fontWeight: "bold", marginBottom: "4px" }}>
+                                {parentCategory.name} ›
+                              </div>
+                            )}
+                            {c.name}
+                          </td>
                           <td className={styles.tableTd}>
                             <span className={styles.dateBadge} style={{ padding: "4px 8px" }}>{c.slug}</span>
                           </td>

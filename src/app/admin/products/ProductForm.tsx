@@ -225,8 +225,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !price) {
-      toast.error("Name and Price are required.");
+    if (!name || !price || !categoryId) {
+      toast.error("Name, Price, and Sub-collection are required.");
       return;
     }
 
@@ -419,6 +419,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           .insert(variantsPayload);
         if (variantError) throw variantError;
       }
+
+      // Trigger on-demand cache revalidation for storefront
+      await fetch("/api/revalidate?tag=products").catch(() => {});
+      await fetch("/api/revalidate?tag=categories").catch(() => {});
 
       toast.success("Product saved successfully!");
       router.push("/admin/products");
@@ -702,21 +706,28 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         {/* Right Side: Specifications & Toggles */}
         <div className={styles.sidebarFormCol}>
           <div className={styles.formCard}>
-            <h3 className={styles.formCardTitle}>Status &amp; Category</h3>
+            <h3 className={styles.formCardTitle}>Status &amp; Collection</h3>
             
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Category</label>
+              <label className={styles.formLabel}>Sub-collection *</label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 className={styles.formSelect}
+                required
               >
-                <option value="" className={styles.filterOption}>Select Category</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id} className={styles.filterOption}>
-                    {cat.name}
-                  </option>
-                ))}
+                <option value="" className={styles.filterOption}>Select Sub-collection</option>
+                {categories
+                  .filter((cat) => cat.parent_id !== null)
+                  .map((cat) => {
+                    const parent = categories.find((c) => c.id === cat.parent_id);
+                    const displayName = parent ? `${parent.name} › ${cat.name}` : cat.name;
+                    return (
+                      <option key={cat.id} value={cat.id} className={styles.filterOption}>
+                        {displayName}
+                      </option>
+                    );
+                  })}
               </select>
             </div>
 

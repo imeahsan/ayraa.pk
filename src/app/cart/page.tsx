@@ -29,7 +29,7 @@ export default function CartPage() {
     <div className="flex flex-col min-h-screen bg-surface">
       <Header />
       
-      <main className="grow">
+      <main className="grow pt-20 md:pt-16">
         <div className={styles.container}>
           <Breadcrumb items={[{ label: "Shopping Bag", url: "/cart" }]} />
 

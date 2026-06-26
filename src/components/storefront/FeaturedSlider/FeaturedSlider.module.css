@@ -73,7 +73,7 @@
 
 .navBtn:hover:not(:disabled) {
   background-color: var(--color-gold);
-  color: #1c1b1b;
+  color: var(--color-badge-text);
   border-color: var(--color-gold);
   box-shadow: var(--shadow-gold);
   transform: translateY(-50%) scale(1.08);

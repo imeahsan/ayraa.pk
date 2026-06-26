@@ -13,6 +13,7 @@ import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { submitQuestion } from "@/app/actions/qa";
 import { createClient } from "@/lib/supabase/client";
 import { checkPurchaseStatus, submitReview } from "@/app/actions/reviews";
+import { useWishlist } from "@/context/WishlistContext";
 import styles from "./ProductDetailClient.module.css";
 
 interface ProductDetailClientProps {
@@ -30,9 +31,11 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
 }) => {
   const { addItem } = useCart();
   const toast = useToast();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isWishlistUpdating, setIsWishlistUpdating] = useState(false);
 
   // QA state & handler
   const [questionText, setQuestionText] = useState("");
@@ -330,6 +333,15 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     }, 600);
   };
 
+  const handleWishlistToggle = async () => {
+    setIsWishlistUpdating(true);
+    try {
+      await toggleWishlist(product);
+    } finally {
+      setIsWishlistUpdating(false);
+    }
+  };
+
   const formattedPrice = Intl.NumberFormat("en-PK", {
     style: "currency",
     currency: "PKR",
@@ -343,6 +355,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
         maximumFractionDigits: 0,
       }).format(product.compare_at_price)
     : null;
+  const wishlisted = isWishlisted(product.id);
 
   return (
     <div className={styles.container}>
@@ -453,6 +466,21 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               disabled={isOutOfStock}
             >
               {isOutOfStock ? "Out of Stock" : "Add to Bag"}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="lg"
+              fullWidth
+              onClick={handleWishlistToggle}
+              isLoading={isWishlistUpdating}
+              style={{
+                borderColor: wishlisted ? "var(--color-gold)" : "var(--color-border)",
+                color: wishlisted ? "var(--color-gold)" : "var(--color-on-surface)",
+                backgroundColor: wishlisted ? "var(--color-gold-muted)" : "transparent",
+              }}
+            >
+              {wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
             </Button>
 
             {product.bedsheet_ar_status === "ready" && (

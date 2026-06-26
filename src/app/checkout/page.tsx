@@ -13,7 +13,7 @@ export default function CheckoutPage() {
   return (
     <div className={styles.pageWrapper}>
       <Header />
-      <main className={styles.mainContent}>
+      <main className={`${styles.mainContent} pt-20 md:pt-16`}>
         <div className={styles.container}>
           <CheckoutForm />
         </div>

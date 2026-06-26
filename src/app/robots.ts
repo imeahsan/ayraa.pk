@@ -11,6 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         "/admin/",
         "/checkout/",
         "/cart",
+        "/wishlist",
         "/login",
         "/register"
       ],
@@ -18,4 +19,3 @@ export default function robots(): MetadataRoute.Robots {
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
-
