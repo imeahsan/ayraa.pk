@@ -7,31 +7,6 @@ import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
 
-const MOCK_PROMOS: PromoCode[] = [
-  {
-    id: "promo-1",
-    code: "WELCOME10",
-    discount_type: "percentage",
-    discount_value: 10,
-    start_date: new Date().toISOString(),
-    end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    is_active: true,
-    applicable_category_ids: null,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "promo-2",
-    code: "LAWNOFF",
-    discount_type: "flat",
-    discount_value: 1000,
-    start_date: new Date().toISOString(),
-    end_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-    is_active: true,
-    applicable_category_ids: ["cat-pret"],
-    created_at: new Date().toISOString(),
-  }
-];
-
 export default function AdminPromosPage() {
   const supabase = createClient();
   const toast = useToast();
@@ -69,14 +44,14 @@ export default function AdminPromosPage() {
           .select("*")
           .order("created_at", { ascending: false });
 
-        if (promoError || !promoData || promoData.length === 0) {
-          setPromos(MOCK_PROMOS);
+        if (promoError || !promoData) {
+          setPromos([]);
         } else {
           setPromos(promoData as PromoCode[]);
         }
       } catch (err) {
         console.error("Failed to load promo data:", err);
-        setPromos(MOCK_PROMOS);
+        setPromos([]);
       } finally {
         setLoading(false);
       }

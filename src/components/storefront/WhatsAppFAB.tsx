@@ -5,15 +5,13 @@ import { usePathname } from "next/navigation";
 
 export const WhatsAppFAB: React.FC = () => {
   const pathname = usePathname();
-  const [currentUrl, setCurrentUrl] = useState("");
   const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCurrentUrl(window.location.href);
-    }
-  }, [pathname]);
+    setIsMounted(true);
+  }, []);
 
   // WhatsApp number
   const phoneNumber = "923295822495";
@@ -23,8 +21,8 @@ export const WhatsAppFAB: React.FC = () => {
     const isProductPage = pathname && pathname.startsWith("/product/");
     let message = "Assalamu Alaikum! I would like to make an inquiry with Ayraa Collection.";
     
-    if (isProductPage && currentUrl) {
-      message = `Assalamu Alaikum! I am interested in this product: ${currentUrl}. Please provide more details.`;
+    if (isProductPage && isMounted && typeof window !== "undefined") {
+      message = `Assalamu Alaikum! I am interested in this product: ${window.location.href}. Please provide more details.`;
     }
 
     return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;

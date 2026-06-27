@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const toast = useToast();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [navSearchTerm, setNavSearchTerm] = useState("");
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -53,6 +54,70 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.refresh();
   };
 
+  const navGroups = [
+    {
+      title: "Store Overview",
+      links: [
+        { name: "Dashboard", href: "/admin", icon: "Dash" },
+        { name: "Reports", href: "/admin/reports", icon: "Data" },
+      ],
+    },
+    {
+      title: "Operations",
+      links: [
+        { name: "POS Terminal", href: "/admin/pos", icon: "POS" },
+        { name: "Orders List", href: "/admin/orders", icon: "Ord" },
+        { name: "Shipping Manager", href: "/admin/shipping", icon: "Ship" },
+        { name: "Returns Manager", href: "/admin/returns", icon: "Ret" },
+      ],
+    },
+    {
+      title: "Catalog & Promos",
+      links: [
+        { name: "Products", href: "/admin/products", icon: "Prod" },
+        { name: "Collections", href: "/admin/categories", icon: "Col" },
+        { name: "Sales Manager", href: "/admin/sales", icon: "Sale" },
+        { name: "Promo Codes", href: "/admin/promos", icon: "Promo" },
+      ],
+    },
+    {
+      title: "Customers & Reviews",
+      links: [
+        { name: "Customers List", href: "/admin/customers", icon: "Cust" },
+        { name: "Product Q&A", href: "/admin/qa", icon: "Q&A" },
+        { name: "Product Reviews", href: "/admin/reviews", icon: "Rev" },
+      ],
+    },
+    {
+      title: "Storefront & System",
+      links: [
+        { name: "Homepage Editor", href: "/admin/homepage", icon: "Home" },
+        { name: "Settings", href: "/admin/settings", icon: "Set" },
+      ],
+    },
+  ];
+
+  const flatLinks = navGroups.flatMap((g) => g.links);
+  const activeLink =
+    flatLinks.find((link) => {
+      if (link.href === "/admin") {
+        return pathname === "/admin";
+      }
+      return pathname === link.href || pathname.startsWith(`${link.href}/`);
+    }) || flatLinks[0];
+
+  const filteredGroups = useMemo(() => {
+    if (!navSearchTerm.trim()) return navGroups;
+    return navGroups
+      .map((group) => {
+        const links = group.links.filter((link) =>
+          link.name.toLowerCase().includes(navSearchTerm.toLowerCase())
+        );
+        return { ...group, links };
+      })
+      .filter((group) => group.links.length > 0);
+  }, [navSearchTerm]);
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -62,51 +127,97 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const navLinks = [
-    { name: "Dashboard", href: "/admin", icon: "Dash" },
-    { name: "Reports", href: "/admin/reports", icon: "Data" },
-    { name: "Products", href: "/admin/products", icon: "Prod" },
-    { name: "Sales Manager", href: "/admin/sales", icon: "Sale" },
-    { name: "Orders", href: "/admin/orders", icon: "Ord" },
-    { name: "Shipping", href: "/admin/shipping", icon: "Ship" },
-    { name: "Returns", href: "/admin/returns", icon: "Ret" },
-    { name: "Collections", href: "/admin/categories", icon: "Col" },
-    { name: "Product Q&A", href: "/admin/qa", icon: "Q&A" },
-    { name: "Product Reviews", href: "/admin/reviews", icon: "Rev" },
-    { name: "Customers", href: "/admin/customers", icon: "Cust" },
-    { name: "Promo Codes", href: "/admin/promos", icon: "Promo" },
-    { name: "Homepage Editor", href: "/admin/homepage", icon: "Home" },
-    { name: "Settings", href: "/admin/settings", icon: "Set" },
-  ];
-
-  const activeLink =
-    navLinks.find((link) => pathname === link.href || pathname.startsWith(`${link.href}/`)) ||
-    navLinks[0];
-
   return (
     <div className={styles.adminLayout}>
       <aside className={styles.sidebar}>
-        <div className={styles.sidebarLogoSection}>
+        <div className={styles.sidebarLogoSection} style={{ paddingBottom: "12px" }}>
           <Link href="/" className={styles.sidebarLogo}>
             AYRAA
           </Link>
           <span className={styles.sidebarSubtitle}>Admin Panel</span>
         </div>
 
-        <nav className={styles.sidebarNav}>
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ""}`}
+        {/* Search Navigation Field */}
+        <div style={{ padding: "0 24px 16px 24px" }}>
+          <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+            <input
+              type="text"
+              placeholder="Search shortcuts..."
+              value={navSearchTerm}
+              onChange={(e) => setNavSearchTerm(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px 24px 6px 10px",
+                background: "rgba(255, 255, 255, 0.04)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "4px",
+                color: "#fff",
+                fontSize: "11px",
+                transition: "border-color 0.2s",
+                outline: "none"
+              }}
+              onFocus={(e) => e.target.style.borderColor = "var(--admin-card-border, #d4af37)"}
+              onBlur={(e) => e.target.style.borderColor = "rgba(255, 255, 255, 0.08)"}
+            />
+            {navSearchTerm && (
+              <button
+                onClick={() => setNavSearchTerm("")}
+                style={{
+                  position: "absolute",
+                  right: "8px",
+                  background: "none",
+                  border: "none",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  padding: 0
+                }}
               >
-                <span className={styles.sidebarIconText}>{link.icon}</span>
-                <span>{link.name}</span>
-              </Link>
-            );
-          })}
+                &times;
+              </button>
+            )}
+          </div>
+        </div>
+
+        <nav className={styles.sidebarNav} style={{ overflowY: "auto", paddingBottom: "20px" }}>
+          {filteredGroups.length === 0 ? (
+            <p style={{ fontSize: "11px", color: "var(--admin-text-sub)", opacity: 0.5, textAlign: "center", padding: "20px 0" }}>
+              No shortcuts found
+            </p>
+          ) : (
+            filteredGroups.map((group) => (
+              <div key={group.title} style={{ marginBottom: "16px" }}>
+                <h4 style={{
+                  fontSize: "10px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "var(--admin-text-sub)",
+                  opacity: 0.5,
+                  margin: "0 0 8px 12px",
+                  fontWeight: 600
+                }}>
+                  {group.title}
+                </h4>
+                <div style={{ display: "grid", gap: "2px" }}>
+                  {group.links.map((link) => {
+                    const isActive = link.href === "/admin"
+                      ? pathname === "/admin"
+                      : pathname === link.href || pathname.startsWith(`${link.href}/`);
+                    return (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        className={`${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ""}`}
+                      >
+                        <span className={styles.sidebarIconText}>{link.icon}</span>
+                        <span>{link.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
         </nav>
 
         <div className={styles.sidebarFooter}>

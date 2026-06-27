@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
@@ -41,8 +41,7 @@ export const Header: React.FC = () => {
   const [menuCategories, setMenuCategories] = useState<NavCategory[]>([]);
   const pathname = usePathname();
   const router = useRouter();
-  const supabaseRef = useRef(createClient());
-  const supabase = supabaseRef.current;
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -118,7 +117,7 @@ export const Header: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data, error } = await supabaseRef.current
+        const { data, error } = await supabase
           .from("categories")
           .select("*")
           .eq("is_active", true)

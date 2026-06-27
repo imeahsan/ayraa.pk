@@ -9,12 +9,6 @@ import styles from "../admin.module.css";
 
 const DUMMY_CATEGORY_IMAGE = "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=100&auto=format&fit=crop&q=80";
 
-const MOCK_CATEGORIES: Category[] = [
-  { id: "cat-rtw", name: "Ready To Wear", slug: "ready-to-wear", description: "Everyday pret.", parent_id: null, sort_order: 1, is_active: true, created_at: new Date().toISOString(), image_url: DUMMY_CATEGORY_IMAGE },
-  { id: "cat-formal", name: "Luxury Formal", slug: "formal", description: "Heavily embroidered formals.", parent_id: null, sort_order: 2, is_active: true, created_at: new Date().toISOString(), image_url: null },
-  { id: "cat-pret", name: "Pret Collection", slug: "pret", description: "Chic luxury pret.", parent_id: null, sort_order: 3, is_active: true, created_at: new Date().toISOString(), image_url: null },
-];
-
 export default function AdminCategoriesPage() {
   const supabase = createClient();
   const toast = useToast();
@@ -42,14 +36,14 @@ export default function AdminCategoriesPage() {
           .select("*")
           .order("sort_order", { ascending: true });
 
-        if (error || !data || data.length === 0) {
-          setCategories(MOCK_CATEGORIES);
+        if (error || !data) {
+          setCategories([]);
         } else {
           setCategories(data as Category[]);
         }
       } catch (err) {
         console.error("Failed to fetch categories:", err);
-        setCategories(MOCK_CATEGORIES);
+        setCategories([]);
       } finally {
         setLoading(false);
       }

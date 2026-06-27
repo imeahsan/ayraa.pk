@@ -141,7 +141,7 @@ export default function AdminReviewsPage() {
 
     setSubmittingManual(true);
     setIsUploading(true);
-    let uploadedUrls: string[] = [];
+    const uploadedUrls: string[] = [];
 
     try {
       for (const file of selectedFiles) {

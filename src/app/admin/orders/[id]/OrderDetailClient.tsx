@@ -14,120 +14,6 @@ interface OrderDetailClientProps {
   orderId: string;
 }
 
-const MOCK_ORDER_DETAIL: Order = {
-  id: "AYR-00142",
-  user_id: null,
-  status: "processing",
-  payment_method: "cod",
-  subtotal: 145000,
-  shipping_cost: 0,
-  total: 145000,
-  shipping_address: {
-    first_name: "Zahra",
-    last_name: "Ahmed",
-    address_line_1: "Block 5, Clifton",
-    address_line_2: "Apartment 4B",
-    city: "Karachi",
-    state: "Sindh",
-    postal_code: "75500",
-    country: "Pakistan",
-  },
-  contact_phone: "0300-1234567",
-  contact_email: "zahra@example.com",
-  city: "Karachi",
-  created_at: new Date().toISOString(),
-  items: [
-    {
-      id: "item1",
-      order_id: "AYR-00142",
-      product_id: "p1",
-      variant_id: "v1",
-      quantity: 2,
-      unit_price: 18500,
-      product: {
-        id: "p1",
-        name: "Noir Silk Blouse",
-        slug: "noir-silk-blouse",
-        description: "Pure silk blouse",
-        price: 18500,
-        compare_at_price: null,
-        sku: "AYR-NOI-01",
-        category_id: "cat-pret",
-        is_active: true,
-        is_featured: false,
-        fabric: "Silk",
-        color: "Black",
-        includes: "Blouse Only",
-        care_instructions: "Dry clean only",
-        meta_title: null,
-        meta_description: null,
-        created_at: new Date().toISOString(),
-        images: [
-          {
-            id: "img1",
-            product_id: "p1",
-            url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&auto=format&fit=crop&q=80",
-            alt_text: "Noir Silk Blouse",
-            sort_order: 1,
-            is_primary: true,
-          },
-        ],
-      },
-      variant: {
-        id: "v1",
-        product_id: "p1",
-        size: "M",
-        stock_quantity: 12,
-        is_available: true,
-      },
-    },
-    {
-      id: "item2",
-      order_id: "AYR-00142",
-      product_id: "p5",
-      variant_id: "v5",
-      quantity: 1,
-      unit_price: 85000,
-      product: {
-        id: "p5",
-        name: "Midnight Chiffon Suit",
-        slug: "midnight-chiffon-suit",
-        description: "Midnight black formal chiffon suit.",
-        price: 85000,
-        compare_at_price: null,
-        sku: "AYR-MCF-05",
-        category_id: "cat-formal",
-        is_active: true,
-        is_featured: false,
-        fabric: "Chiffon",
-        color: "Black",
-        includes: "Shirt, Dupatta, Pants",
-        care_instructions: "Dry clean only",
-        meta_title: null,
-        meta_description: null,
-        created_at: new Date().toISOString(),
-        images: [
-          {
-            id: "img5",
-            product_id: "p5",
-            url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=100&auto=format&fit=crop&q=80",
-            alt_text: "Midnight Chiffon Suit",
-            sort_order: 1,
-            is_primary: true,
-          },
-        ],
-      },
-      variant: {
-        id: "v5",
-        product_id: "p5",
-        size: "S",
-        stock_quantity: 4,
-        is_available: true,
-      },
-    },
-  ],
-};
-
 const CopyButton: React.FC<{ text: string }> = ({ text }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = (e: React.MouseEvent) => {
@@ -208,7 +94,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
           .single();
 
         if (error || !data) {
-          setOrder(MOCK_ORDER_DETAIL);
+          setOrder(null);
         } else {
           // Resolve products/variants for items
           const resolvedOrder = data as Order;
@@ -240,7 +126,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
         }
       } catch (err) {
         console.error("Failed to load order detail:", err);
-        setOrder(MOCK_ORDER_DETAIL);
+        setOrder(null);
       } finally {
         setLoading(false);
       }

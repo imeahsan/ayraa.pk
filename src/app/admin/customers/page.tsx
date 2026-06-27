@@ -6,39 +6,6 @@ import { UserProfile } from "@/types";
 import styles from "../admin.module.css";
 
 // Fallback Mock Customers
-const MOCK_CUSTOMERS: (UserProfile & { orders_count?: number; total_spent?: number; is_guest?: boolean })[] = [
-  {
-    id: "u1",
-    email: "zahra@example.com",
-    full_name: "Zahra Ahmed",
-    phone: "0300-1234567",
-    role: "customer",
-    created_at: new Date().toISOString(),
-    orders_count: 3,
-    total_spent: 185000,
-  },
-  {
-    id: "u2",
-    email: "fatima@example.com",
-    full_name: "Fatima Khan",
-    phone: "0321-7654321",
-    role: "customer",
-    created_at: new Date().toISOString(),
-    orders_count: 1,
-    total_spent: 85500,
-  },
-  {
-    id: "u3",
-    email: "ayesha@example.com",
-    full_name: "Ayesha Tariq",
-    phone: "0333-9876543",
-    role: "customer",
-    created_at: new Date().toISOString(),
-    orders_count: 5,
-    total_spent: 420000,
-  },
-];
-
 export default function AdminCustomersPage() {
   const supabase = createClient();
   const [customers, setCustomers] = useState<(UserProfile & { orders_count?: number; total_spent?: number; is_guest?: boolean })[]>([]);
@@ -149,7 +116,7 @@ export default function AdminCustomersPage() {
         setCustomers(combined);
       } catch (err) {
         console.error("Failed to load customers:", err);
-        setCustomers(MOCK_CUSTOMERS);
+        setCustomers([]);
       } finally {
         setLoading(false);
       }

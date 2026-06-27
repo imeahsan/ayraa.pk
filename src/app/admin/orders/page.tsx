@@ -6,75 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Order, OrderShipment, OrderStatus } from "@/types";
 import styles from "../admin.module.css";
 
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "AYR-00142",
-    user_id: null,
-    status: "processing",
-    payment_method: "cod",
-    subtotal: 145000,
-    shipping_cost: 0,
-    total: 145000,
-    shipping_address: {
-      first_name: "Zahra",
-      last_name: "Ahmed",
-      address_line_1: "Block 5, Clifton",
-      city: "Karachi",
-      state: "Sindh",
-      postal_code: "75500",
-      country: "Pakistan",
-    },
-    contact_phone: "0300-1234567",
-    contact_email: "zahra@example.com",
-    city: "Karachi",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "AYR-00141",
-    user_id: null,
-    status: "shipped",
-    payment_method: "cod",
-    subtotal: 85500,
-    shipping_cost: 0,
-    total: 85500,
-    shipping_address: {
-      first_name: "Fatima",
-      last_name: "Khan",
-      address_line_1: "DHA Phase 6",
-      city: "Lahore",
-      state: "Punjab",
-      postal_code: "54000",
-      country: "Pakistan",
-    },
-    contact_phone: "0321-7654321",
-    contact_email: "fatima@example.com",
-    city: "Lahore",
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: "AYR-00140",
-    user_id: null,
-    status: "delivered",
-    payment_method: "cod",
-    subtotal: 210000,
-    shipping_cost: 0,
-    total: 210000,
-    shipping_address: {
-      first_name: "Ayesha",
-      last_name: "Tariq",
-      address_line_1: "F-7/2",
-      city: "Islamabad",
-      state: "Islamabad",
-      postal_code: "44000",
-      country: "Pakistan",
-    },
-    contact_phone: "0333-9876543",
-    contact_email: "ayesha@example.com",
-    city: "Islamabad",
-    created_at: new Date().toISOString(),
-  },
-];
-
 const CopyButton: React.FC<{ text: string }> = ({ text }) => {
   const [copied, setCopied] = useState(false);
   const handleCopy = (e: React.MouseEvent) => {
@@ -135,14 +66,14 @@ export default function AdminOrdersPage() {
           .select("*, shipments:order_shipments(*)")
           .order("created_at", { ascending: false });
 
-        if (error || !data || data.length === 0) {
-          setOrders(MOCK_ORDERS);
+        if (error || !data) {
+          setOrders([]);
         } else {
           setOrders(data as Order[]);
         }
       } catch (err) {
         console.error("Failed to fetch orders:", err);
-        setOrders(MOCK_ORDERS);
+        setOrders([]);
       } finally {
         setLoading(false);
       }

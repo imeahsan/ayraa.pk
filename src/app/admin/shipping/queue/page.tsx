@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/context/ToastContext";
@@ -75,11 +75,7 @@ export default function ShippingQueuePage() {
   const [directionFilter, setDirectionFilter] = useState<"all" | "forward" | "reverse">("all");
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchShipments();
-  }, []);
-
-  const fetchShipments = async () => {
+  const fetchShipments = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("order_shipments")
@@ -97,7 +93,11 @@ export default function ShippingQueuePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    fetchShipments();
+  }, [fetchShipments]);
 
   const filteredShipments = useMemo(() => {
     const term = searchTerm.toLowerCase();

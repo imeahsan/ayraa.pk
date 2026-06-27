@@ -24,11 +24,12 @@ interface ProductDetailClientProps {
 }
 
 export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
-  product,
+  product: initialProduct,
   relatedProducts,
   initialQuestions = [],
   initialReviews = [],
 }) => {
+  const [product, setProduct] = useState<Product>(initialProduct);
   const { addItem } = useCart();
   const toast = useToast();
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -82,6 +83,26 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     e?.stopPropagation();
     setLightboxIndex((prev) => (prev - 1 + lightboxImages.length) % lightboxImages.length);
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const isPreviewMode = searchParams.get("preview") === "true";
+      if (isPreviewMode) {
+        try {
+          const saved = localStorage.getItem("ayra-preview-product");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.slug === initialProduct.slug) {
+              setProduct(parsed as Product);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to load preview product from local storage:", e);
+        }
+      }
+    }
+  }, [initialProduct.slug]);
 
   useEffect(() => {
     // Cleanup previews on unmount
@@ -148,7 +169,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
 
     setIsSubmittingReview(true);
     setIsUploading(true);
-    let uploadedUrls: string[] = [];
+    const uploadedUrls: string[] = [];
 
     try {
       const supabase = createClient();

@@ -27,36 +27,6 @@ type ReturnLineDraft = {
   refund_amount: number;
 };
 
-const MOCK_RETURNS: OrderReturnRequest[] = [
-  {
-    id: "11111111-1111-4111-8111-111111111111",
-    order_id: "AYR-00142",
-    request_type: "exchange",
-    status: "requested",
-    resolution_type: null,
-    customer_name: "Zahra Ahmed",
-    customer_phone: "0300-1234567",
-    customer_email: "zahra@example.com",
-    reason: "Size exchange requested by customer.",
-    condition_notes: null,
-    admin_notes: null,
-    refund_amount: 0,
-    store_credit_amount: 0,
-    exchange_order_id: null,
-    reverse_courier_name: null,
-    reverse_tracking_number: null,
-    reverse_tracking_url: null,
-    requested_at: new Date().toISOString(),
-    approved_at: null,
-    received_at: null,
-    resolved_at: null,
-    created_by: null,
-    updated_by: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
 const CASE_STATUSES: Array<ReturnRequestStatus | "all"> = [
   "all",
   "draft",
@@ -145,27 +115,27 @@ export default function AdminReturnsPage() {
     }
   }, []);
 
-  const fetchReturns = async () => {
+  async function fetchReturns() {
     try {
       const { data, error } = await supabase
         .from("order_return_requests")
         .select("*, order:orders!order_return_requests_order_id_fkey(*)")
         .order("created_at", { ascending: false });
 
-      if (error || !data || data.length === 0) {
-        setReturns(MOCK_RETURNS);
+      if (error || !data) {
+        setReturns([]);
       } else {
         setReturns(data as OrderReturnRequest[]);
       }
     } catch (err) {
       console.error("Failed to load returns:", err);
-      setReturns(MOCK_RETURNS);
+      setReturns([]);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const loadOrder = async (targetOrderId = orderIdInput.trim()) => {
+  async function loadOrder(targetOrderId = orderIdInput.trim()) {
     if (!targetOrderId) return;
 
     const { data: orderData, error: orderError } = await supabase
@@ -222,7 +192,7 @@ export default function AdminReturnsPage() {
         refund_amount: Number(item.unit_price),
       }))
     );
-  };
+  }
 
   const filteredReturns = useMemo(() => {
     const term = searchTerm.toLowerCase();

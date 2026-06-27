@@ -60,7 +60,7 @@ export const ReturnDetailClient: React.FC<ReturnDetailClientProps> = ({ returnId
     fetchReturn();
   }, [returnId]);
 
-  const fetchReturn = async () => {
+  async function fetchReturn() {
     try {
       const { data, error } = await supabase
         .from("order_return_requests")
@@ -100,7 +100,7 @@ export const ReturnDetailClient: React.FC<ReturnDetailClientProps> = ({ returnId
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const formatPKR = (amount: number) =>
     Intl.NumberFormat("en-PK", {

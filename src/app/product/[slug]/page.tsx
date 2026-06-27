@@ -194,6 +194,9 @@ interface ProductPageProps {
   params: Promise<{
     slug: string;
   }>;
+  searchParams: Promise<{
+    preview?: string;
+  }>;
 }
 
 const getCachedProduct = unstable_cache(
@@ -303,30 +306,63 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   };
 }
 
-export default async function ProductPage({ params }: ProductPageProps) {
+export default async function ProductPage({ params, searchParams }: ProductPageProps) {
   const { slug } = await params;
+  const sParams = await searchParams;
+  const isPreview = sParams?.preview === "true";
+
   let product = await getCachedProduct(slug);
 
-  if (!product) {
+  if (!product && !isPreview) {
     notFound();
   }
 
-  // Load real-time variants to ensure accurate stock quantities
-  try {
-    const supabase = createCacheClient();
-    const { data: realTimeVariants } = await supabase
-      .from("product_variants")
-      .select("*")
-      .eq("product_id", product.id);
+  if (!product && isPreview) {
+    product = {
+      id: "preview-id",
+      name: "Preview Product",
+      slug: slug,
+      description: null,
+      price: 0,
+      compare_at_price: null,
+      sku: "PREVIEW",
+      category_id: null,
+      is_active: true,
+      is_featured: false,
+      fabric: null,
+      color: null,
+      includes: null,
+      care_instructions: null,
+      meta_title: null,
+      meta_description: null,
+      created_at: new Date().toISOString(),
+      images: [],
+      variants: [],
+    };
+  }
 
-    if (realTimeVariants) {
-      product = {
-        ...product,
-        variants: realTimeVariants,
-      };
+  if (!product) {
+    return null;
+  }
+
+  // Load real-time variants to ensure accurate stock quantities
+  if (product && product.id !== "preview-id") {
+    try {
+      const supabase = createCacheClient();
+      const { data: realTimeVariants } = await supabase
+        .from("product_variants")
+        .select("*")
+        .eq("product_id", product.id);
+
+      if (realTimeVariants) {
+        product = {
+          ...product,
+          variants: realTimeVariants,
+        };
+      }
+    } catch (err) {
+      console.error("Error loading real-time variants:", err);
     }
-  } catch (err) {
-    console.error("Error loading real-time variants:", err);
   }
 
   let relatedProducts: Product[] = [];

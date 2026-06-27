@@ -9,67 +9,6 @@ import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
 
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: "p1",
-    name: "Midnight Chiffon Suit",
-    slug: "midnight-chiffon-suit",
-    description: "Exquisite pure chiffon suit.",
-    price: 85000,
-    compare_at_price: 95000,
-    sku: "AYR-MCF-05",
-    category_id: "cat-formal",
-    is_active: true,
-    is_featured: true,
-    fabric: "Chiffon",
-    color: "Black",
-    includes: "Shirt, Dupatta, Pants",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img1",
-        product_id: "p1",
-        url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=100&auto=format&fit=crop&q=80",
-        alt_text: "Midnight Chiffon Suit",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-  },
-  {
-    id: "p2",
-    name: "Noir Silk Blouse",
-    slug: "noir-silk-blouse",
-    description: "Premium raw silk blouse.",
-    price: 18500,
-    compare_at_price: null,
-    sku: "AYR-NOI-01",
-    category_id: "cat-pret",
-    is_active: true,
-    is_featured: false,
-    fabric: "Silk",
-    color: "Black",
-    includes: "Blouse Only",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img2",
-        product_id: "p2",
-        url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&auto=format&fit=crop&q=80",
-        alt_text: "Noir Silk Blouse",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-  },
-];
-
 export default function AdminProductsPage() {
   const supabase = createClient();
   const toast = useToast();
@@ -86,8 +25,8 @@ export default function AdminProductsPage() {
           .select("*, category:categories(*), images:product_images(*)")
           .order("created_at", { ascending: false });
 
-        if (productsError || !productsData || productsData.length === 0) {
-          setProducts(MOCK_PRODUCTS);
+        if (productsError || !productsData) {
+          setProducts([]);
         } else {
           setProducts(productsData as Product[]);
         }
@@ -101,7 +40,7 @@ export default function AdminProductsPage() {
         }
       } catch (err) {
         console.error("Failed to fetch products:", err);
-        setProducts(MOCK_PRODUCTS);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
@@ -239,6 +178,15 @@ export default function AdminProductsPage() {
                       </td>
                       <td className={styles.tableTd}>
                         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                          <a
+                            href={`/product/${p.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.tableLink}
+                            style={{ color: "#38bdf8" }}
+                          >
+                            Preview
+                          </a>
                           <Link href={`/admin/products/${p.id}`} className={styles.tableLink}>
                             Edit
                           </Link>

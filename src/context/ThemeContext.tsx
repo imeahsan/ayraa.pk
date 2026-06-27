@@ -20,18 +20,13 @@ export const useTheme = () => useContext(ThemeContext);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [theme, setTheme] = useState<Theme>("dark");
-
-  // On mount, read from localStorage or system preference
-  useEffect(() => {
-    const stored = localStorage.getItem("ayra-theme") as Theme | null;
-    if (stored === "dark" || stored === "light") {
-      setTheme(stored);
-    } else {
-      // Default to dark (per Stitch design)
-      setTheme("dark");
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("ayra-theme") as Theme | null;
+      if (stored === "dark" || stored === "light") return stored;
     }
-  }, []);
+    return "dark";
+  });
 
   const pathname = usePathname();
 

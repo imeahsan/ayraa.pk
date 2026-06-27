@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { ProductImage } from "@/types";
 import styles from "./ImageGallery.module.css";
@@ -10,12 +10,23 @@ interface ImageGalleryProps {
 }
 
 export const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
-  const [activeImage, setActiveImage] = useState<ProductImage>(
+  const [activeImage, setActiveImage] = useState<ProductImage | undefined>(
     images.find((img) => img.is_primary) || images[0]
   );
   const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({});
 
-  if (!images || images.length === 0) {
+  useEffect(() => {
+    if (images && images.length > 0) {
+      const stillExists = images.some((img) => img.id === activeImage?.id);
+      if (!stillExists) {
+        setActiveImage(images.find((img) => img.is_primary) || images[0]);
+      }
+    }
+  }, [images, activeImage?.id]);
+
+  const currentImage = activeImage || images.find((img) => img.is_primary) || images[0];
+
+  if (!images || images.length === 0 || !currentImage) {
     return <div className={styles.fallback} />;
   }
 
@@ -41,7 +52,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
       <div className={styles.thumbnailsScroll}>
         <div className={styles.thumbnailsList}>
           {images.map((img) => {
-            const isActive = img.id === activeImage.id;
+            const isActive = img.id === currentImage.id;
             return (
               <button
                 key={img.id}
@@ -73,8 +84,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
       >
         <div className={styles.zoomContainer} style={zoomStyle}>
           <Image
-            src={activeImage.url}
-            alt={activeImage.alt_text || "Product image"}
+            src={currentImage.url}
+            alt={currentImage.alt_text || "Product image"}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"

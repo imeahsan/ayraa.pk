@@ -437,6 +437,99 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     }
   };
 
+  const handlePreview = () => {
+    if (!name.trim()) {
+      toast.warning("Please enter a product name first to generate a preview.");
+      return;
+    }
+
+    const calculatedSlug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    const previewProduct = {
+      id: productId || "preview-id",
+      name,
+      slug: calculatedSlug,
+      sku: sku || null,
+      price,
+      compare_at_price: compareAtPrice === "" ? null : Number(compareAtPrice),
+      category_id: categoryId || null,
+      fabric: fabric || null,
+      color: color || null,
+      includes: includes || null,
+      care_instructions: careInstructions || null,
+      description: description || null,
+      is_active: isActive,
+      is_featured: isFeatured,
+      is_on_sale: isOnSale,
+      created_at: new Date().toISOString(),
+      images: images.map((img, idx) => ({
+        id: img.id || `preview-img-${idx}`,
+        product_id: productId || "preview-id",
+        url: img.url,
+        alt_text: name,
+        sort_order: idx + 1,
+        is_primary: idx === 0,
+      })),
+      variants: hasColors
+        ? colorVariants.flatMap((cv, cvIdx) => {
+            if (hasSizes) {
+              return [
+                { size: "XS", qty: cv.stockXS },
+                { size: "S", qty: cv.stockS },
+                { size: "M", qty: cv.stockM },
+                { size: "L", qty: cv.stockL },
+                { size: "XL", qty: cv.stockXL },
+              ].map((s) => ({
+                id: `preview-var-${cvIdx}-${s.size}`,
+                product_id: productId || "preview-id",
+                size: s.size,
+                color: cv.color,
+                stock_quantity: s.qty,
+                is_available: s.qty > 0,
+              }));
+            } else {
+              return [{
+                id: `preview-var-${cvIdx}-Standard`,
+                product_id: productId || "preview-id",
+                size: "Standard",
+                color: cv.color,
+                stock_quantity: cv.singleStock,
+                is_available: cv.singleStock > 0,
+              }];
+            }
+          })
+        : hasSizes
+        ? [
+            { size: "XS", qty: stockXS },
+            { size: "S", qty: stockS },
+            { size: "M", qty: stockM },
+            { size: "L", qty: stockL },
+            { size: "XL", qty: stockXL },
+          ].map((s) => ({
+            id: `preview-var-${s.size}`,
+            product_id: productId || "preview-id",
+            size: s.size,
+            color: "Standard",
+            stock_quantity: s.qty,
+            is_available: s.qty > 0,
+          }))
+        : [{
+            id: `preview-var-Standard`,
+            product_id: productId || "preview-id",
+            size: "Standard",
+            color: "Standard",
+            stock_quantity: singleStock,
+            is_available: singleStock > 0,
+          }],
+    };
+
+    localStorage.setItem("ayra-preview-product", JSON.stringify(previewProduct));
+    window.open(`/product/${calculatedSlug}?preview=true`, "_blank");
+  };
+
   if (loading) return <p className="font-body text-sm text-admin-text-sub text-center py-12">Loading product details...</p>;
 
   return (
@@ -815,6 +908,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           <div className={styles.formActionGroup}>
             <Button type="submit" variant="luxury" size="lg" fullWidth isLoading={saving}>
               {isEditing ? "Save Product Changes" : "Publish Product"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              fullWidth
+              style={{ borderColor: "#38bdf8", color: "#38bdf8" }}
+              onClick={handlePreview}
+            >
+              👁️ Preview Storefront
             </Button>
             <Button
               type="button"

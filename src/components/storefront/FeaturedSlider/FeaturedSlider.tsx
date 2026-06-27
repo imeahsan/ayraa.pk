@@ -19,10 +19,7 @@ export const FeaturedSlider: React.FC<FeaturedSliderProps> = ({
   const sliderRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const itemsPerPage = useRef(4);
-
-  if (!products || products.length === 0) return null;
-
+  
   // Calculate items per page based on window width
   const getItemsPerPage = () => {
     if (typeof window === "undefined") return 4;
@@ -31,17 +28,20 @@ export const FeaturedSlider: React.FC<FeaturedSliderProps> = ({
     return 4;
   };
 
+  const [itemsPerPage, setItemsPerPage] = useState<number>(() => getItemsPerPage());
+
+  if (!products || products.length === 0) return null;
+
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
-    itemsPerPage.current = getItemsPerPage();
     const handleResize = () => {
-      itemsPerPage.current = getItemsPerPage();
+      setItemsPerPage(getItemsPerPage());
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const maxIndex = Math.max(0, products.length - itemsPerPage.current);
+  const maxIndex = Math.max(0, products.length - itemsPerPage);
 
   const scrollTo = (index: number) => {
     if (!sliderRef.current) return;
@@ -96,7 +96,7 @@ export const FeaturedSlider: React.FC<FeaturedSliderProps> = ({
       </div>
 
       {/* Navigation Arrows */}
-      {products.length > itemsPerPage.current && (
+      {products.length > itemsPerPage && (
         <>
           <button
             type="button"

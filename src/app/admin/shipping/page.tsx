@@ -1,31 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/context/ToastContext";
 import { ShippingCompany } from "@/types";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../admin.module.css";
-
-const MOCK_COMPANIES: ShippingCompany[] = [
-  {
-    id: "shipco-1",
-    name: "Leopard Courier",
-    code: "leopard",
-    contact_person: null,
-    phone: null,
-    email: null,
-    website_url: "https://www.leopardscourier.com",
-    tracking_url_template: "https://leetrace.leopardscourier.com/?track_numbers={tracking_number}",
-    default_base_rate: 250,
-    cod_fee_type: null,
-    cod_fee_value: null,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
 
 export default function AdminShippingPage() {
   const supabase = createClient();
@@ -47,31 +28,31 @@ export default function AdminShippingPage() {
     is_active: true,
   });
 
-  useEffect(() => {
-    const load = async () => {
-      await fetchCompanies();
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from("shipping_companies")
         .select("*")
         .order("name", { ascending: true });
 
-      if (error || !data || data.length === 0) {
-        setCompanies(MOCK_COMPANIES);
+      if (error || !data) {
+        setCompanies([]);
       } else {
         setCompanies(data as ShippingCompany[]);
       }
     } catch (err) {
       console.error("Failed to load shipping companies:", err);
-      setCompanies(MOCK_COMPANIES);
+      setCompanies([]);
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    const load = async () => {
+      await fetchCompanies();
+      setLoading(false);
+    };
+    load();
+  }, [fetchCompanies]);
 
   const formatPKR = (amount: number) =>
     Intl.NumberFormat("en-PK", {
