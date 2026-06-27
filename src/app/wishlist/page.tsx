@@ -29,7 +29,7 @@ export default function WishlistPage() {
             <span className={styles.kicker}>Saved for later</span>
             <h1 className={styles.title}>Your Wishlist</h1>
             <p className={styles.copy}>
-              Keep track of the pieces you love. Sign in to save and sync your wishlist across devices.
+              Keep track of lawn, pret, and festive pieces you want to come back to.
             </p>
           </div>
 
@@ -54,7 +54,7 @@ export default function WishlistPage() {
               <p className={styles.stateText}>You have not saved any items yet.</p>
               <Link href="/collections">
                 <Button variant="luxury" size="lg">
-                  Start Browsing
+                  Browse Collections
                 </Button>
               </Link>
             </div>

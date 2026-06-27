@@ -73,7 +73,7 @@ function RegisterContent() {
       <main className={styles.mainContent}>
         <div className={styles.card}>
           <h1 className={styles.title}>Create Account</h1>
-          <p className={styles.subtitle}>Join Ayraa to track orders and shop luxury prêt.</p>
+          <p className={styles.subtitle}>Join Ayraa to track orders and shop refined pret.</p>
 
           {error && <div className={styles.errorBox}>{error}</div>}
 

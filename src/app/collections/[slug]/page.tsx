@@ -15,14 +15,14 @@ export const dynamic = "force-dynamic";
 // ─── Category name map (all slugs) ───────────────────────────────────────────
 const CATEGORY_NAMES: Record<string, string> = {
   // Parent categories
-  "lawn-prints": "Lawn Prints",
-  "garments": "Garments",
-  "bedding": "Bedding",
-  "hijab-collection": "Hijab Collection",
+  "lawn-prints": "Lawn",
+  "garments": "Pret",
+  "bedding": "Home",
+  "hijab-collection": "Hijabs",
   // Lawn sub-categories
   "lawn-3-piece": "Lawn 3-Piece",
   "lawn-2-piece": "Lawn 2-Piece",
-  "lawn-ready-to-wear": "Lawn Ready to Wear",
+  "lawn-ready-to-wear": "Lawn Pret",
   // Garments sub-categories
   "intimate-wear": "Intimate Wear",
   "sleep-wear": "Sleep Wear",
@@ -39,7 +39,7 @@ const SUB_CATEGORIES: Record<string, { name: string; slug: string; image: string
   "lawn-prints": [
     { name: "3-Piece", slug: "lawn-3-piece", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80" },
     { name: "2-Piece", slug: "lawn-2-piece", image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&auto=format&fit=crop&q=80" },
-    { name: "Ready to Wear", slug: "lawn-ready-to-wear", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80" },
+    { name: "Pret", slug: "lawn-ready-to-wear", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80" },
   ],
   "garments": [
     { name: "Intimate Wear", slug: "intimate-wear", image: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&auto=format&fit=crop&q=80" },
@@ -93,7 +93,7 @@ const MOCK_PRODUCTS: Record<string, Product[]> = {
   "lawn-ready-to-wear": [
     {
       id: "p-lrw-1", name: "Ivory Drape Lawn Set", slug: "ivory-drape-lawn-set",
-      description: "Ready-stitched ivory lawn ensemble — just wear and go.",
+      description: "Ready-stitched ivory lawn ensemble made for easy styling.",
       price: 5800, compare_at_price: null, sku: "AYR-LWN-RW-01",
       category_id: "lawn-ready-to-wear", is_active: true, is_featured: true,
       fabric: "Lawn Cotton", color: "Ivory", includes: "Stitched Shirt, Dupatta",

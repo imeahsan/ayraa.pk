@@ -8,19 +8,18 @@ import { useWishlist } from "@/context/WishlistContext";
 import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/lib/supabase/client";
 import { UserProfile, Category } from "@/types";
+import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
 import styles from "./Header.module.css";
 
-// ─── Category mega-menu structure ────────────────────────────────────────────
 interface NavCategory {
+  id: string;
   label: string;
   href: string;
   showInHeader: boolean;
   sub: Array<{ label: string; href: string }>;
 }
 
-const GENERIC_NAV_LINKS = [
-  { label: "New In", href: "/collections" },
-];
+const GENERIC_NAV_LINKS = [{ label: "New In", href: "/collections" }];
 
 const getCategoryNavLabel = (category: Category) =>
   category.header_label?.trim() || category.name;
@@ -29,8 +28,6 @@ const isActiveHref = (pathname: string, href: string) => {
   if (href === "/collections") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 };
-
-import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
 
 export const Header: React.FC = () => {
   const { cart, setCartOpen } = useCart();
@@ -44,7 +41,6 @@ export const Header: React.FC = () => {
   const [menuCategories, setMenuCategories] = useState<NavCategory[]>([]);
   const pathname = usePathname();
   const router = useRouter();
-  // Stable client ref — never recreated across renders
   const supabaseRef = useRef(createClient());
   const supabase = supabaseRef.current;
 
@@ -57,31 +53,30 @@ export const Header: React.FC = () => {
         scrolled ? "102px" : "118px"
       );
     };
-    
-    // Set initial height on mount
+
     document.documentElement.style.setProperty("--header-height", "118px");
-    
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
-    const sb = supabaseRef.current;
-
-    // Initial session check
     const fetchUser = async () => {
       try {
-        const { data: { user } } = await sb.auth.getUser();
-        if (user) {
-          const { data, error } = await sb.from("profiles").select("*").eq("id", user.id).single();
-          if (error) {
-            console.error("Error fetching profile:", error);
-            setProfile(null);
-          } else {
-            setProfile(data as UserProfile);
-          }
-        } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
           setProfile(null);
+          return;
+        }
+
+        const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+        if (error) {
+          console.error("Error fetching profile:", error);
+          setProfile(null);
+        } else {
+          setProfile(data as UserProfile);
         }
       } catch (err) {
         console.error("Auth check failed:", err);
@@ -90,21 +85,24 @@ export const Header: React.FC = () => {
         setAuthReady(true);
       }
     };
+
     fetchUser();
 
-    // Subscribe to auth changes (sign-in / sign-out)
-    const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       try {
-        if (session?.user) {
-          const { data, error } = await sb.from("profiles").select("*").eq("id", session.user.id).single();
-          if (error) {
-            console.error("Error fetching profile on auth change:", error);
-            setProfile(null);
-          } else {
-            setProfile(data as UserProfile);
-          }
-        } else {
+        if (!session?.user) {
           setProfile(null);
+          return;
+        }
+
+        const { data, error } = await supabase.from("profiles").select("*").eq("id", session.user.id).single();
+        if (error) {
+          console.error("Error fetching profile on auth change:", error);
+          setProfile(null);
+        } else {
+          setProfile(data as UserProfile);
         }
       } catch (err) {
         console.error("Auth change callback failed:", err);
@@ -115,7 +113,7 @@ export const Header: React.FC = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -126,27 +124,31 @@ export const Header: React.FC = () => {
           .eq("is_active", true)
           .order("sort_order", { ascending: true });
 
-        if (!error && data && data.length > 0) {
-          const allCats = data as Category[];
-          const parents = allCats.filter((c) => c.parent_id === null);
-          const mapped = parents.map((parent) => {
-            const subs = allCats.filter((c) => c.parent_id === parent.id && c.is_active);
-            return {
-              label: getCategoryNavLabel(parent),
-              href: `/collections/${parent.slug}`,
-              showInHeader: Boolean(parent.show_in_header),
-              sub: subs.map((sub) => ({
-                label: sub.name,
-                href: `/collections/${sub.slug}`,
-              })),
-            };
-          });
-          setMenuCategories(mapped);
-        }
+        if (error || !data || data.length === 0) return;
+
+        const allCats = data as Category[];
+        const parents = allCats.filter((c) => c.parent_id === null);
+
+        const mapped = parents.map((parent) => {
+          const subs = allCats.filter((c) => c.parent_id === parent.id && c.is_active);
+          return {
+            id: parent.id,
+            label: getCategoryNavLabel(parent),
+            href: `/collections/${parent.slug}`,
+            showInHeader: Boolean(parent.show_in_header),
+            sub: subs.map((sub) => ({
+              label: sub.name,
+              href: `/collections/${sub.slug}`,
+            })),
+          };
+        });
+
+        setMenuCategories(mapped);
       } catch (err) {
         console.error("Failed to load navigation categories:", err);
       }
     };
+
     fetchCategories();
   }, []);
 
@@ -165,13 +167,13 @@ export const Header: React.FC = () => {
   };
 
   const totalItemCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+  const headerCategories = menuCategories.filter((cat) => cat.showInHeader);
 
   return (
     <>
       <header className={`${styles.header} ${isScrolled ? styles.scrolled : ""}`}>
         <AnnouncementTicker />
         <div className={styles.container}>
-          {/* Mobile menu toggle */}
           <button
             className={styles.mobileMenuToggle}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -181,13 +183,12 @@ export const Header: React.FC = () => {
             <span className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerOpen : ""}`} />
           </button>
 
-          {/* Branding Logo */}
-          <Link href="/" className={styles.logo}>AYRAA</Link>
+          <Link href="/" className={styles.logo}>
+            AYRAA
+          </Link>
 
-          {/* Desktop Mega-Menu Navigation */}
           <nav className={styles.nav} aria-label="Primary navigation">
             <ul className={styles.navList}>
-              {/* Collections mega-menu trigger */}
               <li className={`${styles.navItem} ${styles.megaMenuWrapper}`}>
                 <Link
                   href="/collections"
@@ -196,18 +197,17 @@ export const Header: React.FC = () => {
                   Shop
                 </Link>
 
-                {/* Mega-menu panel */}
                 <div className={styles.megaMenu} role="region" aria-label="Collections menu">
                   <div className={styles.megaMenuInner}>
-                    {menuCategories.map((cat) => (
-                      <div key={cat.href} className={styles.megaCol}>
+                    {headerCategories.map((cat) => (
+                      <div key={cat.id} className={styles.megaCol}>
                         <Link href={cat.href} className={styles.megaParentLink}>
                           {cat.label}
                         </Link>
-                        {cat.sub && cat.sub.length > 0 && (
+                        {cat.sub.length > 0 && (
                           <ul className={styles.megaSubList}>
                             {cat.sub.map((sub) => (
-                              <li key={`${cat.href}-${sub.href}-${sub.label}`}>
+                              <li key={`${cat.id}-${sub.href}-${sub.label}`}>
                                 <Link
                                   href={sub.href}
                                   className={`${styles.megaSubLink} ${pathname === sub.href ? styles.megaSubLinkActive : ""}`}
@@ -226,21 +226,25 @@ export const Header: React.FC = () => {
 
               {GENERIC_NAV_LINKS.map((item) => (
                 <li key={item.label} className={styles.navItem}>
-                  <Link href={item.href} className={isActiveHref(pathname, item.href) ? "premium-underline-active" : "premium-underline"}>
+                  <Link
+                    href={item.href}
+                    className={isActiveHref(pathname, item.href) ? "premium-underline-active" : "premium-underline"}
+                  >
                     {item.label}
                   </Link>
                 </li>
               ))}
 
-              {menuCategories
-                .filter((cat) => cat.showInHeader)
-                .map((cat) => (
-                  <li key={cat.href} className={styles.navItem}>
-                    <Link href={cat.href} className={isActiveHref(pathname, cat.href) ? "premium-underline-active" : "premium-underline"}>
-                      {cat.label}
-                    </Link>
-                  </li>
-                ))}
+              {headerCategories.map((cat) => (
+                <li key={cat.id} className={styles.navItem}>
+                  <Link
+                    href={cat.href}
+                    className={isActiveHref(pathname, cat.href) ? "premium-underline-active" : "premium-underline"}
+                  >
+                    {cat.label}
+                  </Link>
+                </li>
+              ))}
 
               <li className={styles.navItem}>
                 <Link href="/about" className={pathname === "/about" ? "premium-underline-active" : "premium-underline"}>
@@ -255,9 +259,7 @@ export const Header: React.FC = () => {
             </ul>
           </nav>
 
-          {/* Action icons */}
           <div className={styles.actions}>
-            {/* Theme toggle */}
             <button
               className={styles.iconBtn}
               onClick={toggleTheme}
@@ -267,17 +269,20 @@ export const Header: React.FC = () => {
             >
               {theme === "dark" ? (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
                 </svg>
               ) : (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                 </svg>
               )}
             </button>
 
             {profile?.role === "admin" && (
-              <Link href="/admin" className={styles.dashboardLink} title="Admin Panel">Dashboard</Link>
+              <Link href="/admin" className={styles.dashboardLink} title="Admin Panel">
+                Dashboard
+              </Link>
             )}
 
             {authReady ? (
@@ -289,19 +294,26 @@ export const Header: React.FC = () => {
                   <div className={styles.profileDropdown}>
                     <div className={styles.dropdownMenu}>
                       {profile.role === "admin" && (
-                        <Link href="/admin" className={styles.dropdownItem}>Admin Panel</Link>
+                        <Link href="/admin" className={styles.dropdownItem}>
+                          Admin Panel
+                        </Link>
                       )}
-                      <Link href="/orders" className={styles.dropdownItem}>My Orders</Link>
-                      <button onClick={handleSignOut} className={styles.dropdownItem}>Sign Out</button>
+                      <Link href="/orders" className={styles.dropdownItem}>
+                        My Orders
+                      </Link>
+                      <button onClick={handleSignOut} className={styles.dropdownItem}>
+                        Sign Out
+                      </button>
                     </div>
                   </div>
                 </div>
               ) : (
-                <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className="premium-underline" id="login-link">Login</Link>
+                <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className="premium-underline" id="login-link">
+                  Login
+                </Link>
               )
             ) : (
-              // Placeholder with a tiny spinner to prevent layout shift and show loading state
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2.5rem' }}>
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "2.5rem" }}>
                 <span className={styles.miniSpinner} aria-hidden="true" />
               </span>
             )}
@@ -320,12 +332,11 @@ export const Header: React.FC = () => {
                 {wishlistCount > 0 && <span className={styles.wishlistBadge}>{wishlistCount}</span>}
               </button>
             ) : (
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '2.5rem' }}>
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "2.5rem" }}>
                 <span className={styles.miniSpinner} aria-hidden="true" />
               </span>
             )}
 
-            {/* Bag Icon */}
             <button
               className={styles.iconBtn}
               onClick={() => setCartOpen(true)}
@@ -341,16 +352,15 @@ export const Header: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Fullscreen Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className={styles.mobileMenuOverlay} onClick={() => setIsMobileMenuOpen(false)} />
-      )}
+      {isMobileMenuOpen && <div className={styles.mobileMenuOverlay} onClick={() => setIsMobileMenuOpen(false)} />}
       <nav
         className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}
         aria-label="Mobile navigation"
       >
         <div className={styles.mobileMenuHeader}>
-          <Link href="/" className={styles.logo} onClick={() => setIsMobileMenuOpen(false)}>AYRAA</Link>
+          <Link href="/" className={styles.logo} onClick={() => setIsMobileMenuOpen(false)}>
+            AYRAA
+          </Link>
           <button className={styles.iconBtn} onClick={() => setIsMobileMenuOpen(false)} aria-label="Close navigation">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -369,29 +379,32 @@ export const Header: React.FC = () => {
             </Link>
           </li>
 
-          {menuCategories.map((cat) => {
-            const hasSubs = cat.sub && cat.sub.length > 0;
+          {headerCategories.map((cat) => {
+            const hasSubs = cat.sub.length > 0;
             return (
-              <li key={cat.href} className={styles.mobileMenuItem}>
+              <li key={cat.id} className={styles.mobileMenuItem}>
                 {hasSubs ? (
                   <>
-                    {/* Parent row — tap to expand */}
                     <button
                       className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive} ${styles.mobileParentBtn}`}
-                      onClick={() => setExpandedMobile(expandedMobile === cat.label ? null : cat.label)}
-                      aria-expanded={expandedMobile === cat.label}
+                      onClick={() => setExpandedMobile(expandedMobile === cat.id ? null : cat.id)}
+                      aria-expanded={expandedMobile === cat.id}
                     >
                       <span>{cat.label}</span>
                       <svg
-                        width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                        className={expandedMobile === cat.label ? styles.chevronOpen : styles.chevron}
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className={expandedMobile === cat.id ? styles.chevronOpen : styles.chevron}
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
 
-                    {/* Sub-categories accordion */}
-                    {expandedMobile === cat.label && (
+                    {expandedMobile === cat.id && (
                       <ul className={styles.mobileSubList}>
                         <li>
                           <Link
@@ -403,7 +416,7 @@ export const Header: React.FC = () => {
                           </Link>
                         </li>
                         {cat.sub.map((sub) => (
-                          <li key={`${cat.href}-${sub.href}-${sub.label}`}>
+                          <li key={`${cat.id}-${sub.href}-${sub.label}`}>
                             <Link
                               href={sub.href}
                               className={`${styles.mobileSubLink} ${pathname === sub.href ? styles.mobileSubLinkActive : ""}`}
@@ -430,14 +443,24 @@ export const Header: React.FC = () => {
           })}
 
           <li className={styles.mobileMenuItem}>
-            <Link href="/about" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>About</Link>
+            <Link href="/about" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>
+              About
+            </Link>
           </li>
           <li className={styles.mobileMenuItem}>
-            <Link href="/contact" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
+            <Link href="/contact" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>
+              Contact
+            </Link>
           </li>
           {authReady && !profile && (
             <li className={styles.mobileMenuItem}>
-              <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+              <Link
+                href={`/login?redirectTo=${encodeURIComponent(pathname)}`}
+                className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Login
+              </Link>
             </li>
           )}
         </ul>

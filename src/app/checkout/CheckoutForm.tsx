@@ -430,7 +430,7 @@ export const CheckoutForm: React.FC = () => {
           </h2>
           <div className={styles.paymentCard}>
             <div className={styles.paymentInfo}>
-              <span className={styles.paymentIcon}>🚚</span>
+              <span className={styles.paymentIcon}>COD</span>
               <div className={styles.paymentText}>
                 <h4 className={styles.paymentTitle}>Cash on Delivery (COD)</h4>
                 <p className={styles.paymentDesc}>Pay with cash upon delivery to your doorstep.</p>
@@ -525,7 +525,7 @@ export const CheckoutForm: React.FC = () => {
             ) : (
               <div className={styles.promoApplied}>
                 <span className={styles.promoAppliedText}>
-                  🎟️ <strong>{appliedPromo.code}</strong> applied
+                  Promo <strong>{appliedPromo.code}</strong> applied
                 </span>
                 <button
                   type="button"

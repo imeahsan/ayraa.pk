@@ -79,7 +79,7 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: "16px" }}>
         <div>
           <h1 className={styles.title}>Sign In</h1>
-          <p className={styles.subtitle}>Welcome back to Ayraa luxury fashion.</p>
+          <p className={styles.subtitle}>Sign in to manage orders, wishlist, and checkout faster.</p>
         </div>
         {onClose ? (
           <button
@@ -158,6 +158,12 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
           </svg>
           Continue with Google
         </button>
+      </div>
+
+      <div className={styles.trustStrip}>
+        <span>Cash on Delivery</span>
+        <span>Pakistan-wide delivery</span>
+        <span>Wishlist sync</span>
       </div>
 
       <div className={styles.footerText}>

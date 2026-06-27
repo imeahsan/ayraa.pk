@@ -40,7 +40,7 @@ export default function CartPage() {
           {cart.items.length === 0 ? (
             <div className={styles.emptyState}>
               <p className={styles.emptyText}>Your shopping bag is currently empty.</p>
-              <Link href="/collections/ready-to-wear">
+              <Link href="/collections">
                 <Button variant="luxury" size="lg">
                   Continue Shopping
                 </Button>
@@ -227,7 +227,7 @@ export default function CartPage() {
                     </Button>
                   </Link>
 
-                  <Link href="/collections/ready-to-wear" className={styles.shopLink}>
+                  <Link href="/collections" className={styles.shopLink}>
                     Continue Shopping
                   </Link>
                 </div>

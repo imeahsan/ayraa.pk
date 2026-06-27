@@ -27,11 +27,11 @@ const baseUrl = "https://ayraa.pk";
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Ayraa | Premium Eastern Luxury Fashion",
+    default: "Ayraa | Pakistani Lawn, Pret, and Festive Wear",
     template: "%s | Ayraa Collection"
   },
   description:
-    "Exquisite Eastern couture and luxury prêt-à-porter collection for women. Indulge in premium quality fabrics, intricate craftsmanship, and timeless gold-threaded embroidery.",
+    "Ayraa offers Pakistani lawn, pret, festive wear, and home pieces with considered fabrics and modern everyday grace.",
   keywords: [
     "Eastern Fashion",
     "Luxury Pret",
@@ -46,9 +46,9 @@ export const metadata: Metadata = {
     icon: "/favicon.png",
   },
   openGraph: {
-    title: "Ayraa | Premium Eastern Luxury Fashion",
+    title: "Ayraa | Pakistani Lawn, Pret, and Festive Wear",
     description:
-      "Exquisite Eastern couture and luxury prêt-à-porter collection for women. Indulge in premium quality fabrics, intricate craftsmanship, and timeless gold-threaded embroidery.",
+      "Ayraa offers Pakistani lawn, pret, festive wear, and home pieces with considered fabrics and modern everyday grace.",
     url: baseUrl,
     siteName: "Ayraa Collection",
     locale: "en_PK",
@@ -58,15 +58,15 @@ export const metadata: Metadata = {
         url: "/og-image.jpg",
         width: 800,
         height: 420,
-        alt: "Ayraa Premium Eastern Luxury Fashion",
+        alt: "Ayraa Pakistani lawn, pret, and festive wear",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ayraa | Premium Eastern Luxury Fashion",
+    title: "Ayraa | Pakistani Lawn, Pret, and Festive Wear",
     description:
-      "Exquisite Eastern couture and luxury prêt-à-porter collection for women. Indulge in premium quality fabrics, intricate craftsmanship, and timeless gold-threaded embroidery.",
+      "Ayraa offers Pakistani lawn, pret, festive wear, and home pieces with considered fabrics and modern everyday grace.",
     images: ["/og-image.jpg"],
   },
 };

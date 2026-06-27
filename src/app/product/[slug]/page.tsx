@@ -18,7 +18,7 @@ const MOCK_PRODUCTS: Product[] = [
     id: "f1111111-1111-1111-1111-111111111111",
     name: "Noir Silk Blouse",
     slug: "noir-silk-blouse",
-    description: "A sleek black ready-to-wear blouse crafted from premium raw silk, featuring structured tailoring.",
+    description: "A sleek black pret blouse crafted from premium raw silk, featuring structured tailoring.",
     price: 18500,
     compare_at_price: 22000,
     sku: "AYR-NOI-01",
@@ -345,7 +345,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     relatedProducts = MOCK_PRODUCTS.filter((p) => p.slug !== slug).slice(0, 4);
   }
 
-  const baseUrl = "https://ayraacollection.vercel.app";
+  const baseUrl = "https://ayraa.pk";
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Collections", item: "/collections" },

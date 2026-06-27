@@ -6,45 +6,45 @@ import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import styles from "./shipping-returns.module.css";
 
 export const metadata: Metadata = {
-  title: "Shipping & Returns | Ayra Collection",
+  title: "Shipping & Returns | Ayraa Collection",
   description:
-    "Learn about Ayra's shipping timelines, Cash on Delivery policy across Pakistan, and hassle-free returns process.",
+    "Learn about Ayraa's shipping timelines, Cash on Delivery policy, and return process across Pakistan.",
   alternates: { canonical: "/shipping-returns" },
   openGraph: {
-    title: "Shipping & Returns | Ayra Collection",
-    description: "Shipping timelines and return policy for Ayra premium fashion.",
+    title: "Shipping & Returns | Ayraa Collection",
+    description: "Shipping timelines and return policy for Ayraa.",
     type: "website",
   },
 };
 
 const SHIPPING_INFO = [
   {
-    icon: "📦",
+    icon: "Box",
     title: "Order Processing",
-    desc: "All orders are processed within 1–2 business days. You will receive an order confirmation SMS immediately after placing your order.",
+    desc: "Orders are processed within 1 to 2 business days. You will receive an order confirmation after checkout.",
   },
   {
-    icon: "🚚",
+    icon: "Truck",
     title: "Delivery Timeline",
-    desc: "Standard delivery across Pakistan takes 3–5 business days. Remote areas may take up to 7 business days. Delivery timelines exclude weekends and public holidays.",
+    desc: "Standard delivery across Pakistan usually takes 3 to 5 business days. Remote areas may take up to 7 business days.",
   },
   {
-    icon: "💵",
+    icon: "COD",
     title: "Cash on Delivery",
-    desc: "We exclusively offer Cash on Delivery (COD) for all orders across Pakistan. No advance payment required—pay when your parcel arrives at your doorstep.",
+    desc: "We currently offer Cash on Delivery across Pakistan.",
   },
   {
-    icon: "🔖",
+    icon: "Fee",
     title: "Shipping Charges",
-    desc: "Flat shipping fee of PKR 200 applies to all orders. Orders above PKR 5,000 qualify for free shipping anywhere in Pakistan.",
+    desc: "Shipping charges are shown at checkout. Free shipping can apply during selected offers.",
   },
 ];
 
 const RETURN_STEPS = [
-  { step: "01", title: "Contact Us", desc: "Reach out via WhatsApp or email within 3 days of receiving your order. Share your order number and the reason for return." },
-  { step: "02", title: "Return Approval", desc: "Our team will review your request within 24 hours and issue a return authorization if eligible." },
-  { step: "03", title: "Ship the Item", desc: "Carefully pack the item in its original packaging and hand it over to our designated courier. We arrange the pickup from your location." },
-  { step: "04", title: "Refund / Exchange", desc: "Once received and inspected, we process your exchange or store credit within 5–7 business days." },
+  { step: "01", title: "Contact Us", desc: "Message us within 3 days of delivery with your order number and reason for return." },
+  { step: "02", title: "Return Review", desc: "We check whether the item is eligible for return or exchange." },
+  { step: "03", title: "Pickup or Drop-off", desc: "If approved, we will guide you on the next step for collection or handover." },
+  { step: "04", title: "Exchange or Credit", desc: "Once inspected, we process exchange or store credit according to the return outcome." },
 ];
 
 const NOT_ELIGIBLE = [
@@ -52,7 +52,7 @@ const NOT_ELIGIBLE = [
   "Products without original tags or packaging",
   "Custom-stitched or made-to-order pieces",
   "Sale or clearance items",
-  "Bedding products once opened",
+  "Opened bedding items",
   "Hijabs and scarves for hygiene reasons",
 ];
 
@@ -75,14 +75,12 @@ export default function ShippingReturnsPage() {
             <span className={styles.heroBadge}>Delivery &amp; Policy</span>
             <h1 className={styles.heroTitle}>Shipping &amp; Returns</h1>
             <p className={styles.heroSub}>
-              We deliver across Pakistan with care and pride. Your satisfaction is our commitment.
+              We deliver across Pakistan with clear timelines and simple return rules.
             </p>
           </div>
         </div>
 
         <div className={styles.container}>
-
-          {/* Shipping Info */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <span className={styles.badge}>Delivery</span>
@@ -101,13 +99,12 @@ export default function ShippingReturnsPage() {
             </div>
           </section>
 
-          {/* Return Process */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <span className={styles.badge}>Returns &amp; Exchanges</span>
               <h2 className={styles.sectionTitle}>How to Return</h2>
               <p className={styles.sectionSub}>
-                We accept returns and exchanges within <strong>3 days</strong> of delivery, subject to the conditions below.
+                Eligible items can be returned or exchanged within 3 days of delivery.
               </p>
             </div>
             <div className={styles.stepsGrid}>
@@ -121,7 +118,6 @@ export default function ShippingReturnsPage() {
             </div>
           </section>
 
-          {/* Not Eligible */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <span className={styles.badge}>Important</span>
@@ -131,7 +127,7 @@ export default function ShippingReturnsPage() {
               <ul className={styles.notEligibleList}>
                 {NOT_ELIGIBLE.map((item) => (
                   <li key={item} className={styles.notEligibleItem}>
-                    <span className={styles.bullet}>✗</span>
+                    <span className={styles.bullet}>x</span>
                     {item}
                   </li>
                 ))}
@@ -139,12 +135,11 @@ export default function ShippingReturnsPage() {
             </div>
           </section>
 
-          {/* Contact CTA */}
           <section className={styles.ctaSection}>
             <div className={styles.ctaCard}>
               <h2 className={styles.ctaTitle}>Have a Question?</h2>
               <p className={styles.ctaText}>
-                Our customer care team is available Monday – Saturday, 10AM – 6PM PST.
+                Our customer care team is available Monday to Saturday, 10AM to 6PM PKT.
               </p>
               <div className={styles.ctaBtns}>
                 <a
@@ -161,7 +156,6 @@ export default function ShippingReturnsPage() {
               </div>
             </div>
           </section>
-
         </div>
       </main>
 

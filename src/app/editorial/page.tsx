@@ -1,93 +1,64 @@
 import React from "react";
 import { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import styles from "./editorial.module.css";
 
 export const metadata: Metadata = {
-  title: "Editorial Journal | Ayra Collection",
+  title: "Editorial Journal | Ayraa Collection",
   description:
-    "Explore Ayra's editorial journal—stories of craftsmanship, style inspiration, cultural heritage, and the art of dressing with intention.",
+    "Read styling notes, fabric guidance, and seasonal ideas for Pakistani lawns, pret, festive edits, and wardrobe rituals.",
   alternates: { canonical: "/editorial" },
   openGraph: {
-    title: "Editorial Journal | Ayra Collection",
-    description: "Stories of heritage, craft, and style from the Ayra atelier.",
+    title: "Editorial Journal | Ayraa Collection",
+    description: "Styling notes and seasonal ideas from Ayraa.",
     type: "website",
   },
 };
 
 const FEATURED_ARTICLE = {
-  title: "The Art of Zardozi: Gold Thread Embroidery and Its Mughal Roots",
+  title: "The Craft of Dressing for Pakistani Seasons",
   excerpt:
-    "Few crafts capture the opulence of the Mughal era as vividly as Zardozi—the art of embellishing fabric with gold and silver threads, beads, and precious stones. We trace its journey from the royal courts of Agra to the modern couture studios of Lahore.",
-  category: "Heritage Craft",
-  date: "June 2025",
-  readTime: "7 min read",
+    "A quick look at how to build a wardrobe that moves from lawn mornings to festive evenings without feeling overdone.",
+  category: "Style Guide",
+  date: "June 2026",
+  readTime: "4 min read",
   image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1200&auto=format&fit=crop&q=80",
-  slug: "#",
 };
 
 const ARTICLES = [
   {
-    title: "How to Style a Lawn Suit: From Dawn to Dusk",
-    excerpt: "Lawn—Pakistan's beloved summer fabric—is more versatile than you think. Our stylists show you how to take one suit from a morning family gathering to an evening soiree.",
-    category: "Style Guide",
-    date: "May 2025",
-    readTime: "5 min read",
+    title: "Why Lawn Still Matters",
+    excerpt:
+      "Lightweight fabric, easy tailoring, and the comfort needed for long summer days in Pakistan.",
+    category: "Fabric Notes",
+    date: "May 2026",
+    readTime: "3 min read",
     image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop&q=80",
-    slug: "#",
   },
   {
-    title: "The Fabric Lexicon: Understanding Eastern Textiles",
-    excerpt: "Khaddi, Karandi, Chiffon, Raw Silk—our comprehensive guide to the fabrics that define Eastern fashion, their properties, and how to care for each.",
-    category: "Education",
-    date: "April 2025",
-    readTime: "6 min read",
-    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=600&auto=format&fit=crop&q=80",
-    slug: "#",
-  },
-  {
-    title: "Modest Fashion in 2025: Global Trends Meeting Local Sensibility",
-    excerpt: "From Dubai runways to Karachi boutiques, modest fashion is having its global moment. We explore how Pakistani designers are shaping the global narrative.",
-    category: "Trends",
-    date: "March 2025",
+    title: "Pret That Moves from Work to Dinner",
+    excerpt:
+      "A few simple styling rules for co-ords, kurtas, and polished everyday silhouettes.",
+    category: "Style Guide",
+    date: "April 2026",
     readTime: "4 min read",
     image: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&auto=format&fit=crop&q=80",
-    slug: "#",
   },
   {
-    title: "The Ceremony Capsule: Building Your Bridal Trousseau",
-    excerpt: "A guide to building a thoughtful bridal wardrobe that balances tradition with your personal aesthetic—including what to splurge on and where to be practical.",
-    category: "Bridal",
-    date: "February 2025",
-    readTime: "8 min read",
-    image: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop&q=80",
-    slug: "#",
-  },
-  {
-    title: "Inside the Atelier: A Day with Ayra's Head Embroiderer",
-    excerpt: "We spent a day in the Ayra workshop with master embroiderer Noor Ahmed, whose family has practiced the craft for four generations. His story is one of devotion.",
-    category: "Heritage Craft",
-    date: "January 2025",
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80",
-    slug: "#",
-  },
-  {
-    title: "Linen & Luxury: Why Natural Fibers Remain Supreme",
-    excerpt: "In an age of fast fashion synthetics, we make the case for investing in natural fibers—why they age beautifully, breathe better, and feel unmatched against the skin.",
-    category: "Education",
-    date: "December 2024",
+    title: "Festive Dressing Without Overcomplication",
+    excerpt:
+      "How to choose color, detail, and finish for daawats, Eid, and evening plans.",
+    category: "Festive",
+    date: "March 2026",
     readTime: "4 min read",
-    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=600&auto=format&fit=crop&q=80",
-    slug: "#",
+    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80",
   },
 ];
 
-const CATEGORIES = ["All", "Heritage Craft", "Style Guide", "Trends", "Education", "Bridal"];
+const CATEGORIES = ["All", "Fabric Notes", "Style Guide", "Festive"];
 
 export default function EditorialPage() {
   const baseUrl = "https://ayraa.pk";
@@ -102,21 +73,16 @@ export default function EditorialPage() {
       <Header />
 
       <main className="grow pt-20 md:pt-16">
-        {/* Hero */}
         <div className={styles.hero}>
           <div className={styles.heroOverlay} />
           <div className={styles.heroContent}>
             <span className={styles.heroBadge}>The Journal</span>
             <h1 className={styles.heroTitle}>Editorial</h1>
-            <p className={styles.heroSub}>
-              Stories of heritage, craft, and the art of dressing with intention.
-            </p>
+            <p className={styles.heroSub}>Style notes for Pakistani wardrobes, seasons, and rituals.</p>
           </div>
         </div>
 
         <div className={styles.container}>
-
-          {/* Category Filter */}
           <div className={styles.categoryRow}>
             {CATEGORIES.map((cat) => (
               <span key={cat} className={`${styles.categoryTag} ${cat === "All" ? styles.categoryTagActive : ""}`}>
@@ -125,7 +91,6 @@ export default function EditorialPage() {
             ))}
           </div>
 
-          {/* Featured Article */}
           <section className={styles.featured}>
             <div className={styles.featuredImageWrapper}>
               <Image
@@ -146,13 +111,10 @@ export default function EditorialPage() {
               </div>
               <h2 className={styles.featuredTitle}>{FEATURED_ARTICLE.title}</h2>
               <p className={styles.featuredExcerpt}>{FEATURED_ARTICLE.excerpt}</p>
-              <Link href={FEATURED_ARTICLE.slug} className={styles.readMore}>
-                Read Article →
-              </Link>
+              <span className={styles.readMore}>Stories coming soon</span>
             </div>
           </section>
 
-          {/* Article Grid */}
           <section className={styles.grid}>
             {ARTICLES.map((article) => (
               <article key={article.title} className={styles.card}>
@@ -174,15 +136,12 @@ export default function EditorialPage() {
                   <p className={styles.cardExcerpt}>{article.excerpt}</p>
                   <div className={styles.cardFooter}>
                     <span className={styles.cardDate}>{article.date}</span>
-                    <Link href={article.slug} className={styles.cardLink}>
-                      Read →
-                    </Link>
+                    <span className={styles.cardLink}>Preview</span>
                   </div>
                 </div>
               </article>
             ))}
           </section>
-
         </div>
       </main>
 

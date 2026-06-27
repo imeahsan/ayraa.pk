@@ -1,20 +1,66 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { Category } from "@/types";
 import styles from "./Footer.module.css";
 
+const FALLBACK_COLLECTION_LINKS = [
+  { label: "Lawn", href: "/collections" },
+  { label: "Pret", href: "/collections" },
+  { label: "Festive", href: "/collections" },
+  { label: "Home", href: "/collections" },
+];
+
 export const Footer: React.FC = () => {
+  const [collections, setCollections] = useState<Array<{ label: string; href: string }>>(FALLBACK_COLLECTION_LINKS);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadCollections = async () => {
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("categories")
+          .select("*")
+          .eq("is_active", true)
+          .is("parent_id", null)
+          .order("sort_order", { ascending: true });
+
+        if (error || !data || data.length === 0 || !active) return;
+
+        const mapped = (data as Category[])
+          .filter((category) => category.show_in_header || category.name)
+          .slice(0, 4)
+          .map((category) => ({
+            label: category.header_label?.trim() || category.name,
+            href: `/collections/${category.slug}`,
+          }));
+
+        if (mapped.length > 0) {
+          setCollections(mapped);
+        }
+      } catch {
+        // Keep fallback links.
+      }
+    };
+
+    loadCollections();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.grid}>
-          {/* Newsletter Column */}
           <div className={styles.brandCol}>
             <h3 className={styles.logo}>AYRAA</h3>
             <p className={styles.desc}>
-              Exquisite Eastern pret and luxury couture. Crafting timeless silhouettes
-              infused with traditional heritage and contemporary design aesthetics.
+              Pakistani lawn, pret, festive edits, and home pieces designed for everyday grace.
             </p>
             <form className={styles.newsletterForm} onSubmit={(e) => e.preventDefault()}>
               <input
@@ -30,35 +76,19 @@ export const Footer: React.FC = () => {
             </form>
           </div>
 
-          {/* Links Column 1 */}
           <div className={styles.col}>
             <h4 className={styles.heading}>Collections</h4>
             <ul className={styles.list}>
-              <li>
-                <Link href="/collections/lawn-prints" className={styles.link}>
-                  Lawn Prints
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/garments" className={styles.link}>
-                  Garments
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/bedding" className={styles.link}>
-                  Bedding
-                </Link>
-              </li>
-              <li>
-                <Link href="/collections/hijab-collection" className={styles.link}>
-                  Hijab Collection
-                </Link>
-              </li>
+              {collections.map((item) => (
+                <li key={`${item.label}-${item.href}`}>
+                  <Link href={item.href} className={styles.link}>
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-
-          {/* Links Column 2 */}
           <div className={styles.col}>
             <h4 className={styles.heading}>Customer Care</h4>
             <ul className={styles.list}>
@@ -85,7 +115,6 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Links Column 3 */}
           <div className={styles.col}>
             <h4 className={styles.heading}>Our Brand</h4>
             <ul className={styles.list}>
@@ -115,14 +144,14 @@ export const Footer: React.FC = () => {
 
         <hr className={styles.divider} />
 
-        {/* Footer Bottom info */}
         <div className={styles.bottom}>
           <p className={styles.copyright}>
-            &copy; {new Date().getFullYear()} Ayraa Premium Collection. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} Ayraa Collection. All rights reserved.
           </p>
           <div className={styles.metaList}>
-            <span>Region: <span className="font-semibold text-gold">Pakistan (PKR ₨)</span></span>
+            <span>
+              Region: <span className="font-semibold text-gold">Pakistan (PKR)</span>
+            </span>
             <span>Payment: Cash on Delivery (COD)</span>
           </div>
         </div>

@@ -10,7 +10,7 @@ import styles from "../admin.module.css";
 const DUMMY_CATEGORY_IMAGE = "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=100&auto=format&fit=crop&q=80";
 
 const MOCK_CATEGORIES: Category[] = [
-  { id: "cat-rtw", name: "Ready To Wear", slug: "ready-to-wear", description: "Everyday ready prêt.", parent_id: null, sort_order: 1, is_active: true, created_at: new Date().toISOString(), image_url: DUMMY_CATEGORY_IMAGE },
+  { id: "cat-rtw", name: "Ready To Wear", slug: "ready-to-wear", description: "Everyday pret.", parent_id: null, sort_order: 1, is_active: true, created_at: new Date().toISOString(), image_url: DUMMY_CATEGORY_IMAGE },
   { id: "cat-formal", name: "Luxury Formal", slug: "formal", description: "Heavily embroidered formals.", parent_id: null, sort_order: 2, is_active: true, created_at: new Date().toISOString(), image_url: null },
   { id: "cat-pret", name: "Pret Collection", slug: "pret", description: "Chic luxury pret.", parent_id: null, sort_order: 3, is_active: true, created_at: new Date().toISOString(), image_url: null },
 ];
@@ -499,7 +499,7 @@ export default function AdminCategoriesPage() {
                           <td className={`${styles.tableTd} ${styles.tableTdHighlight}`}>
                             {parentCategory && (
                               <div style={{ fontSize: "10px", color: "var(--color-gold)", textTransform: "uppercase", fontWeight: "bold", marginBottom: "4px" }}>
-                                {parentCategory.name} ›
+                                {parentCategory.name} >
                               </div>
                             )}
                             {c.name}
@@ -517,7 +517,7 @@ export default function AdminCategoriesPage() {
                             )}
                           </td>
                           <td className={styles.tableTd} style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {c.description || "—"}
+                            {c.description || "-"}
                           </td>
                           <td className={styles.tableTd}>
                             <div style={{ display: "flex", gap: "12px" }}>

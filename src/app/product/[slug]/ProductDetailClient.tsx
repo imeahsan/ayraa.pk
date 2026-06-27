@@ -361,7 +361,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     <div className={styles.container}>
       <Breadcrumb
         items={[
-          { label: "Clothing", url: "/collections/ready-to-wear" },
+          { label: "Wardrobe", url: "/collections" },
           { label: product.name, url: `/product/${product.slug}` },
         ]}
       />
@@ -385,6 +385,12 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
           </div>
 
           <p className={styles.description}>{product.description}</p>
+
+          <div className={styles.trustStrip}>
+            <span>Cash on Delivery</span>
+            <span>3 to 5 day delivery</span>
+            <span>Easy returns</span>
+          </div>
 
           {/* Product attributes */}
           <div className={styles.attributes}>
@@ -465,7 +471,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               isLoading={isAdding}
               disabled={isOutOfStock}
             >
-              {isOutOfStock ? "Out of Stock" : "Add to Bag"}
+              {isOutOfStock ? "Out of Stock" : "Add to Cart"}
             </Button>
 
             <Button
@@ -498,7 +504,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                     gap: "8px",
                   }}
                 >
-                  📷 Preview on My Bed
+                  Preview on My Bed
                 </Button>
               </Link>
             )}
@@ -513,7 +519,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                 onClick={() => setActiveTab(activeTab === "fabric" ? null : "fabric")}
               >
                 <span>Fabric &amp; Craftsmanship</span>
-                <span>{activeTab === "fabric" ? "−" : "+"}</span>
+                <span>{activeTab === "fabric" ? "-" : "+"}</span>
               </button>
               {activeTab === "fabric" && (
                 <div className={styles.accordionContent}>
@@ -533,7 +539,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                 onClick={() => setActiveTab(activeTab === "care" ? null : "care")}
               >
                 <span>Care Instructions</span>
-                <span>{activeTab === "care" ? "−" : "+"}</span>
+                <span>{activeTab === "care" ? "-" : "+"}</span>
               </button>
               {activeTab === "care" && (
                 <div className={styles.accordionContent}>
@@ -552,7 +558,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                 onClick={() => setActiveTab(activeTab === "delivery" ? null : "delivery")}
               >
                 <span>Delivery &amp; Returns</span>
-                <span>{activeTab === "delivery" ? "−" : "+"}</span>
+                <span>{activeTab === "delivery" ? "-" : "+"}</span>
               </button>
               {activeTab === "delivery" && (
                 <div className={styles.accordionContent}>
@@ -601,7 +607,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                         fontSize: "24px",
                       }}
                     >
-                      ★
+                      *
                     </span>
                   ))}
                 </div>
@@ -656,7 +662,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                   </div>
                 ) : !hasPurchased ? (
                   <p style={{ fontSize: "13px", color: "var(--color-on-surface-sub)", fontStyle: "italic", paddingBlock: "8px" }}>
-                    🔒 Only verified customers who have purchased this product can leave a review.
+                    Only verified customers who have purchased this product can leave a review.
                   </p>
                 ) : (
                   <form onSubmit={handleReviewSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "12px" }}>
@@ -674,7 +680,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                               color: star <= ratingInput ? "var(--color-gold)" : "rgba(255,255,255,0.15)",
                             }}
                           >
-                            ★
+                            *
                           </button>
                         ))}
                       </div>
@@ -748,7 +754,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                                 justifyContent: "center",
                               }}
                             >
-                              ✕
+                              x
                             </button>
                           </div>
                         ))}
@@ -824,7 +830,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                                   fontSize: "14px",
                                 }}
                               >
-                                ★
+                                *
                               </span>
                             ))}
                           </div>
@@ -834,7 +840,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                             </span>
                             {r.is_verified_buyer && (
                               <span className={styles.verifiedBadge}>
-                                ✓ Verified Buyer
+                                Verified Buyer
                               </span>
                             )}
                           </div>
@@ -996,7 +1002,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
             justifyContent: "center",
             padding: "20px",
           }}
-        >
+          >
           {/* Close Button */}
           <button
             type="button"
@@ -1020,7 +1026,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               transition: "background 0.2s",
             }}
           >
-            ✕
+            x
           </button>
 
           {/* Prev Button */}
@@ -1046,7 +1052,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                 transition: "background 0.2s",
               }}
             >
-              ‹
+              {"<"}
             </button>
           )}
 
@@ -1103,7 +1109,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                 transition: "background 0.2s",
               }}
             >
-              ›
+              {">"}
             </button>
           )}
         </div>

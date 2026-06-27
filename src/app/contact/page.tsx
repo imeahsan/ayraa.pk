@@ -4,25 +4,26 @@ import ContactClient from "./ContactClient";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 
 export const metadata: Metadata = {
-  title: "Contact Us",
-  description: "Get in touch with Ayraa's flagship studio in Karachi. Contact us for custom couture orders, sizing assistance, and support.",
+  title: "Contact Us | Ayraa Collection",
+  description:
+    "Contact Ayraa for order support, sizing help, delivery updates, and general customer care across Pakistan.",
   alternates: {
     canonical: "/contact",
   },
   openGraph: {
     title: "Contact Us | Ayraa Collection",
-    description: "Get in touch with Ayraa's customer care team.",
+    description: "Contact Ayraa for order support, sizing help, delivery updates, and customer care.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "Contact Us | Ayraa Collection",
-    description: "Get in touch with Ayraa's customer care team.",
+    description: "Contact Ayraa for order support, sizing help, delivery updates, and customer care.",
   },
 };
 
 export default function ContactPage() {
-  const baseUrl = "https://ayraacollection.vercel.app";
+  const baseUrl = "https://ayraa.pk";
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Contact", item: "/contact" },

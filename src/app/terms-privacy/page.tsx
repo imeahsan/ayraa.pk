@@ -6,13 +6,13 @@ import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import styles from "./terms-privacy.module.css";
 
 export const metadata: Metadata = {
-  title: "Terms & Privacy Policy | Ayra Collection",
+  title: "Terms & Privacy Policy | Ayraa Collection",
   description:
-    "Read Ayra Collection's Terms of Service and Privacy Policy. We are committed to protecting your data and delivering a transparent shopping experience.",
+    "Read Ayraa Collection's Terms of Service and Privacy Policy for browsing, ordering, and data handling.",
   alternates: { canonical: "/terms-privacy" },
   openGraph: {
-    title: "Terms & Privacy Policy | Ayra Collection",
-    description: "Terms of use and privacy policy for Ayra Collection.",
+    title: "Terms & Privacy Policy | Ayraa Collection",
+    description: "Terms of use and privacy policy for Ayraa Collection.",
     type: "website",
   },
 };
@@ -23,7 +23,7 @@ export default function TermsPrivacyPage() {
     { name: "Home", item: "/" },
     { name: "Terms & Privacy", item: "/terms-privacy" },
   ];
-  const lastUpdated = "June 2025";
+  const lastUpdated = "June 2026";
 
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
@@ -42,8 +42,6 @@ export default function TermsPrivacyPage() {
 
         <div className={styles.container}>
           <div className={styles.layout}>
-
-            {/* Table of Contents */}
             <aside className={styles.toc}>
               <p className={styles.tocLabel}>On This Page</p>
               <nav>
@@ -54,164 +52,93 @@ export default function TermsPrivacyPage() {
               </nav>
             </aside>
 
-            {/* Content */}
             <article className={styles.content}>
-
-              {/* Terms of Service */}
               <section id="terms" className={styles.section}>
                 <h2 className={styles.sectionTitle}>Terms of Service</h2>
                 <p className={styles.intro}>
-                  By accessing or using the Ayra Collection website (<strong>ayraa.pk</strong>), you agree to be bound by
-                  these Terms of Service. Please read them carefully before placing an order.
+                  By using the Ayraa website, you agree to these terms. Please read them before placing an order.
                 </p>
-
                 <h3 className={styles.subTitle}>1. Acceptance of Terms</h3>
                 <p className={styles.para}>
-                  These Terms govern your use of our website and services. By browsing, registering, or purchasing,
-                  you confirm that you are at least 18 years of age and legally capable of entering into a binding agreement.
+                  These terms govern your use of the website and services. By browsing, registering, or purchasing, you confirm that you are legally able to enter into a contract.
                 </p>
-
-                <h3 className={styles.subTitle}>2. Products &amp; Pricing</h3>
+                <h3 className={styles.subTitle}>2. Products and Pricing</h3>
                 <p className={styles.para}>
-                  All products listed on our website are subject to availability. We reserve the right to discontinue
-                  any product at any time. Prices are listed in Pakistani Rupees (PKR) and are inclusive of applicable taxes.
-                  We reserve the right to change prices without prior notice; however, any changes will not affect
-                  already-confirmed orders.
+                  Products are subject to availability. Prices are shown in Pakistani Rupees and may change without notice. Confirmed orders are not affected by later price changes.
                 </p>
-
-                <h3 className={styles.subTitle}>3. Orders &amp; Payment</h3>
+                <h3 className={styles.subTitle}>3. Orders and Payment</h3>
                 <p className={styles.para}>
-                  Orders are accepted on a Cash on Delivery (COD) basis only. An order confirmation SMS will be sent
-                  upon successful order placement. We reserve the right to cancel any order suspected of fraud or
-                  abuse, or if stock becomes unavailable.
+                  Orders are currently accepted on a Cash on Delivery basis. We may cancel orders suspected of fraud or orders that cannot be fulfilled.
                 </p>
-
-                <h3 className={styles.subTitle}>4. Shipping &amp; Delivery</h3>
+                <h3 className={styles.subTitle}>4. Shipping and Delivery</h3>
                 <p className={styles.para}>
-                  We deliver across Pakistan. Delivery timelines are estimates and may vary due to logistics conditions.
-                  Ayra is not responsible for delays caused by third-party couriers, natural disasters, or events
-                  beyond our reasonable control.
+                  Delivery timelines are estimates and may vary based on courier conditions or public holidays.
                 </p>
-
-                <h3 className={styles.subTitle}>5. Returns &amp; Refunds</h3>
+                <h3 className={styles.subTitle}>5. Returns and Refunds</h3>
                 <p className={styles.para}>
-                  Returns are accepted within 3 days of delivery for eligible items in original, unused condition.
-                  We do not offer cash refunds; eligible returns are processed as store credit or exchanges.
-                  Please refer to our <a href="/shipping-returns" className={styles.inlineLink}>Shipping &amp; Returns</a> page for full details.
+                  Eligible items can be returned within 3 days of delivery. Please refer to our <a href="/shipping-returns" className={styles.inlineLink}>Shipping &amp; Returns</a> page for details.
                 </p>
-
                 <h3 className={styles.subTitle}>6. Intellectual Property</h3>
                 <p className={styles.para}>
-                  All content on this website—including text, images, logos, product photography, and design—is the
-                  exclusive intellectual property of Ayra Collection. Unauthorized reproduction, distribution,
-                  or use without written permission is strictly prohibited.
+                  All website content, imagery, text, and branding are protected and may not be reused without permission.
                 </p>
-
-                <h3 className={styles.subTitle}>7. Limitation of Liability</h3>
+                <h3 className={styles.subTitle}>7. Governing Law</h3>
                 <p className={styles.para}>
-                  Ayra Collection shall not be liable for any indirect, incidental, or consequential damages
-                  arising from the use of our website or products. Our total liability shall not exceed the
-                  value of the order in question.
-                </p>
-
-                <h3 className={styles.subTitle}>8. Governing Law</h3>
-                <p className={styles.para}>
-                  These Terms are governed by the laws of the Islamic Republic of Pakistan. Any disputes
-                  arising from these Terms shall be subject to the exclusive jurisdiction of courts in Lahore, Pakistan.
+                  These terms are governed by the laws of Pakistan.
                 </p>
               </section>
 
               <hr className={styles.divider} />
 
-              {/* Privacy Policy */}
               <section id="privacy" className={styles.section}>
                 <h2 className={styles.sectionTitle}>Privacy Policy</h2>
                 <p className={styles.intro}>
-                  Your privacy is important to us. This policy explains what data we collect, why we collect it,
-                  and how we use and protect it.
+                  We collect only the information needed to process orders, communicate with you, and improve the store.
                 </p>
-
                 <h3 className={styles.subTitle}>1. Information We Collect</h3>
                 <p className={styles.para}>
-                  When you place an order, we collect your name, phone number, email address, and delivery address.
-                  We may also collect technical data such as your browser type, IP address, and pages visited,
-                  through standard server logs and analytics tools.
+                  When you place an order, we collect your name, phone number, email address, and delivery details. We may also collect basic analytics data to improve the website.
                 </p>
-
                 <h3 className={styles.subTitle}>2. How We Use Your Information</h3>
                 <ul className={styles.list}>
                   <li>To process and deliver your orders</li>
-                  <li>To send order confirmations and delivery updates via SMS</li>
-                  <li>To respond to your customer service enquiries</li>
-                  <li>To send promotional communications (if you have opted in)</li>
-                  <li>To improve our website and product offerings</li>
+                  <li>To send order confirmations and delivery updates</li>
+                  <li>To respond to customer care enquiries</li>
+                  <li>To send promotional updates if you opt in</li>
                 </ul>
-
                 <h3 className={styles.subTitle}>3. Data Sharing</h3>
                 <p className={styles.para}>
-                  We do not sell, trade, or rent your personal information to third parties. We may share your
-                  delivery details with our logistics partners solely for the purpose of fulfilling your order.
-                  These partners are contractually bound to keep your data confidential.
+                  We do not sell your personal information. We only share delivery details with logistics partners when needed to fulfill your order.
                 </p>
-
-                <h3 className={styles.subTitle}>4. Data Retention</h3>
+                <h3 className={styles.subTitle}>4. Your Rights</h3>
                 <p className={styles.para}>
-                  We retain your personal data for as long as necessary to fulfill the purposes outlined in
-                  this policy, or as required by applicable law. You may request deletion of your data at
-                  any time by contacting us.
-                </p>
-
-                <h3 className={styles.subTitle}>5. Your Rights</h3>
-                <p className={styles.para}>
-                  You have the right to access, correct, or delete your personal data held by us.
-                  You may also opt out of marketing communications at any time by replying STOP to any
-                  SMS or emailing us at <a href="mailto:privacy@ayraa.pk" className={styles.inlineLink}>privacy@ayraa.pk</a>.
-                </p>
-
-                <h3 className={styles.subTitle}>6. Security</h3>
-                <p className={styles.para}>
-                  We implement appropriate technical and organizational measures to protect your personal
-                  information against unauthorized access, disclosure, or destruction. However, no method of
-                  internet transmission is 100% secure, and we cannot guarantee absolute security.
+                  You may request access, correction, or deletion of your personal data by contacting us.
                 </p>
               </section>
 
               <hr className={styles.divider} />
 
-              {/* Cookie Policy */}
               <section id="cookies" className={styles.section}>
                 <h2 className={styles.sectionTitle}>Cookie Policy</h2>
                 <p className={styles.para}>
-                  Our website uses cookies to improve your browsing experience and analyze site traffic.
-                  Cookies are small data files stored on your device. We use the following types of cookies:
-                </p>
-                <ul className={styles.list}>
-                  <li><strong>Essential Cookies:</strong> Required for core website functionality such as shopping cart and session management.</li>
-                  <li><strong>Analytics Cookies:</strong> Help us understand how visitors interact with our website (e.g., Google Analytics).</li>
-                  <li><strong>Marketing Cookies:</strong> Used to deliver relevant advertisements on third-party platforms.</li>
-                </ul>
-                <p className={styles.para}>
-                  You may disable cookies through your browser settings. Note that disabling certain cookies
-                  may affect the functionality of the website.
+                  Our website uses cookies for core functionality and analytics. You can disable cookies in your browser, but some features may stop working.
                 </p>
               </section>
 
               <hr className={styles.divider} />
 
-              {/* Contact */}
               <section id="contact-legal" className={styles.section}>
                 <h2 className={styles.sectionTitle}>Contact Us</h2>
                 <p className={styles.para}>
-                  For any legal enquiries, privacy requests, or data concerns, please contact us:
+                  For legal or privacy requests, contact us through the channels below.
                 </p>
                 <div className={styles.contactBlock}>
-                  <p><strong>Ayra Collection</strong></p>
+                  <p><strong>Ayraa Collection</strong></p>
                   <p>Lahore, Punjab, Pakistan</p>
                   <p>Email: <a href="mailto:legal@ayraa.pk" className={styles.inlineLink}>legal@ayraa.pk</a></p>
                   <p>WhatsApp: <a href="https://wa.me/923295822495" className={styles.inlineLink}>+92 329 5822495</a></p>
                 </div>
               </section>
-
             </article>
           </div>
         </div>

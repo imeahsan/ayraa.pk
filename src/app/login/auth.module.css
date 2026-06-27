@@ -148,6 +148,24 @@
   width: 100%;
 }
 
+.trustStrip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--space-6);
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-subtle);
+  background: linear-gradient(180deg, rgba(233, 195, 73, 0.08), rgba(233, 195, 73, 0.02));
+  color: var(--color-on-surface-sub);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+}
+
+.trustStrip span {
+  padding-inline: 8px;
+}
+
 .oauthButton {
   width: 100%;
   display: flex;

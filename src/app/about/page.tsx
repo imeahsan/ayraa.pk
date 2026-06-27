@@ -7,25 +7,28 @@ import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import styles from "./about.module.css";
 
 export const metadata: Metadata = {
-  title: "Our Story",
-  description: "Learn about the heritage, craftsmanship, and luxury design values of Ayra. Indulge in premium quality fabrics and hand-crafted Eastern fashion.",
+  title: "Our Story | Ayraa Collection",
+  description:
+    "Learn how Ayraa blends Pakistani wardrobe essentials, seasonal lawn, refined pret, and considered home pieces into one graceful brand story.",
   alternates: {
     canonical: "/about",
   },
   openGraph: {
-    title: "Our Story | Ayra Collection",
-    description: "Learn about the heritage, craftsmanship, and luxury design values of Ayra.",
+    title: "Our Story | Ayraa Collection",
+    description:
+      "Learn how Ayraa blends Pakistani wardrobe essentials, seasonal lawn, refined pret, and considered home pieces into one graceful brand story.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Our Story | Ayra Collection",
-    description: "Learn about the heritage, craftsmanship, and luxury design values of Ayra.",
+    title: "Our Story | Ayraa Collection",
+    description:
+      "Learn how Ayraa blends Pakistani wardrobe essentials, seasonal lawn, refined pret, and considered home pieces into one graceful brand story.",
   },
 };
 
 export default function AboutPage() {
-  const baseUrl = "https://ayracollection.vercel.app";
+  const baseUrl = "https://ayraa.pk";
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Our Story", item: "/about" },
@@ -35,12 +38,12 @@ export default function AboutPage() {
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
       <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
       <Header />
-      
+
       <main className="grow pt-20 md:pt-16">
         <div className={styles.hero}>
           <Image
             src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop&q=80"
-            alt="Ayra Atelier"
+            alt="Ayraa atelier"
             fill
             className="object-cover opacity-70"
           />
@@ -52,17 +55,17 @@ export default function AboutPage() {
           <section className={styles.storySection}>
             <div className={styles.grid}>
               <div className={styles.contentCol}>
-                <span className={styles.badge}>Heritage</span>
-                <h2 className={styles.title}>Crafted For The Modern Muse</h2>
+                <span className={styles.badge}>Brand Vision</span>
+                <h2 className={styles.title}>Made for Pakistani seasons and everyday grace</h2>
                 <p className={styles.text}>
-                  Founded on the principles of traditional Eastern couture, <strong>Ayra</strong> weaves together
-                  centuries of heritage craftsmanship with contemporary silhouettes. Each piece is a
-                  testament to the skill of master artisans who keep the heritage of gold-threaded
-                  embroidery (Zardozi) alive.
+                  Ayraa is built around the way people actually dress in Pakistan. We focus on lawn
+                  for warm days, pret for easy styling, festive pieces for daawats and Eid, and
+                  home edits that fit a calm, thoughtful lifestyle.
                 </p>
                 <p className={styles.text}>
-                  Our design atelier works with premium natural fibers—pure raw silks, high-grade
-                  lawn cottons, and fine chiffons—to ensure that luxury is felt in every drape.
+                  Our approach is simple: keep the silhouette refined, the fabric considered, and the
+                  experience easy to shop. The result is a wardrobe that feels polished without being
+                  overworked.
                 </p>
               </div>
               <div className={styles.imageWrapper}>
@@ -79,30 +82,30 @@ export default function AboutPage() {
           </section>
 
           <section className={styles.pillarsSection}>
-            <h2 className={styles.pillarsTitle}>Our Core Pillars</h2>
+            <h2 className={styles.pillarsTitle}>What We Care About</h2>
             <div className={styles.pillarsGrid}>
               <div className={styles.pillarCard}>
-                <span className={styles.pillarIcon}>✨</span>
-                <h3 className={styles.pillarTitle}>Artisanal Integrity</h3>
+                <span className={styles.pillarIcon}>Craft</span>
+                <h3 className={styles.pillarTitle}>Considered Details</h3>
                 <p className={styles.pillarText}>
-                  We collaborate with heritage weaving communities, ensuring fair compensation and preserving
-                  intricate hand-work details.
+                  We pay attention to finishing, comfort, and fit so pieces work in real life, not
+                  just in lookbook images.
                 </p>
               </div>
               <div className={styles.pillarCard}>
-                <span className={styles.pillarIcon}>⚜️</span>
-                <h3 className={styles.pillarTitle}>Sartorial Luxury</h3>
+                <span className={styles.pillarIcon}>Season</span>
+                <h3 className={styles.pillarTitle}>Seasonal Relevance</h3>
                 <p className={styles.pillarText}>
-                  From gold-threaded borders to double-lining slips, every detail is engineered to satisfy the
-                  highest luxury standards.
+                  We design around Pakistani weather, occasions, and wardrobe rhythms instead of
+                  forcing a generic luxury template.
                 </p>
               </div>
               <div className={styles.pillarCard}>
-                <span className={styles.pillarIcon}>⏳</span>
-                <h3 className={styles.pillarTitle}>Timeless Longevity</h3>
+                <span className={styles.pillarIcon}>Ease</span>
+                <h3 className={styles.pillarTitle}>Simple Shopping</h3>
                 <p className={styles.pillarText}>
-                  Our collections transcend seasonal drops. We focus on classic silhouettes designed to last
-                  generations.
+                  We keep navigation, category labeling, and product storytelling straightforward so
+                  customers can move quickly from browse to buy.
                 </p>
               </div>
             </div>

@@ -129,7 +129,7 @@ export default function CustomerOrdersPage() {
           ) : orders.length === 0 ? (
             <div className={styles.emptyState}>
               <p className={styles.emptyText}>You have not placed any orders yet.</p>
-              <Link href="/collections/ready-to-wear">
+              <Link href="/collections">
                 <Button variant="luxury" size="lg">Start Shopping</Button>
               </Link>
             </div>

@@ -15,13 +15,13 @@ import { unstable_cache } from "next/cache";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Ayraa Collection — Premium Eastern Luxury Wear",
+  title: "Ayraa Collection - Premium Eastern Luxury Wear",
   description:
-    "Discover Ayraa's curated collection of premium lawn prints, pret, bedding and hijab essentials. Handcrafted heritage meets contemporary elegance.",
+    "Discover Ayraa's curated collection of premium lawn, pret, bedding, and hijab essentials. Handcrafted heritage meets contemporary elegance.",
   openGraph: {
-    title: "Ayraa Collection — Premium Eastern Luxury Wear",
+    title: "Ayraa Collection - Premium Eastern Luxury Wear",
     description:
-      "Discover Ayraa's curated collection of premium lawn prints, pret, bedding and hijab essentials.",
+      "Discover Ayraa's curated collection of premium lawn, pret, bedding, and hijab essentials.",
     type: "website",
   },
 };
@@ -32,7 +32,7 @@ const MOCK_PRODUCTS: Product[] = [
     id: "p1",
     name: "Noir Silk Blouse",
     slug: "noir-silk-blouse",
-    description: "A sleek black ready-to-wear blouse crafted from premium raw silk.",
+    description: "A sleek black pret blouse crafted from premium raw silk.",
     price: 18500,
     compare_at_price: 22000,
     sku: "AYR-NOI-01",
@@ -432,7 +432,7 @@ export default async function Home() {
             <span className={styles.overline}>Pakistani Wardrobe</span>
             <h2 className={styles.sectionTitle}>Dress for the Season, the Daawat, and the Everyday</h2>
             <p className={styles.sectionDesc}>
-              Move through airy lawn, ready-to-wear kurtas, festive formals, and modest essentials
+              Move through airy lawn, pret kurtas, festive formals, and modest essentials
               with edits built around how Pakistani wardrobes are actually worn.
             </p>
           </div>

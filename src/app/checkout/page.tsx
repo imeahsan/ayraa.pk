@@ -5,8 +5,8 @@ import { CheckoutForm } from "./CheckoutForm";
 import styles from "./checkout.module.css";
 
 export const metadata = {
-  title: "Checkout | Ayraa Premium Collection",
-  description: "Securely place your order with Cash on Delivery options.",
+  title: "Checkout | Ayraa Collection",
+  description: "Securely place your order with Cash on Delivery across Pakistan.",
 };
 
 export default function CheckoutPage() {

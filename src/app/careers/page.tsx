@@ -6,13 +6,13 @@ import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import styles from "./careers.module.css";
 
 export const metadata: Metadata = {
-  title: "Careers | Ayra Collection",
+  title: "Careers | Ayraa Collection",
   description:
-    "Join the Ayra team. We are looking for passionate individuals who appreciate craftsmanship, culture, and premium fashion to grow with us.",
+    "Explore career opportunities at Ayraa and help shape a Pakistani fashion and lifestyle brand.",
   alternates: { canonical: "/careers" },
   openGraph: {
-    title: "Careers | Ayra Collection",
-    description: "Explore career opportunities at Ayra—Pakistan's premium fashion house.",
+    title: "Careers | Ayraa Collection",
+    description: "Explore career opportunities at Ayraa.",
     type: "website",
   },
 };
@@ -23,36 +23,29 @@ const OPENINGS = [
     department: "Marketing",
     location: "Lahore, Pakistan",
     type: "Full-time",
-    desc: "Drive Ayra's social media presence, manage paid campaigns, and craft compelling content strategies that connect with our audience.",
+    desc: "Run social media, paid campaigns, and content that helps customers discover the brand.",
   },
   {
     title: "Fashion Photographer & Videographer",
     department: "Creative",
     location: "Lahore, Pakistan",
     type: "Freelance / Project",
-    desc: "Capture the essence of Ayra's collections through high-end editorial photography and behind-the-scenes brand videos.",
+    desc: "Create product and campaign imagery that feels clean, modern, and commercially strong.",
   },
   {
     title: "E-commerce Operations Manager",
     department: "Operations",
     location: "Lahore, Pakistan",
     type: "Full-time",
-    desc: "Oversee order fulfillment, customer communication, logistics, and inventory management to ensure a seamless customer experience.",
-  },
-  {
-    title: "Fashion Designer (Eastern Couture)",
-    department: "Design",
-    location: "Lahore, Pakistan",
-    type: "Full-time",
-    desc: "Collaborate with our design atelier to develop seasonal collections rooted in traditional Eastern aesthetics and contemporary silhouettes.",
+    desc: "Oversee fulfillment, inventory, customer communication, and order flow.",
   },
 ];
 
 const VALUES = [
-  { icon: "⚜️", title: "Craft Excellence", desc: "We celebrate meticulous workmanship and hold the art of heritage crafting to the highest standard." },
-  { icon: "🌿", title: "Thoughtful Growth", desc: "We grow with purpose—expanding into new markets while protecting the soul of the brand." },
-  { icon: "🤝", title: "Artisan Community", desc: "We are committed to fair compensation and the preservation of traditional embroidery communities." },
-  { icon: "✨", title: "Creative Freedom", desc: "Every team member is encouraged to bring fresh ideas to the table, regardless of their role." },
+  { icon: "Craft", title: "Craft Excellence", desc: "We care about detail, fit, and polished execution." },
+  { icon: "Growth", title: "Thoughtful Growth", desc: "We scale carefully and keep the brand voice consistent." },
+  { icon: "Team", title: "Team Support", desc: "We work closely across creative, operations, and customer care." },
+  { icon: "Ideas", title: "Creative Freedom", desc: "Good ideas matter, no matter the role they come from." },
 ];
 
 export default function CareersPage() {
@@ -68,25 +61,21 @@ export default function CareersPage() {
       <Header />
 
       <main className="grow pt-20 md:pt-16">
-        {/* Hero */}
         <div className={styles.hero}>
           <div className={styles.heroOverlay} />
           <div className={styles.heroContent}>
             <span className={styles.heroBadge}>Join Our Team</span>
-            <h1 className={styles.heroTitle}>Careers at Ayra</h1>
+            <h1 className={styles.heroTitle}>Careers at Ayraa</h1>
             <p className={styles.heroSub}>
-              We are building something extraordinary. If you share a passion for heritage craftsmanship
-              and modern luxury, we want to hear from you.
+              Help build a brand that serves Pakistani wardrobe needs with clarity and care.
             </p>
           </div>
         </div>
 
         <div className={styles.container}>
-
-          {/* Values */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
-              <span className={styles.badge}>Why Ayra</span>
+              <span className={styles.badge}>Why Ayraa</span>
               <h2 className={styles.sectionTitle}>Our Values</h2>
             </div>
             <div className={styles.valuesGrid}>
@@ -100,13 +89,12 @@ export default function CareersPage() {
             </div>
           </section>
 
-          {/* Openings */}
           <section className={styles.section}>
             <div className={styles.sectionHeader}>
               <span className={styles.badge}>Open Positions</span>
               <h2 className={styles.sectionTitle}>Current Openings</h2>
               <p className={styles.sectionSub}>
-                We are a growing team based in Lahore. All roles offer competitive compensation, creative autonomy, and the opportunity to shape a leading fashion brand.
+                We are a growing team based in Lahore. Reach out if you want to help shape the next phase of the brand.
               </p>
             </div>
             <div className={styles.openingsList}>
@@ -138,14 +126,12 @@ export default function CareersPage() {
             </div>
           </section>
 
-          {/* General Application */}
           <section className={styles.generalSection}>
             <div className={styles.generalCard}>
               <div className={styles.generalLeft}>
                 <h2 className={styles.generalTitle}>Don&apos;t See Your Role?</h2>
                 <p className={styles.generalText}>
-                  We are always open to talented individuals who bring something unique.
-                  Send us your portfolio and a brief introduction—we would love to meet you.
+                  Send your portfolio and a short introduction if you think you can contribute in a useful way.
                 </p>
               </div>
               <a
@@ -156,7 +142,6 @@ export default function CareersPage() {
               </a>
             </div>
           </section>
-
         </div>
       </main>
 
