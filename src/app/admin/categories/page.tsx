@@ -499,7 +499,7 @@ export default function AdminCategoriesPage() {
                           <td className={`${styles.tableTd} ${styles.tableTdHighlight}`}>
                             {parentCategory && (
                               <div style={{ fontSize: "10px", color: "var(--color-gold)", textTransform: "uppercase", fontWeight: "bold", marginBottom: "4px" }}>
-                                {parentCategory.name} >
+                                {parentCategory.name} &gt;
                               </div>
                             )}
                             {c.name}

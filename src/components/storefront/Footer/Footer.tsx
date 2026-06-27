@@ -99,7 +99,12 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link href="/shipping-returns" className={styles.link}>
-                  Shipping & Returns
+                  Shipping Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/returns-policy" className={styles.link}>
+                  Returns Policy
                 </Link>
               </li>
               <li>

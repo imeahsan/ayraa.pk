@@ -99,6 +99,15 @@
   transition: all var(--duration-fast) var(--ease-out);
 }
 
+.sidebarIconText {
+  min-width: 44px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: inherit;
+  opacity: 0.9;
+}
+
 .sidebarLink:hover {
   background-color: var(--admin-sidebar-hover);
   color: var(--color-gold);
@@ -965,6 +974,111 @@
 }
 .sizeStockInput[type=number] {
   -moz-appearance: textfield;
+}
+
+.reportSubnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.reportSubnavLink {
+  padding: 8px 14px;
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text-sub);
+  text-decoration: none;
+  font-size: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  background-color: var(--admin-card);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.reportSubnavLink:hover {
+  color: var(--color-gold);
+  border-color: var(--color-gold-border);
+}
+
+.reportFilterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+  background-color: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  padding: var(--space-6);
+}
+
+.reportFilterField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reportFilterActions {
+  display: flex;
+  align-items: end;
+  gap: var(--space-3);
+}
+
+.reportPrimaryButton,
+.reportSecondaryButton {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-label);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reportPrimaryButton {
+  border: 1px solid var(--color-gold-border);
+  background-color: var(--color-gold-muted);
+  color: var(--color-gold);
+  cursor: pointer;
+}
+
+.reportSecondaryButton {
+  border: 1px solid var(--admin-border);
+  background-color: transparent;
+  color: var(--admin-text-sub);
+}
+
+.reportMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+
+.reportMetricHint {
+  display: inline-block;
+  margin-top: var(--space-2);
+  font-size: var(--text-label);
+  color: var(--admin-text-sub);
+}
+
+.reportSummaryText {
+  margin: var(--space-1) 0 0;
+  color: var(--admin-text-sub);
+  font-size: var(--text-body-sm);
+}
+
+.reportStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.reportEmptyState {
+  border: 1px dashed var(--admin-border);
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--admin-text-sub);
 }
 
 /* --- Order detail specific --- */

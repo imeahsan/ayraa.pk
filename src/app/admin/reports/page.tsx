@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   buildCityPerformanceRows,
   buildOrdersByStatusRows,
@@ -8,56 +7,50 @@ import {
   buildTopProductRows,
   getReportingSnapshot,
 } from "@/lib/admin/reporting";
-import { MetricsGrid, ReportTableCard } from "./reports/ReportComponents";
-import styles from "./admin.module.css";
+import { MetricsGrid, ReportFiltersForm, ReportTableCard, ReportsSubnav } from "./ReportComponents";
+import styles from "../admin.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDashboardPage() {
-  const today = new Date();
-  const thirtyDaysAgo = new Date(today);
-  thirtyDaysAgo.setDate(today.getDate() - 30);
-
-  const snapshot = await getReportingSnapshot({
-    date_from: thirtyDaysAgo.toISOString().slice(0, 10),
-    date_to: today.toISOString().slice(0, 10),
-    group_by: "day",
-  });
+export default async function ReportsOverviewPage(props: PageProps<"/admin/reports">) {
+  const searchParams = await props.searchParams;
+  const snapshot = await getReportingSnapshot(searchParams);
 
   return (
     <div className={styles.pageLayout}>
-      <div className={styles.tableHeader}>
-        <div>
-          <h1 className={styles.topbarTitle} style={{ marginBottom: "8px" }}>
-            Commerce Dashboard
-          </h1>
-          <p className={styles.reportSummaryText}>
-            Real data only. Default view covers the last 30 days.
-          </p>
-        </div>
-        <Link href="/admin/reports" className={styles.tableLink}>
-          Open full reports
-        </Link>
-      </div>
+      <ReportsSubnav />
+      <ReportFiltersForm
+        filters={snapshot.filters}
+        fields={[
+          { name: "search", label: "Search" },
+          { name: "date_from", label: "Date From", type: "date" },
+          { name: "date_to", label: "Date To", type: "date" },
+          { name: "status", label: "Order Status", options: snapshot.options.statuses },
+          { name: "city", label: "City", options: snapshot.options.cities },
+          { name: "category_id", label: "Category", options: snapshot.options.categories },
+          { name: "promo_code", label: "Promo", options: snapshot.options.promoCodes },
+          { name: "group_by", label: "Group By", options: snapshot.options.groupBy },
+        ]}
+      />
 
       <MetricsGrid metrics={buildOverviewMetrics(snapshot)} />
 
       <div className={styles.reportStack}>
         <ReportTableCard
-          title="Daily Sales Pulse"
+          title="Sales by Period"
           rows={buildSalesByPeriodRows(snapshot)}
           exportId="sales_by_period"
           filters={snapshot.filters}
         />
         <ReportTableCard
-          title="Order Status Mix"
+          title="Orders by Status"
           rows={buildOrdersByStatusRows(snapshot)}
           exportId="orders_by_status"
           filters={snapshot.filters}
         />
         <ReportTableCard
           title="Top Products"
-          rows={buildTopProductRows(snapshot).slice(0, 10)}
+          rows={buildTopProductRows(snapshot)}
           exportId="top_products"
           filters={snapshot.filters}
         />

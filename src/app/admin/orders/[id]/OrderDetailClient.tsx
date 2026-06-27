@@ -5,8 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Order, OrderItem, OrderStatus } from "@/types";
+import { Order, OrderItem, OrderStatus, ShipmentStatus } from "@/types";
 import { useToast } from "@/context/ToastContext";
+import { Button } from "@/components/storefront/Button/Button";
 import styles from "../../admin.module.css";
 
 interface OrderDetailClientProps {
@@ -127,6 +128,51 @@ const MOCK_ORDER_DETAIL: Order = {
   ],
 };
 
+const CopyButton: React.FC<{ text: string }> = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      type="button"
+      style={{
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: "4px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: copied ? "var(--color-success, #4ade80)" : "var(--admin-text-sub, rgba(255,255,255,0.6))",
+        transition: "color 0.2s, transform 0.1s",
+        marginLeft: "6px",
+        verticalAlign: "middle",
+      }}
+      title="Copy Order ID"
+      onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.85)"}
+      onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+      onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      )}
+    </button>
+  );
+};
+
 export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId }) => {
   const router = useRouter();
   const supabase = createClient();
@@ -134,6 +180,23 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+
+  // Shipment Management States
+  const [shippingCompanies, setShippingCompanies] = useState<any[]>([]);
+  const [shipmentId, setShipmentId] = useState<string | null>(null);
+  const [shippingCompanyId, setShippingCompanyId] = useState<string>("");
+  const [shippingCompanyName, setShippingCompanyName] = useState<string>("");
+  const [shipmentStatus, setShipmentStatus] = useState<ShipmentStatus>("draft");
+  const [trackingNumber, setTrackingNumber] = useState<string>("");
+  const [bookingReference, setBookingReference] = useState<string>("");
+  const [shipmentCost, setShipmentCost] = useState<number>(0);
+  const [codAmount, setCodAmount] = useState<number>(0);
+  const [weightKg, setWeightKg] = useState<string>("0.5");
+  const [piecesCount, setPiecesCount] = useState<number>(1);
+  const [trackingUrl, setTrackingUrl] = useState<string>("");
+  const [estimatedDeliveryAt, setEstimatedDeliveryAt] = useState<string>("");
+  const [shipmentNotes, setShipmentNotes] = useState<string>("");
+  const [savingShipment, setSavingShipment] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
@@ -185,6 +248,65 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
 
     fetchOrderDetail();
   }, [orderId, supabase]);
+
+  // Load Shipping Companies
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("shipping_companies")
+          .select("*")
+          .eq("is_active", true)
+          .order("name", { ascending: true });
+        if (data) setShippingCompanies(data);
+      } catch (err) {
+        console.error("Failed to fetch shipping companies:", err);
+      }
+    };
+    fetchCompanies();
+  }, [supabase]);
+
+  // Load Existing Shipment for this order
+  useEffect(() => {
+    const fetchShipment = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("order_shipments")
+          .select("*")
+          .eq("order_id", orderId)
+          .eq("shipment_direction", "forward")
+          .maybeSingle();
+
+        if (data) {
+          setShipmentId(data.id);
+          setShippingCompanyId(data.shipping_company_id || "");
+          setShippingCompanyName(data.shipping_company_name || "");
+          setShipmentStatus(data.shipment_status || "draft");
+          setTrackingNumber(data.tracking_number || "");
+          setBookingReference(data.booking_reference || "");
+          setShipmentCost(Number(data.shipping_cost || 0));
+          setCodAmount(Number(data.cod_amount || 0));
+          setWeightKg(data.weight_kg ? String(data.weight_kg) : "0.5");
+          setPiecesCount(data.pieces_count || 1);
+          setTrackingUrl(data.tracking_url || "");
+          if (data.estimated_delivery_at) {
+            const date = new Date(data.estimated_delivery_at);
+            const offset = date.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(date.getTime() - offset)).toISOString().slice(0, 16);
+            setEstimatedDeliveryAt(localISOTime);
+          }
+          setShipmentNotes(data.package_notes || "");
+        } else if (order) {
+          setCodAmount(Number(order.total || 0));
+        }
+      } catch (err) {
+        console.error("Failed to load shipment:", err);
+      }
+    };
+    if (orderId && order) {
+      fetchShipment();
+    }
+  }, [orderId, order, supabase]);
 
   const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value as OrderStatus;
@@ -245,6 +367,63 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
         return styles.badgeCancelled;
       default:
         return "";
+    }
+  };
+
+  const handleShipmentSave = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!order) return;
+    setSavingShipment(true);
+
+    try {
+      const now = new Date().toISOString();
+      const shipmentData = {
+        order_id: order.id,
+        shipping_company_id: shippingCompanyId || null,
+        shipping_company_name: shippingCompanyName || null,
+        shipment_direction: "forward",
+        tracking_number: trackingNumber || null,
+        tracking_url: trackingUrl || null,
+        booking_reference: bookingReference || null,
+        shipment_status: shipmentStatus,
+        shipping_cost: Number(shipmentCost || 0),
+        cod_amount: Number(codAmount || 0),
+        weight_kg: weightKg ? Number(weightKg) : null,
+        pieces_count: Number(piecesCount || 1),
+        package_notes: shipmentNotes || null,
+        recipient_name: `${order.shipping_address.first_name} ${order.shipping_address.last_name}`,
+        recipient_phone: order.contact_phone,
+        recipient_city: order.shipping_address.city,
+        recipient_address: `${order.shipping_address.address_line_1}${order.shipping_address.address_line_2 ? ', ' + order.shipping_address.address_line_2 : ''}`,
+        recipient_postal_code: order.shipping_address.postal_code || null,
+        updated_at: now,
+      };
+
+      if (shipmentId) {
+        const { error } = await supabase
+          .from("order_shipments")
+          .update(shipmentData)
+          .eq("id", shipmentId);
+        if (error) throw new Error(error.message);
+        toast.success("Shipment updated successfully!");
+      } else {
+        const newShipment = {
+          ...shipmentData,
+          created_at: now,
+        };
+        const { data, error } = await supabase
+          .from("order_shipments")
+          .insert([newShipment])
+          .select()
+          .single();
+        if (error) throw new Error(error.message);
+        if (data) setShipmentId(data.id);
+        toast.success("Shipment created successfully!");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save shipment.");
+    } finally {
+      setSavingShipment(false);
     }
   };
 
@@ -441,18 +620,121 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
       </div>
 
       {/* Screen layout */}
-      <div className={`${styles.pageLayout} no-print`}>
-        <div style={{ marginBottom: "8px" }}>
-          <Link href="/admin/orders" className={styles.backLink}>
-            &larr; Back to Orders
-          </Link>
+      <div className={`${styles.pageLayout} no-print`} style={{ maxWidth: "1280px", margin: "0 auto", padding: "12px var(--space-4)" }}>
+        
+        {/* Top Header & Action Panel */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: "28px",
+          borderBottom: "1px solid rgba(233, 195, 73, 0.12)",
+          paddingBottom: "20px",
+          flexWrap: "wrap",
+          gap: "16px"
+        }}>
+          <div>
+            <Link href="/admin/orders" className={styles.backLink} style={{ display: "inline-flex", alignItems: "center", gap: "6px", textDecoration: "none", fontSize: "13px" }}>
+              <span>&larr;</span> Back to Orders
+            </Link>
+            
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", flexWrap: "wrap" }}>
+              <h1 style={{
+                margin: 0,
+                fontSize: "26px",
+                fontWeight: "var(--weight-bold)",
+                fontFamily: "var(--font-headline)",
+                letterSpacing: "-0.5px"
+              }}>
+                Order #{order.id}
+              </h1>
+              <CopyButton text={order.id} />
+              <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`} style={{ textTransform: "capitalize", padding: "4px 10px", fontSize: "11px", letterSpacing: "0.5px" }}>
+                {order.status}
+              </span>
+            </div>
+            
+            <p style={{ margin: "6px 0 0 0", fontSize: "12px", color: "var(--admin-text-sub)" }}>
+              Placed on {new Date(order.created_at).toLocaleString("en-PK", { dateStyle: "long", timeStyle: "short" })}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: "12px" }}>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                backgroundColor: "rgba(233, 195, 73, 0.06)",
+                color: "var(--color-gold)",
+                border: "1px solid rgba(233, 195, 73, 0.2)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "13px",
+                fontWeight: "var(--weight-bold)",
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(233, 195, 73, 0.12)";
+                e.currentTarget.style.borderColor = "var(--color-gold)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(233, 195, 73, 0.06)";
+                e.currentTarget.style.borderColor = "rgba(233, 195, 73, 0.2)";
+              }}
+            >
+              <span>🖨️</span> Print Invoice
+            </button>
+            
+            <Link
+              href={`/admin/returns?orderId=${encodeURIComponent(order.id)}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                backgroundColor: "rgba(96, 165, 250, 0.06)",
+                color: "var(--color-info)",
+                border: "1px solid rgba(96, 165, 250, 0.2)",
+                borderRadius: "var(--radius-sm)",
+                fontSize: "13px",
+                fontWeight: "var(--weight-bold)",
+                textDecoration: "none",
+                transition: "all 0.2s"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(96, 165, 250, 0.12)";
+                e.currentTarget.style.borderColor = "var(--color-info)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(96, 165, 250, 0.06)";
+                e.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.2)";
+              }}
+            >
+              <span>🔄</span> Return / Exchange
+            </Link>
+          </div>
         </div>
 
+        {/* 2-Column Responsive Dashboard Layout */}
         <div className={styles.orderDetailLayout}>
-          {/* Left Side: Order items list */}
-          <div className={styles.orderMainCol}>
-            <div className={styles.formCard}>
-              <h3 className={styles.formCardTitle}>Order Items ({order.items?.length || 0})</h3>
+          
+          {/* LEFT COLUMN: Order items summary & payment logs */}
+          <div className={styles.orderMainCol} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            
+            {/* Items Summary Card */}
+            <div className={styles.formCard} style={{ border: "1px solid var(--admin-border)", margin: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "12px" }}>
+                <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "var(--weight-bold)", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  Order Items
+                </h3>
+                <span style={{ fontSize: "12px", color: "var(--admin-text-sub)", fontWeight: "var(--weight-semibold)", backgroundColor: "var(--color-bg-hover)", padding: "3px 8px", borderRadius: "10px" }}>
+                  {order.items?.length || 0} {order.items?.length === 1 ? "Product" : "Products"}
+                </span>
+              </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 {order.items?.map((item) => {
@@ -461,8 +743,8 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
                     item.product?.images?.[0];
 
                   return (
-                    <div key={item.id} className={styles.orderItemRow}>
-                      <div className={styles.orderItemImageWrapper}>
+                    <div key={item.id} className={styles.orderItemRow} style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "14px", alignItems: "flex-start" }}>
+                      <div className={styles.orderItemImageWrapper} style={{ border: "1px solid rgba(233, 195, 73, 0.12)", borderRadius: "var(--radius-sm)", overflow: "hidden" }}>
                         {primaryImage ? (
                           <Image
                             src={primaryImage.url}
@@ -475,10 +757,12 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
                           <div style={{ width: "100%", height: "100%", backgroundColor: "var(--color-bg-hover)" }} />
                         )}
                       </div>
-                      <div className={styles.orderItemDetails}>
-                        <h4 className={styles.orderItemName}>
+                      
+                      <div className={styles.orderItemDetails} style={{ paddingLeft: "10px" }}>
+                        <h4 className={styles.orderItemName} style={{ fontSize: "14px", color: "var(--admin-text)", lineHeight: "1.4" }}>
                           {item.product?.name || "Unknown Product"}
                         </h4>
+                        
                         {(() => {
                           const displayColor = item.variant?.color && item.variant.color !== "Standard"
                             ? item.variant.color
@@ -487,21 +771,27 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
                             ? item.variant.size
                             : null;
                           return (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <div style={{ display: "flex", gap: "8px", marginTop: "4px", flexWrap: "wrap" }}>
                               {displayColor && (
-                                <span className={styles.orderItemMeta}>Color: {displayColor}</span>
+                                <span className={styles.orderItemMeta} style={{ fontSize: "10px", backgroundColor: "rgba(255,255,255,0.05)", padding: "1px 5px", borderRadius: "3px" }}>
+                                  Color: {displayColor}
+                                </span>
                               )}
                               {displaySize && (
-                                <span className={styles.orderItemMeta}>Size: {displaySize}</span>
+                                <span className={styles.orderItemMeta} style={{ fontSize: "10px", backgroundColor: "rgba(255,255,255,0.05)", padding: "1px 5px", borderRadius: "3px" }}>
+                                  Size: {displaySize}
+                                </span>
                               )}
                             </div>
                           );
                         })()}
-                        <span className={styles.orderItemSubmeta}>
+                        
+                        <span className={styles.orderItemSubmeta} style={{ marginTop: "6px", display: "block" }}>
                           {formatPKR(item.unit_price)} × {item.quantity}
                         </span>
                       </div>
-                      <div className={styles.orderItemPrice}>
+                      
+                      <div className={styles.orderItemPrice} style={{ fontSize: "14px", color: "var(--color-gold-bright)" }}>
                         {formatPKR(item.unit_price * item.quantity)}
                       </div>
                     </div>
@@ -509,134 +799,267 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
                 })}
               </div>
 
-              <hr className={styles.divider} />
-
               {/* Price Calculations */}
-              <div className={styles.priceBreakdown}>
-                <div className={styles.priceRow}>
+              <div className={styles.priceBreakdown} style={{ marginTop: "20px", backgroundColor: "rgba(255,255,255,0.01)", padding: "14px", borderRadius: "var(--radius-sm)", border: "1px solid rgba(255,255,255,0.03)" }}>
+                <div className={styles.priceRow} style={{ fontSize: "13px", color: "var(--admin-text-sub)", display: "flex", justifyContent: "space-between" }}>
                   <span>Subtotal</span>
                   <span>{formatPKR(order.subtotal)}</span>
                 </div>
                 {order.discount_amount && Number(order.discount_amount) > 0 ? (
-                  <div className={styles.priceRow} style={{ color: "var(--color-gold)", fontWeight: "bold" }}>
-                    <span>Discount ({order.promo_code || "Promo"})</span>
+                  <div className={styles.priceRow} style={{ display: "flex", justifyContent: "space-between", color: "var(--color-gold)", fontWeight: "bold", fontSize: "13px" }}>
+                    <span>Discount ({order.promo_code || "Promo Code"})</span>
                     <span>-{formatPKR(Number(order.discount_amount))}</span>
                   </div>
                 ) : null}
-                <div className={styles.priceRow}>
+                <div className={styles.priceRow} style={{ fontSize: "13px", color: "var(--admin-text-sub)", display: "flex", justifyContent: "space-between" }}>
                   <span>Shipping Cost</span>
                   <span>
                     {order.shipping_cost === 0 ? "FREE" : formatPKR(order.shipping_cost)}
                   </span>
                 </div>
-                <hr className={styles.divider} />
-                <div className={styles.totalRow}>
-                  <span>Total Amount Paid</span>
-                  <span className={styles.totalPrice}>{formatPKR(order.total)}</span>
+                <hr className={styles.divider} style={{ margin: "8px 0" }} />
+                <div className={styles.totalRow} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "14px", fontWeight: "var(--weight-bold)", color: "var(--admin-text)" }}>Total Paid</span>
+                  <span className={styles.totalPrice} style={{ color: "var(--color-gold)", fontSize: "18px" }}>{formatPKR(order.total)}</span>
                 </div>
               </div>
             </div>
+
+            {/* Audit & Log Details */}
+            <div className={styles.formCard} style={{ border: "1px solid var(--admin-border)", margin: 0 }}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: "14px", fontWeight: "var(--weight-bold)", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "12px" }}>
+                Payment &amp; Audit Logs
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "13px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--admin-text-sub)" }}>Payment Method:</span>
+                  <span style={{ fontWeight: "var(--weight-semibold)", color: "var(--color-success)" }}>💸 Cash on Delivery (COD)</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "var(--admin-text-sub)" }}>Order Placement:</span>
+                  <span>{new Date(order.created_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}</span>
+                </div>
+                {order.updated_at && (
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "var(--admin-text-sub)" }}>Last Updated:</span>
+                    <span>{new Date(order.updated_at).toLocaleString("en-PK", { dateStyle: "medium", timeStyle: "short" })}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
           </div>
 
-          {/* Right Side: Order Status Manager & Customer Info */}
-          <div className={styles.orderSidebarCol}>
-            {/* Order Status Manager */}
-            <div className={styles.formCard}>
-              <h3 className={styles.formCardTitle}>Order Status</h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <span className={styles.orderDetailText} style={{ color: "var(--admin-text-sub)" }}>Current Status:</span>
-                  <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`}>
-                    {order.status}
-                  </span>
-                </div>
-
-                <div className={styles.formGroup}>
-                  <label className={styles.formLabel}>Update Order Status</label>
-                  <select
-                    value={order.status}
-                    onChange={handleStatusChange}
-                    disabled={updating}
-                    className={styles.formSelect}
-                  >
-                    <option value="pending" className={styles.filterOption}>Pending</option>
-                    <option value="processing" className={styles.filterOption}>Processing</option>
-                    <option value="shipped" className={styles.filterOption}>Shipped</option>
-                    <option value="delivered" className={styles.filterOption}>Delivered</option>
-                    <option value="cancelled" className={styles.filterOption}>Cancelled</option>
-                  </select>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className={styles.signOutButton}
-                  style={{
-                    marginTop: "8px",
-                    backgroundColor: "rgba(212, 175, 55, 0.1)",
-                    color: "var(--color-gold)",
-                    borderColor: "rgba(212, 175, 55, 0.2)",
-                    cursor: "pointer"
-                  }}
+          {/* RIGHT COLUMN: Actions, status, and shipping management */}
+          <div className={styles.orderSidebarCol} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            
+            {/* Status Manager Panel */}
+            <div className={styles.formCard} style={{ border: "1px solid var(--admin-border)", margin: 0 }}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: "14px", fontWeight: "var(--weight-bold)", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "12px" }}>
+                Order Status Manager
+              </h3>
+              
+              <div className={styles.formGroup} style={{ marginBottom: 0 }}>
+                <label className={styles.formLabel} style={{ marginBottom: "8px", fontSize: "12px", color: "var(--admin-text-sub)" }}>Current Status: <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`} style={{ marginLeft: "6px" }}>{order.status}</span></label>
+                <select
+                  value={order.status}
+                  onChange={handleStatusChange}
+                  disabled={updating}
+                  className={styles.formSelect}
+                  style={{ width: "100%" }}
                 >
-                  🖨️ Print Receipt
-                </button>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
               </div>
             </div>
 
-            {/* Customer Metadata */}
-            <div className={styles.formCard}>
-              <h3 className={styles.formCardTitle}>Customer &amp; Delivery</h3>
+            {/* Shipment Management Form Card */}
+            <form onSubmit={handleShipmentSave} className={styles.formCard} style={{ border: "1px solid var(--admin-border)", margin: 0 }}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: "14px", fontWeight: "var(--weight-bold)", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "12px" }}>
+                Shipment Management
+              </h3>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Courier Company</label>
+                    <select
+                      value={shippingCompanyId}
+                      onChange={(event) => {
+                        const selectedId = event.target.value;
+                        setShippingCompanyId(selectedId);
+                        const selectedCompany = shippingCompanies.find((item) => item.id === selectedId);
+                        setShippingCompanyName(selectedCompany?.name || "");
+                        if (selectedCompany && !shipmentCost) {
+                          setShipmentCost(Number(selectedCompany.default_base_rate || 0));
+                        }
+                      }}
+                      className={styles.formSelect}
+                    >
+                      <option value="">Manual / None</option>
+                      {shippingCompanies.map((company) => (
+                        <option key={company.id} value={company.id}>
+                          {company.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Shipment Status</label>
+                    <select value={shipmentStatus} onChange={(event) => setShipmentStatus(event.target.value as ShipmentStatus)} className={styles.formSelect}>
+                      <option value="draft">Draft</option>
+                      <option value="booked">Booked</option>
+                      <option value="picked_up">Picked Up</option>
+                      <option value="in_transit">In Transit</option>
+                      <option value="out_for_delivery">Out for Delivery</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="failed_delivery">Failed Delivery</option>
+                      <option value="returned">Returned</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Tracking Number</label>
+                  <input value={trackingNumber} onChange={(event) => setTrackingNumber(event.target.value)} className={styles.formInput} placeholder="Enter Tracking ID" />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Booking Reference CN</label>
+                  <input value={bookingReference} onChange={(event) => setBookingReference(event.target.value)} className={styles.formInput} placeholder="Consignment Note #" />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Ship Cost (PKR)</label>
+                    <input type="number" min={0} value={shipmentCost} onChange={(event) => setShipmentCost(Number(event.target.value))} className={styles.formInput} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>COD Amount</label>
+                    <input type="number" min={0} value={codAmount} onChange={(event) => setCodAmount(Number(event.target.value))} className={styles.formInput} />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Weight (kg)</label>
+                    <input type="number" min={0} step="0.001" value={weightKg} onChange={(event) => setWeightKg(event.target.value)} className={styles.formInput} placeholder="0.5" />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>Pieces Count</label>
+                    <input type="number" min={1} value={piecesCount} onChange={(event) => setPiecesCount(Number(event.target.value))} className={styles.formInput} />
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Tracking Link URL</label>
+                  <input value={trackingUrl} onChange={(event) => setTrackingUrl(event.target.value)} className={styles.formInput} placeholder="Auto-filled from template if blank" />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Estimated Delivery</label>
+                  <input type="datetime-local" value={estimatedDeliveryAt} onChange={(event) => setEstimatedDeliveryAt(event.target.value)} className={styles.formInput} />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Package Courier Notes</label>
+                  <textarea value={shipmentNotes} onChange={(event) => setShipmentNotes(event.target.value)} className={styles.formTextarea} rows={2} style={{ resize: "vertical" }} />
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
+                  <Button type="submit" variant="luxury" size="sm" isLoading={savingShipment} style={{ width: "100%" }}>
+                    {shipmentId ? "Update Shipment" : "Create Shipment"}
+                  </Button>
+                  
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px" }}>
+                    <Link href="/admin/shipping" className={styles.tableLink}>
+                      Open Shipping Queue &rarr;
+                    </Link>
+                    {trackingUrl && (
+                      <Link href={trackingUrl} className={styles.tableLink} target="_blank" style={{ color: "var(--color-info)" }}>
+                        Open Tracking CN ↗
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            {/* Customer Details Card */}
+            <div className={styles.formCard} style={{ border: "1px solid var(--admin-border)", margin: 0 }}>
+              <h3 style={{ margin: "0 0 16px 0", fontSize: "14px", fontWeight: "var(--weight-bold)", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "1px", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "12px" }}>
+                Customer &amp; Delivery
+              </h3>
+              
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                <div className={styles.formGroup}>
-                  <h4 className={styles.formLabel} style={{ color: "var(--color-gold)", margin: 0 }}>Customer Information</h4>
-                  <p className={styles.orderDetailText}>
-                    <strong>Name:</strong> {order.shipping_address.first_name}{" "}
-                    {order.shipping_address.last_name}
+                
+                {/* Contact details */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <h4 style={{ margin: 0, fontSize: "11px", color: "var(--admin-text-sub)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Customer Profile</h4>
+                  <p className={styles.orderDetailText} style={{ fontSize: "13.5px", fontWeight: "var(--weight-semibold)" }}>
+                    {order.shipping_address.first_name} {order.shipping_address.last_name}
                   </p>
-                  <p className={styles.orderDetailText}>
-                    <strong>Email:</strong> {order.contact_email}
+                  <p className={styles.orderDetailText} style={{ fontSize: "13px" }}>
+                    ✉️ <a href={`mailto:${order.contact_email}`} className={styles.tableLink} style={{ color: "var(--color-gold)", textDecoration: "none" }}>{order.contact_email}</a>
                   </p>
-                  <p className={styles.orderDetailText}>
-                    <strong>Phone:</strong> {order.contact_phone}
-                  </p>
-                </div>
-
-                <hr className={styles.divider} />
-
-                <div className={styles.formGroup}>
-                  <h4 className={styles.formLabel} style={{ color: "var(--color-gold)", margin: 0 }}>Shipping Address</h4>
-                  <p className={styles.orderDetailText}>{order.shipping_address.address_line_1}</p>
-                  {order.shipping_address.address_line_2 && (
-                    <p className={styles.orderDetailText}>{order.shipping_address.address_line_2}</p>
-                  )}
-                  <p className={styles.orderDetailText}>
-                    {order.shipping_address.city}, {order.shipping_address.state}
-                  </p>
-                  <p className={styles.orderDetailText}>
-                    {order.shipping_address.postal_code}, Pakistan
+                  <p className={styles.orderDetailText} style={{ fontSize: "13px" }}>
+                    📞 <a href={`tel:${order.contact_phone}`} className={styles.tableLink} style={{ color: "var(--color-gold)", textDecoration: "none" }}>{order.contact_phone}</a>
                   </p>
                 </div>
 
-                <hr className={styles.divider} />
+                <hr className={styles.divider} style={{ margin: "4px 0" }} />
 
-                <div className={styles.formGroup}>
-                  <h4 className={styles.formLabel} style={{ color: "var(--color-gold)", margin: 0 }}>Payment Method</h4>
-                  <p className={styles.orderDetailText}>
-                    💸 Cash on Delivery (COD)
-                  </p>
+                {/* Delivery details */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h4 style={{ margin: 0, fontSize: "11px", color: "var(--admin-text-sub)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Shipping Address</h4>
+                    <button
+                      onClick={() => {
+                        const fullAddress = `${order.shipping_address.first_name} ${order.shipping_address.last_name}\n${order.shipping_address.address_line_1}${order.shipping_address.address_line_2 ? '\n' + order.shipping_address.address_line_2 : ''}\n${order.shipping_address.city}, ${order.shipping_address.state}\nPakistan\nPhone: ${order.contact_phone}`;
+                        navigator.clipboard.writeText(fullAddress);
+                        toast.success("Shipping address copied!");
+                      }}
+                      type="button"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--admin-text-sub)",
+                        cursor: "pointer",
+                        fontSize: "10.5px",
+                        padding: "2px 6px",
+                        borderRadius: "3px",
+                        backgroundColor: "rgba(255,255,255,0.04)",
+                        transition: "all 0.2s"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)"}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.04)"}
+                    >
+                      📋 Copy Address
+                    </button>
+                  </div>
+                  <div style={{ fontSize: "13px", lineHeight: "1.5", color: "var(--admin-text)" }}>
+                    <p style={{ margin: 0 }}>{order.shipping_address.address_line_1}</p>
+                    {order.shipping_address.address_line_2 && (
+                      <p style={{ margin: 0 }}>{order.shipping_address.address_line_2}</p>
+                    )}
+                    <p style={{ margin: 0 }}>{order.shipping_address.city}, {order.shipping_address.state}</p>
+                    <p style={{ margin: 0 }}>{order.shipping_address.postal_code}, Pakistan</p>
+                  </div>
                 </div>
 
-                <hr className={styles.divider} />
-
-                <div className={styles.formGroup}>
-                  <h4 className={styles.formLabel} style={{ color: "var(--color-gold)", margin: 0 }}>Order Logs</h4>
-                  <p className={styles.orderDetailText} style={{ color: "var(--admin-text-sub)" }}>Placed on {formatDate(order.created_at)}</p>
-                </div>
               </div>
             </div>
+
           </div>
+
         </div>
+
       </div>
     </>
   );

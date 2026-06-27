@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Order, OrderStatus } from "@/types";
+import { Order, OrderShipment, OrderStatus } from "@/types";
 import styles from "../admin.module.css";
 
 const MOCK_ORDERS: Order[] = [
@@ -75,6 +75,51 @@ const MOCK_ORDERS: Order[] = [
   },
 ];
 
+const CopyButton: React.FC<{ text: string }> = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button
+      onClick={handleCopy}
+      type="button"
+      style={{
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: "4px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: copied ? "var(--color-success, #4ade80)" : "var(--admin-text-sub, rgba(255,255,255,0.6))",
+        transition: "color 0.2s, transform 0.1s",
+        marginLeft: "6px",
+        verticalAlign: "middle",
+      }}
+      title="Copy Order ID"
+      onMouseDown={(e) => e.currentTarget.style.transform = "scale(0.85)"}
+      onMouseUp={(e) => e.currentTarget.style.transform = "scale(1)"}
+      onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      )}
+    </button>
+  );
+};
+
 export default function AdminOrdersPage() {
   const supabase = createClient();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -87,7 +132,7 @@ export default function AdminOrdersPage() {
       try {
         const { data, error } = await supabase
           .from("orders")
-          .select("*")
+          .select("*, shipments:order_shipments(*)")
           .order("created_at", { ascending: false });
 
         if (error || !data || data.length === 0) {
@@ -204,16 +249,21 @@ export default function AdminOrdersPage() {
                   <th className={styles.tableTh}>City</th>
                   <th className={styles.tableTh}>Total</th>
                   <th className={styles.tableTh}>Status</th>
+                  <th className={styles.tableTh}>Shipment</th>
                   <th className={styles.tableTh}>Order Date</th>
                   <th className={styles.tableTh}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredOrders.map((order) => {
+                  const latestForwardShipment = ((order.shipments || []) as OrderShipment[])
+                    .filter((shipment) => shipment.shipment_direction === "forward")
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
                   return (
                     <tr key={order.id} className={styles.tableTr}>
-                      <td className={`${styles.tableTd} ${styles.tableTdHighlight}`}>
+                      <td className={`${styles.tableTd} ${styles.tableTdHighlight}`} style={{ whiteSpace: "nowrap" }}>
                         <Link href={`/admin/orders/${order.id}`} className={styles.tableLink}>{order.id}</Link>
+                        <CopyButton text={order.id} />
                       </td>
                       <td className={styles.tableTd}>
                         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -232,6 +282,20 @@ export default function AdminOrdersPage() {
                         <span className={`${styles.badge} ${getStatusBadgeClass(order.status)}`}>
                           {order.status}
                         </span>
+                      </td>
+                      <td className={styles.tableTd}>
+                        {latestForwardShipment ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                            <span style={{ fontSize: "12px", color: "var(--admin-text)" }}>
+                              {latestForwardShipment.shipping_company_name || "Courier assigned"}
+                            </span>
+                            <span style={{ fontSize: "11px", color: "var(--admin-text-sub)" }}>
+                              {latestForwardShipment.tracking_number || latestForwardShipment.shipment_status}
+                            </span>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: "11px", color: "var(--admin-text-sub)" }}>Not booked</span>
+                        )}
                       </td>
                       <td className={styles.tableTd} style={{ fontSize: "12px" }}>
                         {formatDate(order.created_at)}

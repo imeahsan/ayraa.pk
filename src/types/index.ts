@@ -89,6 +89,8 @@ export interface Order {
   user?: UserProfile;
   promo_code?: string | null;
   discount_amount?: number;
+  shipments?: OrderShipment[];
+  updated_at?: string;
 }
 
 export interface OrderItem {
@@ -116,6 +118,125 @@ export interface OrderNote {
   admin_user_id: string;
   note: string;
   created_at: string;
+}
+
+export type ShipmentDirection = 'forward' | 'reverse';
+export type ShipmentStatus =
+  | 'draft'
+  | 'booked'
+  | 'picked_up'
+  | 'in_transit'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'failed_delivery'
+  | 'returned'
+  | 'cancelled';
+
+export interface ShippingCompany {
+  id: string;
+  name: string;
+  code: string;
+  contact_person?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  website_url?: string | null;
+  tracking_url_template?: string | null;
+  default_base_rate?: number | null;
+  cod_fee_type?: 'fixed' | 'percentage' | null;
+  cod_fee_value?: number | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderShipment {
+  id: string;
+  order_id: string;
+  shipping_company_id: string | null;
+  shipping_company_name: string | null;
+  shipment_direction: ShipmentDirection;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  booking_reference: string | null;
+  shipment_status: ShipmentStatus;
+  shipping_cost: number;
+  cod_amount: number;
+  weight_kg: number | null;
+  pieces_count: number;
+  package_notes: string | null;
+  recipient_name: string;
+  recipient_phone: string;
+  recipient_city: string;
+  recipient_address: string;
+  recipient_postal_code: string | null;
+  booked_at: string | null;
+  shipped_at: string | null;
+  estimated_delivery_at: string | null;
+  delivered_at: string | null;
+  returned_at: string | null;
+  created_by: string | null;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  shipping_company?: ShippingCompany;
+}
+
+export type ReturnRequestType = 'return' | 'exchange' | 'replacement';
+export type ReturnRequestStatus = 'draft' | 'requested' | 'approved' | 'rejected' | 'received' | 'inspected' | 'resolved' | 'cancelled';
+export type ReturnResolutionType = 'refund' | 'exchange_order' | 'store_credit' | 'no_action';
+export type ReturnConditionStatus = 'unopened' | 'unused' | 'used' | 'damaged' | 'wrong_item' | 'defective';
+export type ReturnRestockAction = 'restock' | 'do_not_restock' | 'inspect_later';
+
+export interface OrderReturnRequest {
+  id: string;
+  order_id: string;
+  request_type: ReturnRequestType;
+  status: ReturnRequestStatus;
+  resolution_type: ReturnResolutionType | null;
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string | null;
+  reason: string;
+  condition_notes: string | null;
+  admin_notes: string | null;
+  refund_amount: number;
+  store_credit_amount: number;
+  exchange_order_id: string | null;
+  reverse_courier_name: string | null;
+  reverse_tracking_number: string | null;
+  reverse_tracking_url: string | null;
+  requested_at: string;
+  approved_at: string | null;
+  received_at: string | null;
+  resolved_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
+  order?: Order;
+  items?: OrderReturnItem[];
+}
+
+export interface OrderReturnItem {
+  id: string;
+  return_request_id: string;
+  order_item_id: string;
+  product_id: string | null;
+  variant_id: string | null;
+  quantity: number;
+  reason: string | null;
+  condition_status: ReturnConditionStatus;
+  restock_action: ReturnRestockAction;
+  refund_amount: number;
+  exchange_product_id: string | null;
+  exchange_variant_id: string | null;
+  exchange_quantity: number | null;
+  created_at: string;
+  product?: Product;
+  variant?: ProductVariant;
+  order_item?: OrderItem;
+  exchange_product?: Product;
+  exchange_variant?: ProductVariant;
 }
 
 export interface ShippingAddress {

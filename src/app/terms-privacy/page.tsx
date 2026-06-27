@@ -76,7 +76,7 @@ export default function TermsPrivacyPage() {
                 </p>
                 <h3 className={styles.subTitle}>5. Returns and Refunds</h3>
                 <p className={styles.para}>
-                  Eligible items can be returned within 3 days of delivery. Please refer to our <a href="/shipping-returns" className={styles.inlineLink}>Shipping &amp; Returns</a> page for details.
+                  Eligible issues must be reported within 3 days of delivery. Please refer to our <a href="/returns-policy" className={styles.inlineLink}>Returns Policy</a> page for strict eligibility rules.
                 </p>
                 <h3 className={styles.subTitle}>6. Intellectual Property</h3>
                 <p className={styles.para}>

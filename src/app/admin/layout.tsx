@@ -48,6 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    toast.success("Signed out successfully.");
     router.push("/");
     router.refresh();
   };
@@ -62,22 +63,28 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navLinks = [
-    { name: "Dashboard", href: "/admin", icon: "📊" },
-    { name: "Products", href: "/admin/products", icon: "📦" },
-    { name: "Sales Manager", href: "/admin/sales", icon: "🔥" },
-    { name: "Orders", href: "/admin/orders", icon: "🛒" },
-    { name: "Collections", href: "/admin/categories", icon: "🗂️" },
-    { name: "Product Q&A", href: "/admin/qa", icon: "❓" },
-    { name: "Product Reviews", href: "/admin/reviews", icon: "⭐" },
-    { name: "Customers", href: "/admin/customers", icon: "👥" },
-    { name: "Promo Codes", href: "/admin/promos", icon: "🎫" },
-    { name: "Homepage Editor", href: "/admin/homepage", icon: "🎨" },
-    { name: "Settings", href: "/admin/settings", icon: "⚙️" },
+    { name: "Dashboard", href: "/admin", icon: "Dash" },
+    { name: "Reports", href: "/admin/reports", icon: "Data" },
+    { name: "Products", href: "/admin/products", icon: "Prod" },
+    { name: "Sales Manager", href: "/admin/sales", icon: "Sale" },
+    { name: "Orders", href: "/admin/orders", icon: "Ord" },
+    { name: "Shipping", href: "/admin/shipping", icon: "Ship" },
+    { name: "Returns", href: "/admin/returns", icon: "Ret" },
+    { name: "Collections", href: "/admin/categories", icon: "Col" },
+    { name: "Product Q&A", href: "/admin/qa", icon: "Q&A" },
+    { name: "Product Reviews", href: "/admin/reviews", icon: "Rev" },
+    { name: "Customers", href: "/admin/customers", icon: "Cust" },
+    { name: "Promo Codes", href: "/admin/promos", icon: "Promo" },
+    { name: "Homepage Editor", href: "/admin/homepage", icon: "Home" },
+    { name: "Settings", href: "/admin/settings", icon: "Set" },
   ];
+
+  const activeLink =
+    navLinks.find((link) => pathname === link.href || pathname.startsWith(`${link.href}/`)) ||
+    navLinks[0];
 
   return (
     <div className={styles.adminLayout}>
-      {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarLogoSection}>
           <Link href="/" className={styles.sidebarLogo}>
@@ -88,16 +95,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <nav className={styles.sidebarNav}>
           {navLinks.map((link) => {
-            const isActive = pathname === link.href;
+            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`${styles.sidebarLink} ${
-                  isActive ? styles.sidebarLinkActive : ""
-                }`}
+                className={`${styles.sidebarLink} ${isActive ? styles.sidebarLinkActive : ""}`}
               >
-                <span className="text-lg">{link.icon}</span>
+                <span className={styles.sidebarIconText}>{link.icon}</span>
                 <span>{link.name}</span>
               </Link>
             );
@@ -120,21 +125,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* Main Content Pane */}
       <div className={styles.mainPane}>
-        {/* Topbar */}
         <header className={styles.topbar}>
-          <h2 className={styles.topbarTitle}>
-            {navLinks.find((l) => l.href === pathname)?.name || "Admin"}
-          </h2>
+          <h2 className={styles.topbarTitle}>{activeLink.name}</h2>
           <div className={styles.topbarActions}>
-            <Link href="/" className={styles.topbarButton} style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-              🏪 View Storefront
+            <Link
+              href="/"
+              className={styles.topbarButton}
+              style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
+            >
+              View Storefront
             </Link>
           </div>
         </header>
 
-        {/* Dynamic page content */}
         <div className={styles.contentContainer}>
           <div className={styles.innerContent}>{children}</div>
         </div>
