@@ -9,6 +9,7 @@ import { ThreeTextureOverlay } from './ThreeTextureOverlay';
 import { ARControls } from './ARControls';
 import { Button } from '@/components/storefront/Button/Button';
 import { compositeARCapture, downloadBlob, shareARCapture } from '@/lib/bedsheet-ar/capture';
+import { trackEvent } from '@/lib/analytics';
 
 interface BedsheetARExperienceProps {
   productId: string;
@@ -47,6 +48,13 @@ export default function BedsheetARExperience({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
 
+  useEffect(() => {
+    trackEvent('ar_start', {
+      item_id: productId,
+      item_name: productName,
+    });
+  }, [productId, productName]);
+
   // 1. Manage screen dimensions
   useEffect(() => {
     function updateDimensions() {
@@ -81,6 +89,10 @@ export default function BedsheetARExperience({
   useEffect(() => {
     // Check for secure context first (camera requires HTTPS or localhost)
     if (typeof window !== 'undefined' && !window.isSecureContext) {
+      trackEvent('ar_error', {
+        item_id: productId,
+        error_category: 'https_required',
+      });
       setError(
         'Camera requires HTTPS. Please access this page via https:// or localhost. '
         + 'If testing on mobile, use an HTTPS tunnel (e.g. ngrok) or connect over USB DevTools.'
@@ -106,8 +118,17 @@ export default function BedsheetARExperience({
           rotation: data.settings.defaultRotation,
           repeatMode: data.settings.repeatMode
         });
+        trackEvent('ar_texture_loaded', {
+          item_id: productId,
+          item_name: productName,
+          repeat_mode: data.settings.repeatMode,
+        });
       } catch (err: any) {
         console.error("Failed to load AR asset:", err);
+        trackEvent('ar_error', {
+          item_id: productId,
+          error_category: 'texture_load_failed',
+        });
         setError(err.message || 'Error loading bedsheet preview data.');
       } finally {
         setTextureLoading(false);
@@ -121,18 +142,27 @@ export default function BedsheetARExperience({
       resetCorners();
       setCameraStatus('idle');
     };
-  }, [productId, setTextureUrl, resetSettings, resetCorners, setCameraStatus]);
+  }, [productId, productName, setTextureUrl, resetSettings, resetCorners, setCameraStatus]);
 
   // 3. Camera callbacks — memoized to avoid CameraStream restarting on each render
-  const handleCameraReady = useCallback((video: HTMLVideoElement, stream: MediaStream) => {
+  const handleCameraReady = useCallback((video: HTMLVideoElement) => {
     videoElementRef.current = video;
     setCameraStatus('ready');
-  }, [setCameraStatus]);
+    trackEvent('ar_camera_permission_granted', {
+      item_id: productId,
+      item_name: productName,
+    });
+  }, [productId, productName, setCameraStatus]);
 
   const handleCameraError = useCallback((status: any, err: Error) => {
     setCameraStatus(status);
+    trackEvent(status === 'permission_denied' ? 'ar_camera_permission_denied' : 'ar_error', {
+      item_id: productId,
+      item_name: productName,
+      error_category: status,
+    });
     setError(err.message || 'Could not access the device camera.');
-  }, [setCameraStatus]);
+  }, [productId, productName, setCameraStatus]);
 
   // 4. Capture compositing handler
   const handleCapture = async () => {
@@ -182,6 +212,11 @@ export default function BedsheetARExperience({
 
     } catch (err: any) {
       console.error('Composite failed:', err);
+      trackEvent('ar_error', {
+        item_id: productId,
+        item_name: productName,
+        error_category: 'capture_failed',
+      });
       alert('Failed to capture preview image: ' + err.message);
     } finally {
       setCapturing(false);
@@ -190,6 +225,10 @@ export default function BedsheetARExperience({
 
   const handleDownload = () => {
     if (captureBlob) {
+      trackEvent('ar_capture_download', {
+        item_id: productId,
+        item_name: productName,
+      });
       downloadBlob(captureBlob, `ayra-bedsheet-preview-${productSlug}.webp`);
     }
   };
@@ -197,6 +236,11 @@ export default function BedsheetARExperience({
   const handleShare = async () => {
     if (captureBlob) {
       const shared = await shareARCapture(captureBlob, `ayra-ar-${productSlug}.webp`, productName);
+      trackEvent('ar_capture_share', {
+        item_id: productId,
+        item_name: productName,
+        shared,
+      });
       if (!shared) {
         // Fallback info
         alert('Web Share is not supported on this browser. Use the Download option instead!');

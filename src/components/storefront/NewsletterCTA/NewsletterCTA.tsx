@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { trackEvent, trackSanitizedSupabaseError } from "@/lib/analytics";
 import styles from "./NewsletterCTA.module.css";
 
 export const NewsletterCTA: React.FC = () => {
@@ -20,12 +21,15 @@ export const NewsletterCTA: React.FC = () => {
         .insert({ email: email.trim().toLowerCase() });
 
       if (error && error.code !== "23505") {
+        trackSanitizedSupabaseError("newsletter_signup", error);
         // 23505 = unique violation (already subscribed) — treat as success
         throw error;
       }
+      trackEvent("newsletter_signup", { source: "homepage_cta" });
       setStatus("success");
       setEmail("");
     } catch {
+      trackEvent("newsletter_error", { source: "homepage_cta", error_category: "submission_failed" });
       // Silently succeed — table may not exist yet, but we still thank the user
       setStatus("success");
       setEmail("");

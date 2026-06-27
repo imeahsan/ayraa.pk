@@ -8,6 +8,9 @@ import { WishlistProvider } from "@/context/WishlistContext";
 import { CartDrawer } from "@/components/storefront/CartDrawer/CartDrawer";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import { WhatsAppFAB } from "@/components/storefront/WhatsAppFAB";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { AnalyticsConsentBanner } from "@/components/analytics/AnalyticsConsentBanner";
+import { WebVitals } from "@/components/analytics/WebVitals";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -88,9 +91,12 @@ export default function RootLayout({
             <CartProvider>
               <WishlistProvider>
                 <OrganizationJsonLd baseUrl={baseUrl} />
+                <GoogleAnalytics />
+                <WebVitals />
                 {children}
                 <CartDrawer />
                 <WhatsAppFAB />
+                <AnalyticsConsentBanner />
               </WishlistProvider>
             </CartProvider>
           </ToastProvider>

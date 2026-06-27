@@ -2,6 +2,12 @@
 
 import React, { createContext, useContext, useEffect, useReducer } from "react";
 import { Cart, CartItem, Product, ProductVariant } from "@/types";
+import {
+  getCartItemValue,
+  productToAnalyticsItem,
+  trackEcommerceEvent,
+  trackEvent,
+} from "@/lib/analytics";
 
 interface CartContextType {
   cart: Cart;
@@ -95,7 +101,7 @@ function cartReducer(state: CartItem[], action: CartAction): CartItem[] {
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, dispatch] = useReducer(cartReducer, []);
-  const [isCartOpen, setCartOpen] = React.useState(false);
+  const [isCartOpen, setCartOpenState] = React.useState(false);
 
   // Load cart on mount to avoid SSR hydration mismatch
   useEffect(() => {
@@ -115,18 +121,64 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [items]);
 
   const { subtotal, shipping, total } = calculateCartTotals(items);
+  const cart = { items, subtotal, shipping, total };
+
+  const setCartOpen = (open: boolean) => {
+    setCartOpenState(open);
+    if (open) {
+      trackEcommerceEvent("view_cart", {
+        value: total,
+        items: items.map((item, index) => productToAnalyticsItem(item.product, {
+          variant: item.variant,
+          quantity: item.quantity,
+          index,
+        })),
+      });
+    }
+  };
 
   const addItem = (product: Product, variant: ProductVariant | null, quantity = 1) => {
     dispatch({ type: "ADD_ITEM", payload: { product, variant, quantity } });
+    trackEcommerceEvent("add_to_cart", {
+      value: product.price * quantity,
+      items: [productToAnalyticsItem(product, { variant, quantity })],
+    });
     setCartOpen(true); // Automatically open cart drawer when item is added!
   };
 
   const removeItem = (productId: string, variantId: string | null) => {
+    const item = items.find(
+      (cartItem) => cartItem.product_id === productId && cartItem.variant_id === variantId
+    );
     dispatch({ type: "REMOVE_ITEM", payload: { productId, variantId } });
+    if (item) {
+      trackEcommerceEvent("remove_from_cart", {
+        value: getCartItemValue(item),
+        items: [productToAnalyticsItem(item.product, {
+          variant: item.variant,
+          quantity: item.quantity,
+        })],
+      });
+    }
   };
 
   const updateQuantity = (productId: string, variantId: string | null, quantity: number) => {
+    const item = items.find(
+      (cartItem) => cartItem.product_id === productId && cartItem.variant_id === variantId
+    );
     dispatch({ type: "UPDATE_QUANTITY", payload: { productId, variantId, quantity } });
+    if (item) {
+      const nextQuantity = Math.max(1, Math.min(quantity, item.variant ? item.variant.stock_quantity : 99));
+      trackEvent("cart_quantity_change", {
+        item_id: productId,
+        item_name: item.product.name,
+        item_variant: variantId || undefined,
+        previous_quantity: item.quantity,
+        quantity: nextQuantity,
+        value: item.product.price * nextQuantity,
+        currency: "PKR",
+      });
+    }
   };
 
   const clearCart = () => {
@@ -136,7 +188,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <CartContext.Provider
       value={{
-        cart: { items, subtotal, shipping, total },
+        cart,
         isCartOpen,
         setCartOpen,
         addItem,

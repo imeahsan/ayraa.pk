@@ -9,6 +9,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { createClient } from "@/lib/supabase/client";
 import { UserProfile, Category } from "@/types";
 import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
+import { trackEvent } from "@/lib/analytics";
 import styles from "./Header.module.css";
 
 interface NavCategory {
@@ -153,6 +154,7 @@ export const Header: React.FC = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    trackEvent("logout");
     router.refresh();
   };
 
@@ -165,6 +167,22 @@ export const Header: React.FC = () => {
     openLoginModal();
   };
 
+  const trackNavClick = (label: string, href: string, location: "header" | "mobile_menu" | "profile_menu" = "header") => {
+    trackEvent("nav_click", {
+      link_text: label,
+      link_url: href,
+      nav_location: location,
+    });
+  };
+
+  const handleMobileMenuToggle = () => {
+    const nextOpen = !isMobileMenuOpen;
+    setIsMobileMenuOpen(nextOpen);
+    if (nextOpen) {
+      trackEvent("mobile_menu_open");
+    }
+  };
+
   const totalItemCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
   const headerCategories = menuCategories.filter((cat) => cat.showInHeader);
 
@@ -175,14 +193,14 @@ export const Header: React.FC = () => {
         <div className={styles.container}>
           <button
             className={styles.mobileMenuToggle}
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onClick={handleMobileMenuToggle}
             aria-label="Toggle Navigation Menu"
             id="mobile-menu-toggle"
           >
             <span className={`${styles.hamburger} ${isMobileMenuOpen ? styles.hamburgerOpen : ""}`} />
           </button>
 
-          <Link href="/" className={styles.logo}>
+          <Link href="/" className={styles.logo} onClick={() => trackNavClick("AYRAA", "/")}>
             AYRAA
           </Link>
 
@@ -192,6 +210,7 @@ export const Header: React.FC = () => {
                 <Link
                   href="/collections"
                   className={pathname.startsWith("/collections") ? "premium-underline-active" : "premium-underline"}
+                  onClick={() => trackNavClick("Shop", "/collections")}
                 >
                   Shop
                 </Link>
@@ -200,7 +219,7 @@ export const Header: React.FC = () => {
                   <div className={styles.megaMenuInner}>
                     {headerCategories.map((cat) => (
                       <div key={cat.id} className={styles.megaCol}>
-                        <Link href={cat.href} className={styles.megaParentLink}>
+                        <Link href={cat.href} className={styles.megaParentLink} onClick={() => trackNavClick(cat.label, cat.href)}>
                           {cat.label}
                         </Link>
                         {cat.sub.length > 0 && (
@@ -210,6 +229,7 @@ export const Header: React.FC = () => {
                                 <Link
                                   href={sub.href}
                                   className={`${styles.megaSubLink} ${pathname === sub.href ? styles.megaSubLinkActive : ""}`}
+                                  onClick={() => trackNavClick(sub.label, sub.href)}
                                 >
                                   {sub.label}
                                 </Link>
@@ -228,6 +248,7 @@ export const Header: React.FC = () => {
                   <Link
                     href={item.href}
                     className={isActiveHref(pathname, item.href) ? "premium-underline-active" : "premium-underline"}
+                    onClick={() => trackNavClick(item.label, item.href)}
                   >
                     {item.label}
                   </Link>
@@ -239,6 +260,7 @@ export const Header: React.FC = () => {
                   <Link
                     href={cat.href}
                     className={isActiveHref(pathname, cat.href) ? "premium-underline-active" : "premium-underline"}
+                    onClick={() => trackNavClick(cat.label, cat.href)}
                   >
                     {cat.label}
                   </Link>
@@ -246,12 +268,12 @@ export const Header: React.FC = () => {
               ))}
 
               <li className={styles.navItem}>
-                <Link href="/about" className={pathname === "/about" ? "premium-underline-active" : "premium-underline"}>
+                <Link href="/about" className={pathname === "/about" ? "premium-underline-active" : "premium-underline"} onClick={() => trackNavClick("About", "/about")}>
                   About
                 </Link>
               </li>
               <li className={styles.navItem}>
-                <Link href="/contact" className={pathname === "/contact" ? "premium-underline-active" : "premium-underline"}>
+                <Link href="/contact" className={pathname === "/contact" ? "premium-underline-active" : "premium-underline"} onClick={() => trackNavClick("Contact", "/contact")}>
                   Contact
                 </Link>
               </li>
@@ -261,7 +283,10 @@ export const Header: React.FC = () => {
           <div className={styles.actions}>
             <button
               className={styles.iconBtn}
-              onClick={toggleTheme}
+              onClick={() => {
+                trackEvent("theme_toggle", { next_theme: theme === "dark" ? "light" : "dark" });
+                toggleTheme();
+              }}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
               id="theme-toggle-btn"
               title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
@@ -279,7 +304,7 @@ export const Header: React.FC = () => {
             </button>
 
             {profile?.role === "admin" && (
-              <Link href="/admin" className={styles.dashboardLink} title="Admin Panel">
+              <Link href="/admin" className={styles.dashboardLink} title="Admin Panel" onClick={() => trackNavClick("Dashboard", "/admin")}>
                 Dashboard
               </Link>
             )}
@@ -293,11 +318,11 @@ export const Header: React.FC = () => {
                   <div className={styles.profileDropdown}>
                     <div className={styles.dropdownMenu}>
                       {profile.role === "admin" && (
-                        <Link href="/admin" className={styles.dropdownItem}>
+                        <Link href="/admin" className={styles.dropdownItem} onClick={() => trackNavClick("Admin Panel", "/admin", "profile_menu")}>
                           Admin Panel
                         </Link>
                       )}
-                      <Link href="/orders" className={styles.dropdownItem}>
+                      <Link href="/orders" className={styles.dropdownItem} onClick={() => trackNavClick("My Orders", "/orders", "profile_menu")}>
                         My Orders
                       </Link>
                       <button onClick={handleSignOut} className={styles.dropdownItem}>
@@ -307,7 +332,7 @@ export const Header: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className="premium-underline" id="login-link">
+                <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className="premium-underline" id="login-link" onClick={() => trackEvent("login_start", { method: "password", source: "header" })}>
                   Login
                 </Link>
               )
@@ -357,7 +382,10 @@ export const Header: React.FC = () => {
         aria-label="Mobile navigation"
       >
         <div className={styles.mobileMenuHeader}>
-          <Link href="/" className={styles.logo} onClick={() => setIsMobileMenuOpen(false)}>
+          <Link href="/" className={styles.logo} onClick={() => {
+            trackNavClick("AYRAA", "/", "mobile_menu");
+            setIsMobileMenuOpen(false);
+          }}>
             AYRAA
           </Link>
           <button className={styles.iconBtn} onClick={() => setIsMobileMenuOpen(false)} aria-label="Close navigation">
@@ -372,7 +400,10 @@ export const Header: React.FC = () => {
             <Link
               href="/collections"
               className={`${styles.mobileMenuLink} ${pathname === "/collections" ? styles.mobileMenuLinkActive : styles.mobileMenuLinkInactive}`}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={() => {
+                trackNavClick("New In", "/collections", "mobile_menu");
+                setIsMobileMenuOpen(false);
+              }}
             >
               New In
             </Link>
@@ -409,7 +440,10 @@ export const Header: React.FC = () => {
                           <Link
                             href={cat.href}
                             className={styles.mobileSubLink}
-                            onClick={() => setIsMobileMenuOpen(false)}
+                            onClick={() => {
+                              trackNavClick(`All ${cat.label}`, cat.href, "mobile_menu");
+                              setIsMobileMenuOpen(false);
+                            }}
                           >
                             All {cat.label}
                           </Link>
@@ -419,7 +453,10 @@ export const Header: React.FC = () => {
                             <Link
                               href={sub.href}
                               className={`${styles.mobileSubLink} ${pathname === sub.href ? styles.mobileSubLinkActive : ""}`}
-                              onClick={() => setIsMobileMenuOpen(false)}
+                              onClick={() => {
+                                trackNavClick(sub.label, sub.href, "mobile_menu");
+                                setIsMobileMenuOpen(false);
+                              }}
                             >
                               {sub.label}
                             </Link>
@@ -432,7 +469,10 @@ export const Header: React.FC = () => {
                   <Link
                     href={cat.href}
                     className={`${styles.mobileMenuLink} ${pathname === cat.href ? styles.mobileSubLinkActive : styles.mobileMenuLinkInactive}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={() => {
+                      trackNavClick(cat.label, cat.href, "mobile_menu");
+                      setIsMobileMenuOpen(false);
+                    }}
                   >
                     {cat.label}
                   </Link>
@@ -442,12 +482,18 @@ export const Header: React.FC = () => {
           })}
 
           <li className={styles.mobileMenuItem}>
-            <Link href="/about" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>
+            <Link href="/about" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => {
+              trackNavClick("About", "/about", "mobile_menu");
+              setIsMobileMenuOpen(false);
+            }}>
               About
             </Link>
           </li>
           <li className={styles.mobileMenuItem}>
-            <Link href="/contact" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>
+            <Link href="/contact" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => {
+              trackNavClick("Contact", "/contact", "mobile_menu");
+              setIsMobileMenuOpen(false);
+            }}>
               Contact
             </Link>
           </li>
@@ -456,7 +502,10 @@ export const Header: React.FC = () => {
               <Link
                 href={`/login?redirectTo=${encodeURIComponent(pathname)}`}
                 className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`}
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  trackEvent("login_start", { method: "password", source: "mobile_menu" });
+                  setIsMobileMenuOpen(false);
+                }}
               >
                 Login
               </Link>

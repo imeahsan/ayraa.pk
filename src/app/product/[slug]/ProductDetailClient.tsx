@@ -14,6 +14,13 @@ import { submitQuestion } from "@/app/actions/qa";
 import { createClient } from "@/lib/supabase/client";
 import { checkPurchaseStatus, submitReview } from "@/app/actions/reviews";
 import { useWishlist } from "@/context/WishlistContext";
+import {
+  getProductSaleState,
+  productToAnalyticsItem,
+  trackEcommerceEvent,
+  trackEvent,
+  trackSanitizedSupabaseError,
+} from "@/lib/analytics";
 import styles from "./ProductDetailClient.module.css";
 
 interface ProductDetailClientProps {
@@ -85,6 +92,15 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
   };
 
   useEffect(() => {
+    trackEcommerceEvent("view_item", {
+      value: product.price,
+      items: [productToAnalyticsItem(product)],
+      item_slug: product.slug,
+      is_on_sale: getProductSaleState(product),
+    });
+  }, [product]);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
       const isPreviewMode = searchParams.get("preview") === "true";
@@ -98,8 +114,12 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
             }
           }
         } catch (e) {
-          console.error("Failed to load preview product from local storage:", e);
-        }
+        console.error("Failed to load preview product from local storage:", e);
+        trackEvent("supabase_client_error", {
+          source: "product_preview_local_storage",
+          error_code: "local_storage_parse_failed",
+        });
+      }
       }
     }
   }, [initialProduct.slug]);
@@ -123,6 +143,13 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
       const validFiles = filesArray.filter(file => file.type.startsWith("image/"));
       if (validFiles.length !== filesArray.length) {
         toast.warning("Only image files are allowed.");
+      }
+      if (validFiles.length > 0) {
+        trackEvent("review_image_upload", {
+          item_id: product.id,
+          item_name: product.name,
+          image_count: validFiles.length,
+        });
       }
 
       const newFiles = [...selectedFiles, ...validFiles];
@@ -192,6 +219,10 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
       }
     } catch (uploadErr: any) {
       console.error("Error uploading review images:", uploadErr);
+      trackEvent("supabase_client_error", {
+        source: "review_image_upload",
+        error_code: "storage_upload_failed",
+      });
       toast.error("Failed to upload images. Please try again.");
       setIsSubmittingReview(false);
       setIsUploading(false);
@@ -203,6 +234,12 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     setIsSubmittingReview(false);
 
     if (result.success) {
+      trackEvent("review_submit", {
+        item_id: product.id,
+        item_name: product.name,
+        rating: ratingInput,
+        image_count: uploadedUrls.length,
+      });
       toast.success("Thank you! Your review has been posted successfully.");
       setReviewTextInput("");
       setRatingInput(5);
@@ -224,6 +261,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
         }
       } catch (err) {
         console.error("Failed to reload reviews:", err);
+        trackSanitizedSupabaseError("reload_reviews", err);
       }
     } else {
       toast.error(result.error || "Failed to submit review.");
@@ -257,6 +295,10 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     setIsSubmittingQuestion(false);
 
     if (result.success) {
+      trackEvent("question_submit", {
+        item_id: product.id,
+        item_name: product.name,
+      });
       toast.success("Your question has been submitted, you will be answered shortly.");
       setQuestionText("");
     } else {
@@ -299,10 +341,22 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     setSelectedSize(null); // Reset size on color change
+    trackEvent("select_item_variant", {
+      item_id: product.id,
+      item_name: product.name,
+      variant_type: "color",
+      item_variant: color,
+    });
   };
 
   const handleSizeChange = (size: string) => {
     setSelectedSize(size);
+    trackEvent("select_item_variant", {
+      item_id: product.id,
+      item_name: product.name,
+      variant_type: "size",
+      item_variant: size,
+    });
   };
 
   const isOutOfStock = React.useMemo(() => {
@@ -363,6 +417,18 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     }
   };
 
+  const toggleAccordion = (tab: string) => {
+    const nextTab = activeTab === tab ? null : tab;
+    setActiveTab(nextTab);
+    if (nextTab) {
+      trackEvent("accordion_open", {
+        item_id: product.id,
+        item_name: product.name,
+        accordion_id: tab,
+      });
+    }
+  };
+
   const formattedPrice = Intl.NumberFormat("en-PK", {
     style: "currency",
     currency: "PKR",
@@ -390,7 +456,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
       <div className={styles.layout}>
         {/* Left Side: Images */}
         <div className={styles.leftSide}>
-          {product.images && <ImageGallery images={product.images} />}
+          {product.images && <ImageGallery images={product.images} product={product} />}
         </div>
 
         {/* Right Side: Details */}
@@ -511,7 +577,15 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
             </Button>
 
             {product.bedsheet_ar_status === "ready" && (
-              <Link href={`/product/${product.slug}/bedsheet-ar`} style={{ width: "100%" }}>
+              <Link
+                href={`/product/${product.slug}/bedsheet-ar`}
+                style={{ width: "100%" }}
+                onClick={() => trackEvent("ar_preview_open", {
+                  item_id: product.id,
+                  item_name: product.name,
+                  source: "product_detail",
+                })}
+              >
                 <Button
                   variant="outline"
                   size="lg"
@@ -537,7 +611,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               <button
                 type="button"
                 className={styles.accordionTrigger}
-                onClick={() => setActiveTab(activeTab === "fabric" ? null : "fabric")}
+                onClick={() => toggleAccordion("fabric")}
               >
                 <span>Fabric &amp; Craftsmanship</span>
                 <span>{activeTab === "fabric" ? "-" : "+"}</span>
@@ -557,7 +631,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               <button
                 type="button"
                 className={styles.accordionTrigger}
-                onClick={() => setActiveTab(activeTab === "care" ? null : "care")}
+                onClick={() => toggleAccordion("care")}
               >
                 <span>Care Instructions</span>
                 <span>{activeTab === "care" ? "-" : "+"}</span>
@@ -576,7 +650,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               <button
                 type="button"
                 className={styles.accordionTrigger}
-                onClick={() => setActiveTab(activeTab === "delivery" ? null : "delivery")}
+                onClick={() => toggleAccordion("delivery")}
               >
                 <span>Delivery &amp; Returns</span>
                 <span>{activeTab === "delivery" ? "-" : "+"}</span>
@@ -598,8 +672,18 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
         <section className={styles.recommendations}>
           <h2 className={styles.recommendationsHeading}>Complete the Look</h2>
           <div className={styles.recommendationsGrid}>
-            {relatedProducts.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {relatedProducts.map((p, index) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                listName="Related products"
+                index={index}
+                onProductClick={() => trackEvent("related_product_click", {
+                  item_id: p.id,
+                  item_name: p.name,
+                  source_item_id: product.id,
+                })}
+              />
             ))}
           </div>
         </section>

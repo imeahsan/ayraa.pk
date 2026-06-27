@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { createClient } from "@/lib/supabase/client";
+import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 
 interface AllProductsClientProps {
   initialProducts: Product[];
@@ -20,6 +21,15 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialProducts.length >= 12);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    trackEcommerceEvent("view_item_list", {
+      item_list_name: "All products",
+      items: products.map((product, index) =>
+        productToAnalyticsItem(product, { listName: "All products", index })
+      ),
+    });
+  }, [products]);
 
   useEffect(() => {
     if (!hasMore || loading) return;
@@ -81,8 +91,8 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
   return (
     <>
       <div className={gridClassName}>
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+        {products.map((product, index) => (
+          <ProductCard key={product.id} product={product} listName="All products" index={index} />
         ))}
       </div>
 

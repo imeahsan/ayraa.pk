@@ -3,13 +3,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { Product } from "@/types";
 import { useWishlist } from "@/context/WishlistContext";
+import { getProductSaleState, productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 import styles from "./ProductCard.module.css";
 
 interface ProductCardProps {
   product: Product;
+  listName?: string;
+  index?: number;
+  onProductClick?: () => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, listName, index, onProductClick }) => {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const primaryImage =
     product.images?.find((img) => img.is_primary) || product.images?.[0];
@@ -30,10 +34,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       }).format(product.compare_at_price)
     : null;
 
+  const handleProductClick = () => {
+    trackEcommerceEvent("select_item", {
+      item_list_name: listName,
+      value: product.price,
+      items: [productToAnalyticsItem(product, { listName, index })],
+      item_slug: product.slug,
+      is_on_sale: getProductSaleState(product),
+    });
+    onProductClick?.();
+  };
+
   return (
     <div className={styles.card} id={`product-card-${product.id}`}>
       <div className={styles.media}>
-        <Link href={`/product/${product.slug}`} className={styles.imageWrapper}>
+        <Link href={`/product/${product.slug}`} className={styles.imageWrapper} onClick={handleProductClick}>
           {primaryImage ? (
             <Image
               src={primaryImage.url}
@@ -86,7 +101,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <span className={styles.category}>{product.category.name}</span>
         ) : null}
         <h3 className={styles.title}>
-          <Link href={`/product/${product.slug}`} className={styles.titleLink}>
+          <Link href={`/product/${product.slug}`} className={styles.titleLink} onClick={handleProductClick}>
             {product.name}
           </Link>
         </h3>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/storefront/Button/Button";
+import { trackEvent } from "@/lib/analytics";
 import styles from "@/app/login/auth.module.css";
 
 interface LoginFormProps {
@@ -33,6 +34,7 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
 
     setIsLoading(true);
     setError(null);
+    trackEvent("login_start", { method: "password", source: "login_form" });
 
     const { error: loginError } = await supabase.auth.signInWithPassword({
       email,
@@ -40,11 +42,13 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
     });
 
     if (loginError) {
+      trackEvent("login_failed", { method: "password", error_category: "auth_error" });
       setError(loginError.message);
       setIsLoading(false);
       return;
     }
 
+    trackEvent("login_success", { method: "password" });
     if (effectiveRedirectTo) {
       router.push(effectiveRedirectTo);
       router.refresh();
@@ -55,6 +59,7 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
 
   const handleGoogleLogin = async () => {
     setError(null);
+    trackEvent("login_start", { method: "google", source: "login_form" });
 
     document.cookie = `sb-oauth-redirect-to=${encodeURIComponent(
       oauthRedirectTarget
@@ -70,6 +75,7 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
     });
 
     if (oauthError) {
+      trackEvent("login_failed", { method: "google", error_category: "oauth_error" });
       setError(oauthError.message);
     }
   };

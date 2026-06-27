@@ -5,10 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { Button } from "../Button/Button";
+import { cartToAnalyticsItems, trackEcommerceEvent, trackEvent } from "@/lib/analytics";
 import styles from "./CartDrawer.module.css";
 
 export const CartDrawer: React.FC = () => {
   const { cart, isCartOpen, setCartOpen, updateQuantity, removeItem } = useCart();
+  const FREE_SHIPPING_THRESHOLD = 5000;
+  const amountToFreeShipping = FREE_SHIPPING_THRESHOLD - cart.subtotal;
+  const isFreeShipping = amountToFreeShipping <= 0;
 
   // Disable page scrolling when drawer is open
   useEffect(() => {
@@ -22,11 +26,18 @@ export const CartDrawer: React.FC = () => {
     };
   }, [isCartOpen]);
 
-  if (!isCartOpen) return null;
+  useEffect(() => {
+    if (!isCartOpen || cart.items.length === 0) return;
+    trackEvent("free_shipping_progress", {
+      cart_value: cart.subtotal,
+      threshold: FREE_SHIPPING_THRESHOLD,
+      amount_remaining: Math.max(0, amountToFreeShipping),
+      free_shipping_unlocked: isFreeShipping,
+      currency: "PKR",
+    });
+  }, [amountToFreeShipping, cart.items.length, cart.subtotal, isCartOpen, isFreeShipping]);
 
-  const FREE_SHIPPING_THRESHOLD = 5000;
-  const amountToFreeShipping = FREE_SHIPPING_THRESHOLD - cart.subtotal;
-  const isFreeShipping = amountToFreeShipping <= 0;
+  if (!isCartOpen) return null;
 
   const formatPKR = (amount: number) => {
     return Intl.NumberFormat("en-PK", {
@@ -228,7 +239,17 @@ export const CartDrawer: React.FC = () => {
               <span className={styles.totalVal}>{formatPKR(cart.total)}</span>
             </div>
             <p className={styles.footerMuted}>Taxes and shipping calculated at checkout.</p>
-            <Link href="/checkout" onClick={() => setCartOpen(false)} style={{ width: "100%", display: "block" }}>
+            <Link
+              href="/checkout"
+              onClick={() => {
+                trackEcommerceEvent("begin_checkout", {
+                  value: cart.total,
+                  items: cartToAnalyticsItems(cart),
+                });
+                setCartOpen(false);
+              }}
+              style={{ width: "100%", display: "block" }}
+            >
               <Button variant="luxury" fullWidth size="lg">
                 Proceed to Checkout
               </Button>

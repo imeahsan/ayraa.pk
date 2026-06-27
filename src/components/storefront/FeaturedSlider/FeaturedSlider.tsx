@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ProductCard } from "../ProductCard/ProductCard";
 import { Product } from "@/types";
+import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 import styles from "./FeaturedSlider.module.css";
 
 interface FeaturedSliderProps {
@@ -31,6 +32,16 @@ export const FeaturedSlider: React.FC<FeaturedSliderProps> = ({
   const [itemsPerPage, setItemsPerPage] = useState<number>(() => getItemsPerPage());
 
   if (!products || products.length === 0) return null;
+
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    trackEcommerceEvent("view_item_list", {
+      item_list_name: title || "Featured slider",
+      items: products.map((product, index) =>
+        productToAnalyticsItem(product, { listName: title || "Featured slider", index })
+      ),
+    });
+  }, [products, title]);
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
@@ -73,7 +84,6 @@ export const FeaturedSlider: React.FC<FeaturedSliderProps> = ({
       scrollTo(next);
     }, 4200);
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoPlay, isPaused, activeIndex, maxIndex]);
 
   const totalDots = maxIndex + 1;
@@ -88,9 +98,9 @@ export const FeaturedSlider: React.FC<FeaturedSliderProps> = ({
 
       {/* Scrollable Track */}
       <div ref={sliderRef} className={styles.sliderTrack}>
-        {products.map((product) => (
+        {products.map((product, index) => (
           <div key={product.id} className={styles.slideItem}>
-            <ProductCard product={product} />
+            <ProductCard product={product} listName={title || "Featured slider"} index={index} />
           </div>
         ))}
       </div>

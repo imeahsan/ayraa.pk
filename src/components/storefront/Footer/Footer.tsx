@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Category } from "@/types";
+import { trackEvent } from "@/lib/analytics";
 import styles from "./Footer.module.css";
 
 const FALLBACK_COLLECTION_LINKS = [
@@ -62,7 +63,13 @@ export const Footer: React.FC = () => {
             <p className={styles.desc}>
               Pakistani lawn, pret, festive edits, and home pieces designed for everyday grace.
             </p>
-            <form className={styles.newsletterForm} onSubmit={(e) => e.preventDefault()}>
+            <form
+              className={styles.newsletterForm}
+              onSubmit={(e) => {
+                e.preventDefault();
+                trackEvent("newsletter_signup", { source: "footer" });
+              }}
+            >
               <input
                 type="email"
                 placeholder="Enter your email"
@@ -81,7 +88,11 @@ export const Footer: React.FC = () => {
             <ul className={styles.list}>
               {collections.map((item) => (
                 <li key={`${item.label}-${item.href}`}>
-                  <Link href={item.href} className={styles.link}>
+                  <Link
+                    href={item.href}
+                    className={styles.link}
+                    onClick={() => trackEvent("footer_link_click", { link_text: item.label, link_url: item.href })}
+                  >
                     {item.label}
                   </Link>
                 </li>
@@ -93,27 +104,27 @@ export const Footer: React.FC = () => {
             <h4 className={styles.heading}>Customer Care</h4>
             <ul className={styles.list}>
               <li>
-                <Link href="/contact" className={styles.link}>
+                <Link href="/contact" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "Contact Us", link_url: "/contact" })}>
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link href="/shipping-returns" className={styles.link}>
+                <Link href="/shipping-returns" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "Shipping Policy", link_url: "/shipping-returns" })}>
                   Shipping Policy
                 </Link>
               </li>
               <li>
-                <Link href="/returns-policy" className={styles.link}>
+                <Link href="/returns-policy" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "Returns Policy", link_url: "/returns-policy" })}>
                   Returns Policy
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className={styles.link}>
+                <Link href="/faq" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "FAQs", link_url: "/faq" })}>
                   FAQs
                 </Link>
               </li>
               <li>
-                <Link href="/size-guide" className={styles.link}>
+                <Link href="/size-guide" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "Size Guide", link_url: "/size-guide" })}>
                   Size Guide
                 </Link>
               </li>
@@ -124,22 +135,22 @@ export const Footer: React.FC = () => {
             <h4 className={styles.heading}>Our Brand</h4>
             <ul className={styles.list}>
               <li>
-                <Link href="/about" className={styles.link}>
+                <Link href="/about" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "Our Story", link_url: "/about" })}>
                   Our Story
                 </Link>
               </li>
               <li>
-                <Link href="/editorial" className={styles.link}>
+                <Link href="/editorial" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "Editorial Journal", link_url: "/editorial" })}>
                   Editorial Journal
                 </Link>
               </li>
               <li>
-                <Link href="/careers" className={styles.link}>
+                <Link href="/careers" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "Careers", link_url: "/careers" })}>
                   Careers
                 </Link>
               </li>
               <li>
-                <Link href="/terms-privacy" className={styles.link}>
+                <Link href="/terms-privacy" className={styles.link} onClick={() => trackEvent("footer_link_click", { link_text: "Terms & Privacy", link_url: "/terms-privacy" })}>
                   Terms & Privacy
                 </Link>
               </li>

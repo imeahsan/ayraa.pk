@@ -8,14 +8,29 @@ import { Breadcrumb } from "@/components/storefront/Breadcrumb/Breadcrumb";
 import { Button } from "@/components/storefront/Button/Button";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { useWishlist } from "@/context/WishlistContext";
+import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 import styles from "./wishlist.module.css";
 
 export default function WishlistPage() {
   const { wishlistItems, wishlistReady, isLoggedIn, openLoginModal } = useWishlist();
 
-  const wishlistProducts = wishlistItems
-    .map((item) => item.product)
-    .filter((product): product is NonNullable<typeof product> => Boolean(product));
+  const wishlistProducts = React.useMemo(
+    () =>
+      wishlistItems
+        .map((item) => item.product)
+        .filter((product): product is NonNullable<typeof product> => Boolean(product)),
+    [wishlistItems]
+  );
+
+  React.useEffect(() => {
+    if (!wishlistReady || !isLoggedIn) return;
+    trackEcommerceEvent("view_wishlist", {
+      item_list_name: "Wishlist",
+      items: wishlistProducts.map((product, index) =>
+        productToAnalyticsItem(product, { listName: "Wishlist", index })
+      ),
+    });
+  }, [isLoggedIn, wishlistProducts, wishlistReady]);
 
   return (
     <div className="flex flex-col min-h-screen bg-bg">
@@ -61,8 +76,8 @@ export default function WishlistPage() {
           ) : (
             <section className={styles.gridSection}>
               <div className={styles.grid}>
-                {wishlistProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {wishlistProducts.map((product, index) => (
+                  <ProductCard key={product.id} product={product} listName="Wishlist" index={index} />
                 ))}
               </div>
             </section>

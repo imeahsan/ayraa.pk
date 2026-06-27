@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { Button } from "@/components/storefront/Button/Button";
+import { trackEvent } from "@/lib/analytics";
 import styles from "./auth.module.css";
 
 function RegisterContent() {
@@ -33,6 +34,7 @@ function RegisterContent() {
 
     setIsLoading(true);
     setError(null);
+    trackEvent("register_start", { method: "password" });
 
     // Sign up with Supabase
     const { data, error: signUpError } = await supabase.auth.signUp({
@@ -47,6 +49,7 @@ function RegisterContent() {
     });
 
     if (signUpError) {
+      trackEvent("register_failed", { method: "password", error_category: "auth_error" });
       setError(signUpError.message);
       setIsLoading(false);
       return;
@@ -61,6 +64,7 @@ function RegisterContent() {
         role: "customer",
       });
 
+      trackEvent("register_success", { method: "password" });
       router.push(redirectTo);
       router.refresh();
     }

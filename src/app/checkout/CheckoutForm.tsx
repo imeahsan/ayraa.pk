@@ -9,6 +9,14 @@ import { placeOrder } from "../actions/orders";
 import { CheckoutFormData, PAKISTAN_CITIES, PromoCode } from "@/types";
 import { Button } from "@/components/storefront/Button/Button";
 import { createClient } from "@/lib/supabase/client";
+import {
+  cartToAnalyticsItems,
+  isPurchaseAlreadyTracked,
+  markPurchaseTracked,
+  trackEcommerceEvent,
+  trackEvent,
+  trackSanitizedSupabaseError,
+} from "@/lib/analytics";
 import styles from "./CheckoutForm.module.css";
 
 export const CheckoutForm: React.FC = () => {
@@ -38,6 +46,22 @@ export const CheckoutForm: React.FC = () => {
 
   const [errors, setErrors] = useState<Partial<Record<keyof CheckoutFormData, string>>>({});
   const [rememberMe, setRememberMe] = useState(false);
+
+  React.useEffect(() => {
+    if (cart.items.length === 0) return;
+    trackEcommerceEvent("begin_checkout", {
+      value: cart.total,
+      items: cartToAnalyticsItems(cart, appliedPromo?.code),
+      coupon: appliedPromo?.code,
+    });
+    trackEcommerceEvent("add_payment_info", {
+      value: cart.total,
+      payment_type: "cod",
+      items: cartToAnalyticsItems(cart, appliedPromo?.code),
+      coupon: appliedPromo?.code,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     // 1. Load remembered details if they exist
@@ -139,6 +163,10 @@ export const CheckoutForm: React.FC = () => {
       if (error || !data) {
         setPromoError("Invalid promo code.");
         setAppliedPromo(null);
+        trackEvent("promo_validation_failed", {
+          error_category: "invalid_code",
+          coupon: codeString,
+        });
         return;
       }
 
@@ -149,11 +177,19 @@ export const CheckoutForm: React.FC = () => {
       if (promo.start_date && new Date(promo.start_date) > now) {
         setPromoError("This promo is not active yet.");
         setAppliedPromo(null);
+        trackEvent("promo_validation_failed", {
+          error_category: "not_started",
+          coupon: codeString,
+        });
         return;
       }
       if (promo.end_date && new Date(promo.end_date) < now) {
         setPromoError("This promo code has expired.");
         setAppliedPromo(null);
+        trackEvent("promo_validation_failed", {
+          error_category: "expired",
+          coupon: codeString,
+        });
         return;
       }
 
@@ -166,14 +202,25 @@ export const CheckoutForm: React.FC = () => {
         if (!hasEligibleItems) {
           setPromoError("This promo is not applicable to items in your cart.");
           setAppliedPromo(null);
+          trackEvent("promo_validation_failed", {
+            error_category: "ineligible_cart",
+            coupon: codeString,
+          });
           return;
         }
       }
 
       setAppliedPromo(promo);
       setPromoCodeInput("");
+      trackEvent("apply_promo", {
+        coupon: promo.code,
+        discount_type: promo.discount_type,
+        discount_value: promo.discount_value,
+      });
     } catch (err) {
       console.error("Promo validation error:", err);
+      trackSanitizedSupabaseError("promo_validation", err);
+      trackEvent("promo_apply_error", { error_category: "validation_failed" });
       setPromoError("Failed to validate promo code.");
       setAppliedPromo(null);
     } finally {
@@ -182,6 +229,9 @@ export const CheckoutForm: React.FC = () => {
   };
 
   const handleRemovePromo = () => {
+    trackEvent("remove_promo", {
+      coupon: appliedPromo?.code,
+    });
     setAppliedPromo(null);
     setPromoError(null);
   };
@@ -209,6 +259,12 @@ export const CheckoutForm: React.FC = () => {
     if (cart.items.length === 0) return;
 
     setIsLoading(true);
+    trackEcommerceEvent("add_shipping_info", {
+      value: finalTotal,
+      shipping_tier: cart.shipping === 0 ? "free_shipping" : "flat_rate",
+      items: cartToAnalyticsItems(cart, appliedPromo?.code),
+      coupon: appliedPromo?.code,
+    });
 
     const cartItemsPayload = cart.items.map((item) => ({
       product_id: item.product_id,
@@ -230,6 +286,19 @@ export const CheckoutForm: React.FC = () => {
     setIsLoading(false);
 
     if (result.success && result.orderId) {
+      if (!isPurchaseAlreadyTracked(result.orderId)) {
+        trackEcommerceEvent("purchase", {
+          transaction_id: result.orderId,
+          value: finalTotal,
+          subtotal: cart.subtotal,
+          shipping: cart.shipping,
+          discount: discountAmount,
+          coupon: appliedPromo?.code,
+          payment_type: "cod",
+          items: cartToAnalyticsItems(cart, appliedPromo?.code),
+        });
+        markPurchaseTracked(result.orderId);
+      }
       if (rememberMe) {
         const detailsToSave = {
           first_name: formData.first_name,
@@ -249,6 +318,9 @@ export const CheckoutForm: React.FC = () => {
       clearCart();
       toast.success("Order placed successfully!");
     } else {
+      trackEvent("order_failed", {
+        error_category: result.error ? "server_error" : "unknown",
+      });
       toast.error(`Order placement failed: ${result.error || "Please try again."}`);
     }
   };

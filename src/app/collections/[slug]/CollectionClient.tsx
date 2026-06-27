@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { Breadcrumb } from "@/components/storefront/Breadcrumb/Breadcrumb";
+import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 import styles from "./CollectionClient.module.css";
 
 interface CollectionClientProps {
@@ -91,6 +92,16 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   }, [filteredProducts, limit]);
 
   const sentinelRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    trackEcommerceEvent("view_item_list", {
+      item_list_name: categoryName,
+      item_category: categoryName,
+      items: displayedProducts.map((product, index) =>
+        productToAnalyticsItem(product, { listName: categoryName, index })
+      ),
+    });
+  }, [categoryName, displayedProducts]);
 
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -210,8 +221,8 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
           ) : (
             <>
               <div className={styles.grid}>
-                {displayedProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {displayedProducts.map((product, index) => (
+                  <ProductCard key={product.id} product={product} listName={categoryName} index={index} />
                 ))}
               </div>
 

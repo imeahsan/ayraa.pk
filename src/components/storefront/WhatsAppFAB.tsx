@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { trackEvent } from "@/lib/analytics";
 
 export const WhatsAppFAB: React.FC = () => {
   const pathname = usePathname();
@@ -45,6 +46,11 @@ export const WhatsAppFAB: React.FC = () => {
       }}
       onMouseDown={() => setIsActive(true)}
       onMouseUp={() => setIsActive(false)}
+      onClick={() => trackEvent("whatsapp_click", {
+        source: "floating_button",
+        page_path: pathname,
+        context: pathname?.startsWith("/product/") ? "product" : "storefront",
+      })}
       style={{
         position: "fixed",
         bottom: "32px",

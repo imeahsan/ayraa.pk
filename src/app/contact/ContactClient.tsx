@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { Button } from "@/components/storefront/Button/Button";
+import { trackEvent } from "@/lib/analytics";
 import styles from "./contact.module.css";
 
 export default function ContactClient() {
@@ -27,6 +28,14 @@ export default function ContactClient() {
     ].join("\n");
 
     const whatsappUrl = `https://wa.me/923295822495?text=${encodeURIComponent(body)}`;
+    trackEvent("contact_submit", {
+      subject_type: subject.trim() ? "custom" : "general",
+      destination: "whatsapp",
+    });
+    trackEvent("whatsapp_click", {
+      source: "contact_form",
+      context: "contact",
+    });
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
     setName("");
     setEmail("");

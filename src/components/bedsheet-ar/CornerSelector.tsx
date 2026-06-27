@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useRef, useState } from 'react';
-import { CornerPoint, CornerLabel } from '@/lib/bedsheet-ar/types';
+import { CornerLabel } from '@/lib/bedsheet-ar/types';
 import { useARStore } from '@/lib/bedsheet-ar/store';
+import { trackEvent } from '@/lib/analytics';
 
 interface CornerSelectorProps {
   width: number;
@@ -39,6 +40,11 @@ export function CornerSelector({ width, height }: CornerSelectorProps) {
     const y = e.clientY - rect.top;
 
     addCorner({ x, y });
+    trackEvent('ar_corner_set', {
+      corner_index: corners.length + 1,
+      viewport_width: width,
+      viewport_height: height,
+    });
   };
 
   const handleMarkerPointerDown = (e: React.PointerEvent<HTMLDivElement>, label: CornerLabel) => {
@@ -61,16 +67,6 @@ export function CornerSelector({ width, height }: CornerSelectorProps) {
     if (!activeDragLabel) return;
     e.currentTarget.releasePointerCapture(e.pointerId);
     setActiveDragLabel(null);
-  };
-
-  const getMarkerColorClass = (label: CornerLabel) => {
-    switch (label) {
-      case 'topLeft': return 'bg-red-500';
-      case 'topRight': return 'bg-blue-500';
-      case 'bottomRight': return 'bg-green-500';
-      case 'bottomLeft': return 'bg-yellow-500';
-      default: return 'bg-white';
-    }
   };
 
   const getMarkerLabelShort = (label: CornerLabel) => {
@@ -100,7 +96,6 @@ export function CornerSelector({ width, height }: CornerSelectorProps) {
 
       {/* Render selected corner pins */}
       {corners.map((corner) => {
-        const isDragging = activeDragLabel === corner.label;
         return (
           <div
             key={corner.label}

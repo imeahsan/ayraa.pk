@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { ProductImage } from "@/types";
+import { Product, ProductImage } from "@/types";
+import { trackEvent } from "@/lib/analytics";
 import styles from "./ImageGallery.module.css";
 
 interface ImageGalleryProps {
   images: ProductImage[];
+  product?: Product;
 }
 
-export const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
+export const ImageGallery: React.FC<ImageGalleryProps> = ({ images, product }) => {
   const [activeImage, setActiveImage] = useState<ProductImage | undefined>(
     images.find((img) => img.is_primary) || images[0]
   );
@@ -46,19 +48,29 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
     setZoomStyle({});
   };
 
+  const handleThumbnailClick = (img: ProductImage, index: number) => {
+    setActiveImage(img);
+    trackEvent("product_image_view", {
+      item_id: product?.id || img.product_id,
+      item_name: product?.name,
+      image_id: img.id,
+      image_index: index,
+    });
+  };
+
   return (
     <div className={styles.gallery}>
       {/* Thumbnails list */}
       <div className={styles.thumbnailsScroll}>
         <div className={styles.thumbnailsList}>
-          {images.map((img) => {
+          {images.map((img, index) => {
             const isActive = img.id === currentImage.id;
             return (
               <button
                 key={img.id}
                 type="button"
                 className={`${styles.thumbBtn} ${isActive ? styles.thumbActive : ""}`}
-                onClick={() => setActiveImage(img)}
+                onClick={() => handleThumbnailClick(img, index)}
                 aria-label="View product image thumbnail"
               >
                 <div className={styles.thumbImageWrapper}>

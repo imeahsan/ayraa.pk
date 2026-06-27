@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/context/ToastContext";
 import { Product, WishlistItem } from "@/types";
 import { WishlistLoginModal } from "@/components/storefront/WishlistLoginModal/WishlistLoginModal";
+import { productToAnalyticsItem, trackEcommerceEvent, trackEvent } from "@/lib/analytics";
 
 interface WishlistContextType {
   wishlistItems: WishlistItem[];
@@ -111,6 +112,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [supabase, syncAuthState]);
 
   const openLoginModal = useCallback(() => {
+    trackEvent("wishlist_login_prompt");
     setIsLoginModalOpen(true);
   }, []);
 
@@ -150,6 +152,10 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false;
       }
 
+      trackEcommerceEvent("remove_from_wishlist", {
+        value: product.price,
+        items: [productToAnalyticsItem(product)],
+      });
       toast.info("Removed from your wishlist.");
     } else {
       const { error } = await supabase.from("wishlist_items").insert({
@@ -163,6 +169,10 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return false;
       }
 
+      trackEcommerceEvent("add_to_wishlist", {
+        value: product.price,
+        items: [productToAnalyticsItem(product)],
+      });
       toast.success("Added to your wishlist.");
     }
 
@@ -175,6 +185,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return;
     }
 
+    const existing = wishlistItems.find((item) => item.product_id === productId);
     const { error } = await supabase
       .from("wishlist_items")
       .delete()
@@ -188,8 +199,16 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     await refreshWishlist();
+    if (existing?.product) {
+      trackEcommerceEvent("remove_from_wishlist", {
+        value: existing.product.price,
+        items: [productToAnalyticsItem(existing.product)],
+      });
+    } else {
+      trackEvent("remove_from_wishlist", { item_id: productId });
+    }
     toast.info("Removed from your wishlist.");
-  }, [currentUserId, ensureLoggedIn, refreshWishlist, supabase, toast]);
+  }, [currentUserId, ensureLoggedIn, refreshWishlist, supabase, toast, wishlistItems]);
 
   return (
     <WishlistContext.Provider
