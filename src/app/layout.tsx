@@ -22,7 +22,7 @@ const montserrat = Montserrat({
   display: "swap",
 });
 
-const baseUrl = "https://ayraacollection.vercel.app";
+const baseUrl = "https://ayraa.pk";
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -56,8 +56,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
+        width: 800,
+        height: 420,
         alt: "Ayraa Premium Eastern Luxury Fashion",
       },
     ],
