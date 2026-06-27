@@ -153,6 +153,39 @@ const FALLBACK_CATEGORIES = [
   { id: "c4", name: "Hijab Collection", slug: "hijab-collection", description: null, image_url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 4, is_active: true, created_at: "" },
 ] as Category[];
 
+const PAKISTANI_EDIT_PROFILES = [
+  {
+    keys: ["lawn", "print", "unstitched"],
+    eyebrow: "Summer lawn",
+    description: "Airy printed suits for Pakistan's long warm season, from everyday wear to family lunches.",
+    occasion: "Daily wear, office, university",
+  },
+  {
+    keys: ["pret", "garment", "kurta", "ready"],
+    eyebrow: "Ready-to-wear",
+    description: "Polished kurtas, co-ords, and easy separates made for quick styling without tailoring delays.",
+    occasion: "Workdays, dinners, travel",
+  },
+  {
+    keys: ["formal", "luxury", "festive", "embroidered"],
+    eyebrow: "Festive formals",
+    description: "Elevated embroideries, graceful drapes, and occasion-ready details for daawats and Eid plans.",
+    occasion: "Eid, mehndi, evening events",
+  },
+  {
+    keys: ["hijab", "dupatta", "modest", "scarf"],
+    eyebrow: "Modest essentials",
+    description: "Soft hijabs and finishing layers that pair cleanly with lawn, pret, and formal eastern wear.",
+    occasion: "Everyday styling, layering",
+  },
+  {
+    keys: ["bed", "home"],
+    eyebrow: "Home textile",
+    description: "Coordinated bedding for a softer home setting after the day's wardrobe has been chosen.",
+    occasion: "Bedrooms, guest rooms",
+  },
+];
+
 // Value pillars for brand story section
 const VALUE_PILLARS = [
   {
@@ -276,6 +309,18 @@ const getCachedDisplayCategories = unstable_cache(
   { revalidate: 300, tags: ["categories"] }
 );
 
+type HomeTestimonial = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  reviewer_name: string | null;
+  product?: { name: string; slug: string } | null;
+};
+
+type HomeTestimonialRow = Omit<HomeTestimonial, "product"> & {
+  product?: { name: string; slug: string } | { name: string; slug: string }[] | null;
+};
+
 const getCachedTestimonials = unstable_cache(
   async () => {
     const supabase = createCacheClient();
@@ -284,7 +329,14 @@ const getCachedTestimonials = unstable_cache(
       .select("id, rating, comment, reviewer_name, product:products(name, slug)")
       .order("created_at", { ascending: false })
       .limit(6);
-    return (data || []) as any[];
+    const rows = (data || []) as unknown as HomeTestimonialRow[];
+    return rows.map((row) => {
+      const product = Array.isArray(row.product) ? row.product[0] : row.product;
+      return {
+        ...row,
+        product: product ? { name: product.name, slug: product.slug } : null,
+      };
+    });
   },
   ["testimonials"],
   { revalidate: 300, tags: ["reviews"] }
@@ -331,13 +383,7 @@ export default async function Home() {
   } catch { /* ignore */ }
 
   // ── Testimonials / recent reviews ─────────────────
-  let testimonials: {
-    id: string;
-    rating: number;
-    comment: string | null;
-    reviewer_name: string | null;
-    product?: { name: string; slug: string } | null;
-  }[] = [];
+  let testimonials: HomeTestimonial[] = [];
   try {
     testimonials = await getCachedTestimonials();
   } catch { /* ignore */ }
@@ -353,32 +399,52 @@ export default async function Home() {
     cat.image_url ||
     fallbackImgs[cat.slug] ||
     "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80";
+  const getPakistaniEditProfile = (cat: Category) => {
+    const searchable = `${cat.slug} ${cat.name}`.toLowerCase();
+    return (
+      PAKISTANI_EDIT_PROFILES.find((profile) =>
+        profile.keys.some((key) => searchable.includes(key))
+      ) || {
+        eyebrow: "Eastern edit",
+        description: cat.description || "Thoughtfully selected pieces for Pakistani wardrobes, refined styling, and everyday grace.",
+        occasion: "Seasonal wardrobe refresh",
+      }
+    );
+  };
+  const wardrobeCategories = displayCategories.filter((cat) => {
+    const searchable = `${cat.slug} ${cat.name}`.toLowerCase();
+    return !["bed", "home"].some((key) => searchable.includes(key));
+  });
+  const pakistaniEditCategories = wardrobeCategories.length >= 3 ? wardrobeCategories : displayCategories;
 
   return (
-    <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
+    <div className={`${styles.homeShell} flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out`}>
       <Header />
 
-      <main className="grow pt-20 md:pt-16">
+      <main className={`${styles.main} grow pt-20 md:pt-16`}>
 
         {/* ──────── HERO SLIDER ────────────────────────────── */}
         <HeroSlider slides={heroSlides} />
 
-        {/* ──────── SHOP BY CATEGORY ──────────────────────── */}
+        {/* ──────── PAKISTANI WARDROBE EDITS ───────────────── */}
         <section className={styles.section} id="shop-by-category">
           <div className={styles.sectionHeader}>
-            <span className={styles.overline}>Explore</span>
-            <h2 className={styles.sectionTitle}>Shop by Category</h2>
+            <span className={styles.overline}>Pakistani Wardrobe</span>
+            <h2 className={styles.sectionTitle}>Dress for the Season, the Daawat, and the Everyday</h2>
             <p className={styles.sectionDesc}>
-              From summer lawn prints to cosy bedding — every corner of Ayraa, curated for you.
+              Move through airy lawn, ready-to-wear kurtas, festive formals, and modest essentials
+              with edits built around how Pakistani wardrobes are actually worn.
             </p>
           </div>
 
-          <div className={styles.mosaicGrid}>
-            {displayCategories.map((cat, i) => (
+          <div className={styles.wardrobeGrid}>
+            {pakistaniEditCategories.map((cat, i) => {
+              const profile = getPakistaniEditProfile(cat);
+              return (
               <Link
                 key={cat.id}
                 href={`/collections/${cat.slug}`}
-                className={`${styles.mosaicCard} ${i === 0 ? styles.mosaicCardHero : ""}`}
+                className={`${styles.wardrobeCard} ${i === 0 ? styles.wardrobeCardHero : ""}`}
               >
                 <div className={styles.mosaicImgWrapper}>
                   <Image
@@ -391,11 +457,17 @@ export default async function Home() {
                 </div>
                 <div className={styles.mosaicOverlay} />
                 <div className={styles.mosaicContent}>
+                  <span className={styles.mosaicNumber}>{profile.eyebrow}</span>
                   <h3 className={styles.mosaicTitle}>{cat.name}</h3>
+                  <p className={styles.mosaicMeta}>
+                    {profile.description}
+                  </p>
+                  <span className={styles.occasionPill}>{profile.occasion}</span>
                   <span className={styles.mosaicCta}>Explore →</span>
                 </div>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -418,6 +490,24 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* ──────── NEW ARRIVALS ───────────────────────────── */}
+        {newArrivals.length > 0 && (
+          <section className={styles.section} id="new-arrivals">
+            <div className="container">
+              <div className={styles.sectionHeaderRow}>
+                <div>
+                  <span className={styles.overline}>Just In</span>
+                  <h2 className={styles.sectionTitle}>New Arrivals</h2>
+                </div>
+                <Link href="/collections" className={styles.textCta}>
+                  View All →
+                </Link>
+              </div>
+              <FeaturedSlider products={newArrivals} autoPlay={false} />
+            </div>
+          </section>
+        )}
+
         {/* ──────── BRAND STORY ───────────────────────────── */}
         <section className={styles.brandSection} id="brand-story">
           <div className={styles.brandGrid}>
@@ -433,6 +523,10 @@ export default async function Home() {
               <div className={styles.brandImgOverlay} />
               <div className={styles.brandImgBadge}>
                 <span>Est. 2018</span>
+              </div>
+              <div className={styles.brandTextureCard}>
+                <span>Material note</span>
+                <strong>Soft hand-feel, structured finish, refined fall.</strong>
               </div>
             </div>
 
@@ -467,24 +561,6 @@ export default async function Home() {
             </div>
           </div>
         </section>
-
-        {/* ──────── NEW ARRIVALS ───────────────────────────── */}
-        {newArrivals.length > 0 && (
-          <section className={styles.section} id="new-arrivals">
-            <div className="container">
-              <div className={styles.sectionHeaderRow}>
-                <div>
-                  <span className={styles.overline}>Just In</span>
-                  <h2 className={styles.sectionTitle}>New Arrivals</h2>
-                </div>
-                <Link href="/collections" className={styles.textCta}>
-                  View All →
-                </Link>
-              </div>
-              <FeaturedSlider products={newArrivals} autoPlay={false} />
-            </div>
-          </section>
-        )}
 
         {/* ──────── SALE SECTION ──────────────────────────── */}
         {saleProducts.length > 0 && (

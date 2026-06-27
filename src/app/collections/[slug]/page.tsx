@@ -1,15 +1,14 @@
-import React, { cache } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { createCacheClient } from "@/lib/supabase/cache-client";
-import { Product } from "@/types";
+import { Category, Product } from "@/types";
 import { CollectionClient } from "./CollectionClient";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { notFound } from "next/navigation";
-import styles from "./CollectionClient.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -198,6 +197,10 @@ interface CategoryPageProps {
   params: Promise<{ slug: string }>;
 }
 
+type SubCategoryCard = Pick<Category, "id" | "name" | "slug"> & {
+  image_url: string | null;
+};
+
 import { unstable_cache } from "next/cache";
 
 // ... metadata ...
@@ -292,14 +295,15 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const { slug } = await params;
   const category = await getCachedCategory(slug);
   const name = category?.name || CATEGORY_NAMES[slug] || "Collection";
-  const desc = category?.description || `Explore our premium range of ${name.toLowerCase()} at Ayraa.`;
+  const title = category?.meta_title || name;
+  const desc = category?.meta_description || category?.description || `Explore our premium range of ${name.toLowerCase()} at Ayraa.`;
 
   return {
-    title: name,
+    title,
     description: desc,
     alternates: { canonical: `/collections/${slug}` },
-    openGraph: { title: `${name} | Ayraa`, description: desc, type: "website" },
-    twitter: { card: "summary_large_image", title: `${name} | Ayraa`, description: desc },
+    openGraph: { title: `${title} | Ayraa`, description: desc, type: "website" },
+    twitter: { card: "summary_large_image", title: `${title} | Ayraa`, description: desc },
   };
 }
 
@@ -322,12 +326,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   ];
 
   // Fetch sub-categories dynamically from database
-  let subCategories: any[] = [];
+  let subCategories: SubCategoryCard[] = [];
   if (category) {
     try {
       const dbSubs = await getCachedSubCategories(category.id);
       if (dbSubs && dbSubs.length > 0) {
-        subCategories = dbSubs;
+        subCategories = dbSubs as SubCategoryCard[];
       }
     } catch { /* ignore */ }
   }

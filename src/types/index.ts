@@ -13,6 +13,10 @@ export interface Category {
   parent_id: string | null;
   sort_order: number;
   is_active: boolean;
+  show_in_header?: boolean;
+  header_label?: string | null;
+  meta_title?: string | null;
+  meta_description?: string | null;
   created_at: string;
   children?: Category[];
   product_count?: number;

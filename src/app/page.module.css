@@ -4,6 +4,35 @@
    ======================================================================= */
 
 /* ── Shared Section Utilities ─────────────────────────────────────────── */
+.homeShell {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+.homeShell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(233, 195, 73, 0.12), transparent 28%),
+    radial-gradient(circle at 88% 38%, rgba(181, 150, 10, 0.1), transparent 24%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.025), transparent 38%);
+}
+
+:global(html.theme-light) .homeShell::before {
+  background:
+    radial-gradient(circle at 12% 14%, rgba(94, 96, 77, 0.1), transparent 28%),
+    radial-gradient(circle at 90% 40%, rgba(233, 195, 73, 0.16), transparent 24%),
+    linear-gradient(135deg, rgba(28, 27, 27, 0.035), transparent 40%);
+}
+
+.main {
+  position: relative;
+}
+
 .overline {
   display: block;
   font-family: var(--font-body);
@@ -18,6 +47,16 @@
 .sectionHeader {
   text-align: center;
   margin-bottom: 56px;
+  position: relative;
+}
+
+.sectionHeader::after {
+  content: "";
+  display: block;
+  width: min(220px, 52vw);
+  height: 1px;
+  margin: 22px auto 0;
+  background: linear-gradient(90deg, transparent, var(--color-gold-border), transparent);
 }
 
 .sectionHeaderRow {
@@ -29,11 +68,11 @@
 
 .sectionTitle {
   font-family: var(--font-headline);
-  font-size: clamp(26px, 4vw, 40px);
+  font-size: clamp(30px, 4.7vw, 52px);
   font-weight: 600;
   color: var(--color-on-surface);
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  letter-spacing: -0.04em;
+  line-height: 1;
   margin-bottom: 12px;
   transition: color var(--duration-slow) var(--ease-out);
 }
@@ -73,71 +112,96 @@
 
 .section {
   padding-block: 96px;
-  background-color: var(--color-bg);
+  background:
+    linear-gradient(180deg, var(--color-bg), color-mix(in srgb, var(--color-bg) 88%, var(--color-bg-elevated)));
   transition: background-color var(--duration-slow) var(--ease-out);
   position: relative;
 }
 
 .sectionElevated {
   padding-block: 96px;
-  background-color: var(--color-bg-elevated);
+  background:
+    radial-gradient(circle at 8% 12%, var(--color-gold-muted), transparent 26%),
+    linear-gradient(180deg, var(--color-bg-elevated), var(--color-bg-card));
   transition: background-color var(--duration-slow) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.sectionElevated::before {
+  content: "";
+  position: absolute;
+  inset: 28px;
+  border: 1px solid var(--color-border-subtle);
+  pointer-events: none;
+}
+
+.sectionElevated :global(.container) {
+  position: relative;
+  z-index: 1;
 }
 
 /* ── HERO ────────────────────────────────────────────────────────────── */
 
 /* ── CATEGORY MOSAIC ──────────────────────────────────────────────────── */
-.mosaicGrid {
+.wardrobeGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: 14px;
   max-width: 1400px;
   margin-inline: auto;
   padding-inline: var(--margin-mobile);
 }
 
 @media (min-width: 600px) {
-  .mosaicGrid {
+  .wardrobeGrid {
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 16px;
     padding-inline: var(--margin-tablet);
   }
 }
 
 @media (min-width: 1024px) {
-  .mosaicGrid {
+  .wardrobeGrid {
     grid-template-columns: repeat(4, 1fr);
     grid-auto-rows: 300px;
-    gap: 12px;
+    gap: 18px;
     padding-inline: var(--margin-desktop);
   }
 
-  .mosaicCardHero {
+  .wardrobeCardHero {
     grid-column: span 2;
     grid-row: span 2;
   }
 }
 
-.mosaicCard {
+.wardrobeCard {
   position: relative;
   display: block;
   height: 260px;
   overflow: hidden;
   border: 1px solid var(--color-border-subtle);
+  border-radius: 22px;
+  background-color: var(--color-bg-card);
+  box-shadow: var(--shadow-md);
   text-decoration: none;
-  transition: border-color var(--duration-normal) var(--ease-out);
+  transition: border-color var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
 }
 
 @media (min-width: 600px) {
-  .mosaicCard { height: 300px; }
+  .wardrobeCard { height: 300px; }
 }
 
 @media (min-width: 1024px) {
-  .mosaicCard { height: 100%; }
+  .wardrobeCard { height: 100%; }
 }
 
-.mosaicCard:hover {
+.wardrobeCard:hover {
   border-color: var(--color-gold);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-xl);
 }
 
 .mosaicImgWrapper {
@@ -148,52 +212,92 @@
 
 .mosaicImg {
   object-fit: cover;
-  opacity: 0.88;
-  transition: transform 800ms var(--ease-out), opacity 400ms var(--ease-out);
+  opacity: 0.86;
+  filter: saturate(0.88) contrast(1.02);
+  transition: transform 900ms var(--ease-out), opacity 400ms var(--ease-out), filter 400ms var(--ease-out);
 }
 
-.mosaicCard:hover .mosaicImg {
-  transform: scale(1.06);
+.wardrobeCard:hover .mosaicImg {
+  transform: scale(1.08);
   opacity: 1;
+  filter: saturate(1.05) contrast(1.05);
 }
 
 .mosaicOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(28, 27, 27, 0.88) 0%,
-    rgba(28, 27, 27, 0.12) 55%,
-    transparent 100%
-  );
+  background:
+    linear-gradient(to top, rgba(28, 27, 27, 0.92) 0%, rgba(28, 27, 27, 0.22) 56%, transparent 100%),
+    radial-gradient(circle at 18% 16%, rgba(233, 195, 73, 0.18), transparent 30%);
   z-index: 10;
   transition: background var(--duration-normal) var(--ease-out);
 }
 
-.mosaicCard:hover .mosaicOverlay {
-  background: linear-gradient(
-    to top,
-    rgba(28, 27, 27, 0.75) 0%,
-    rgba(28, 27, 27, 0.08) 55%,
-    transparent 100%
-  );
+.wardrobeCard:hover .mosaicOverlay {
+  background:
+    linear-gradient(to top, rgba(28, 27, 27, 0.78) 0%, rgba(28, 27, 27, 0.12) 58%, transparent 100%),
+    radial-gradient(circle at 18% 16%, rgba(233, 195, 73, 0.24), transparent 34%);
 }
 
 .mosaicContent {
   position: absolute;
-  bottom: 28px;
-  left: 28px;
-  right: 28px;
+  bottom: 26px;
+  left: 26px;
+  right: 26px;
   z-index: 20;
+}
+
+.mosaicNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  margin-bottom: 18px;
+  padding: 8px 14px;
+  border: 1px solid rgba(233, 195, 73, 0.45);
+  border-radius: 999px;
+  color: #e9c349;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background-color: rgba(28, 27, 27, 0.38);
+  backdrop-filter: blur(10px);
 }
 
 .mosaicTitle {
   font-family: var(--font-headline);
-  font-size: clamp(18px, 2vw, 26px);
+  font-size: clamp(22px, 2.5vw, 34px);
   font-weight: 600;
   color: #fbf9f8;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.mosaicMeta {
+  max-width: 300px;
+  margin-bottom: 14px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(251, 249, 248, 0.72);
+}
+
+.occasionPill {
+  display: inline-flex;
+  width: fit-content;
+  margin: 0 0 16px;
+  padding: 7px 10px;
+  border-left: 2px solid #e9c349;
+  background-color: rgba(251, 249, 248, 0.08);
+  color: rgba(251, 249, 248, 0.82);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .mosaicCta {
@@ -203,20 +307,22 @@
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: #e9c349;
-  opacity: 0;
-  transform: translateY(8px);
+  opacity: 0.82;
+  transform: translateY(0);
   display: inline-block;
-  transition: opacity 250ms var(--ease-out), transform 250ms var(--ease-out);
+  transition: opacity 250ms var(--ease-out), transform 250ms var(--ease-out), letter-spacing 250ms var(--ease-out);
 }
 
-.mosaicCard:hover .mosaicCta {
+.wardrobeCard:hover .mosaicCta {
   opacity: 1;
-  transform: translateY(0);
+  letter-spacing: 0.2em;
 }
 
 /* ── BRAND STORY ─────────────────────────────────────────────────────── */
 .brandSection {
-  background-color: var(--color-bg);
+  padding: 24px clamp(16px, 3vw, 40px);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--color-bg) 92%, #000), var(--color-bg));
   transition: background-color var(--duration-slow) var(--ease-out);
   overflow: hidden;
 }
@@ -225,6 +331,13 @@
   display: grid;
   grid-template-columns: 1fr;
   min-height: 540px;
+  max-width: calc(var(--container-max) - 48px);
+  margin-inline: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 28px;
+  overflow: hidden;
+  background-color: var(--color-bg-elevated);
+  box-shadow: var(--shadow-xl);
 }
 
 @media (min-width: 768px) {
@@ -244,6 +357,7 @@
   position: relative;
   min-height: 360px;
   overflow: hidden;
+  background-color: var(--color-charcoal);
 }
 
 @media (min-width: 768px) {
@@ -265,11 +379,9 @@
 .brandImgOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to right,
-    transparent 50%,
-    var(--color-bg) 100%
-  );
+  background:
+    linear-gradient(to right, transparent 48%, var(--color-bg-elevated) 100%),
+    linear-gradient(to top, rgba(28, 27, 27, 0.62), transparent 48%);
   z-index: 10;
 }
 
@@ -296,12 +408,47 @@
   color: #e9c349;
 }
 
+.brandTextureCard {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  z-index: 20;
+  max-width: 245px;
+  padding: 18px 20px;
+  border: 1px solid rgba(251, 249, 248, 0.14);
+  background-color: rgba(28, 27, 27, 0.58);
+  backdrop-filter: blur(16px);
+  color: #fbf9f8;
+}
+
+.brandTextureCard span {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #e9c349;
+}
+
+.brandTextureCard strong {
+  display: block;
+  font-family: var(--font-headline);
+  font-size: 20px;
+  line-height: 1.18;
+  font-weight: 600;
+}
+
 .brandContent {
   padding: 64px var(--margin-mobile);
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 0;
+  background:
+    radial-gradient(circle at 86% 10%, var(--color-gold-muted), transparent 26%),
+    var(--color-bg-elevated);
 }
 
 @media (min-width: 768px) {
@@ -318,11 +465,11 @@
 
 .brandTitle {
   font-family: var(--font-headline);
-  font-size: clamp(28px, 3.5vw, 46px);
+  font-size: clamp(34px, 4vw, 58px);
   font-weight: 600;
   color: var(--color-on-surface);
-  line-height: 1.1;
-  letter-spacing: -0.025em;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
   margin-bottom: 20px;
   transition: color var(--duration-slow) var(--ease-out);
 }
@@ -353,6 +500,18 @@
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  padding: 16px;
+  border: 1px solid transparent;
+  background-color: transparent;
+  transition: border-color var(--duration-normal) var(--ease-out),
+              background-color var(--duration-normal) var(--ease-out),
+              transform var(--duration-normal) var(--ease-out);
+}
+
+.pillar:hover {
+  border-color: var(--color-border-subtle);
+  background-color: color-mix(in srgb, var(--color-bg-card) 72%, transparent);
+  transform: translateX(6px);
 }
 
 .pillarIcon {
@@ -564,6 +723,25 @@
     flex-direction: column;
     gap: 8px;
     text-align: center;
+  }
+
+  .mosaicMeta {
+    display: none;
+  }
+
+  .brandSection {
+    padding: 12px;
+  }
+
+  .brandGrid {
+    border-radius: 20px;
+  }
+
+  .brandTextureCard {
+    left: 28px;
+    right: 28px;
+    bottom: 82px;
+    max-width: none;
   }
 
   .heroActions {

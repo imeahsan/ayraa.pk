@@ -14,44 +14,21 @@ import styles from "./Header.module.css";
 interface NavCategory {
   label: string;
   href: string;
+  showInHeader: boolean;
   sub: Array<{ label: string; href: string }>;
 }
 
-const MOCK_CATEGORIES: NavCategory[] = [
-  {
-    label: "Lawn Prints",
-    href: "/collections/lawn-prints",
-    sub: [
-      { label: "3-Piece",       href: "/collections/lawn-3-piece" },
-      { label: "2-Piece",       href: "/collections/lawn-2-piece" },
-      { label: "Ready to Wear", href: "/collections/lawn-ready-to-wear" },
-    ],
-  },
-  {
-    label: "Garments",
-    href: "/collections/garments",
-    sub: [
-      { label: "Intimate Wear", href: "/collections/intimate-wear" },
-      { label: "Sleep Wear",    href: "/collections/sleep-wear" },
-    ],
-  },
-  {
-    label: "Bedding",
-    href: "/collections/bedding",
-    sub: [
-      { label: "Single Bed-sheets", href: "/collections/single-bedsheets" },
-      { label: "Double Bed-sheets", href: "/collections/double-bedsheets" },
-    ],
-  },
-  {
-    label: "Hijab Collection",
-    href: "/collections/hijab-collection",
-    sub: [
-      { label: "Chiffon Hijabs", href: "/collections/chiffon-hijabs" },
-      { label: "Printed Hijabs", href: "/collections/printed-hijabs" },
-    ],
-  },
+const GENERIC_NAV_LINKS = [
+  { label: "New In", href: "/collections" },
 ];
+
+const getCategoryNavLabel = (category: Category) =>
+  category.header_label?.trim() || category.name;
+
+const isActiveHref = (pathname: string, href: string) => {
+  if (href === "/collections") return pathname === href;
+  return pathname === href || pathname.startsWith(`${href}/`);
+};
 
 import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
 
@@ -64,7 +41,7 @@ export const Header: React.FC = () => {
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [menuCategories, setMenuCategories] = useState<NavCategory[]>(MOCK_CATEGORIES);
+  const [menuCategories, setMenuCategories] = useState<NavCategory[]>([]);
   const pathname = usePathname();
   const router = useRouter();
   // Stable client ref — never recreated across renders
@@ -153,10 +130,11 @@ export const Header: React.FC = () => {
           const allCats = data as Category[];
           const parents = allCats.filter((c) => c.parent_id === null);
           const mapped = parents.map((parent) => {
-            const subs = allCats.filter((c) => c.parent_id === parent.id);
+            const subs = allCats.filter((c) => c.parent_id === parent.id && c.is_active);
             return {
-              label: parent.name,
+              label: getCategoryNavLabel(parent),
               href: `/collections/${parent.slug}`,
+              showInHeader: Boolean(parent.show_in_header),
               sub: subs.map((sub) => ({
                 label: sub.name,
                 href: `/collections/${sub.slug}`,
@@ -215,7 +193,7 @@ export const Header: React.FC = () => {
                   href="/collections"
                   className={pathname.startsWith("/collections") ? "premium-underline-active" : "premium-underline"}
                 >
-                  Collections
+                  Shop
                 </Link>
 
                 {/* Mega-menu panel */}
@@ -229,7 +207,7 @@ export const Header: React.FC = () => {
                         {cat.sub && cat.sub.length > 0 && (
                           <ul className={styles.megaSubList}>
                             {cat.sub.map((sub) => (
-                              <li key={sub.href}>
+                              <li key={`${cat.href}-${sub.href}-${sub.label}`}>
                                 <Link
                                   href={sub.href}
                                   className={`${styles.megaSubLink} ${pathname === sub.href ? styles.megaSubLinkActive : ""}`}
@@ -246,14 +224,32 @@ export const Header: React.FC = () => {
                 </div>
               </li>
 
+              {GENERIC_NAV_LINKS.map((item) => (
+                <li key={item.label} className={styles.navItem}>
+                  <Link href={item.href} className={isActiveHref(pathname, item.href) ? "premium-underline-active" : "premium-underline"}>
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+
+              {menuCategories
+                .filter((cat) => cat.showInHeader)
+                .map((cat) => (
+                  <li key={cat.href} className={styles.navItem}>
+                    <Link href={cat.href} className={isActiveHref(pathname, cat.href) ? "premium-underline-active" : "premium-underline"}>
+                      {cat.label}
+                    </Link>
+                  </li>
+                ))}
+
               <li className={styles.navItem}>
                 <Link href="/about" className={pathname === "/about" ? "premium-underline-active" : "premium-underline"}>
-                  Heritage
+                  About
                 </Link>
               </li>
               <li className={styles.navItem}>
                 <Link href="/contact" className={pathname === "/contact" ? "premium-underline-active" : "premium-underline"}>
-                  Journal
+                  Contact
                 </Link>
               </li>
             </ul>
@@ -363,6 +359,16 @@ export const Header: React.FC = () => {
         </div>
 
         <ul className={styles.mobileMenuList}>
+          <li className={styles.mobileMenuItem}>
+            <Link
+              href="/collections"
+              className={`${styles.mobileMenuLink} ${pathname === "/collections" ? styles.mobileMenuLinkActive : styles.mobileMenuLinkInactive}`}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              New In
+            </Link>
+          </li>
+
           {menuCategories.map((cat) => {
             const hasSubs = cat.sub && cat.sub.length > 0;
             return (
@@ -397,7 +403,7 @@ export const Header: React.FC = () => {
                           </Link>
                         </li>
                         {cat.sub.map((sub) => (
-                          <li key={sub.href}>
+                          <li key={`${cat.href}-${sub.href}-${sub.label}`}>
                             <Link
                               href={sub.href}
                               className={`${styles.mobileSubLink} ${pathname === sub.href ? styles.mobileSubLinkActive : ""}`}
@@ -424,10 +430,10 @@ export const Header: React.FC = () => {
           })}
 
           <li className={styles.mobileMenuItem}>
-            <Link href="/about" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Heritage</Link>
+            <Link href="/about" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>About</Link>
           </li>
           <li className={styles.mobileMenuItem}>
-            <Link href="/contact" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Journal</Link>
+            <Link href="/contact" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
           </li>
           {authReady && !profile && (
             <li className={styles.mobileMenuItem}>

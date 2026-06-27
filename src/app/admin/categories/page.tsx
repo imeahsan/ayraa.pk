@@ -22,6 +22,10 @@ export default function AdminCategoriesPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [parentId, setParentId] = useState("");
+  const [showInHeader, setShowInHeader] = useState(false);
+  const [headerLabel, setHeaderLabel] = useState("");
+  const [metaTitle, setMetaTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -59,6 +63,10 @@ export default function AdminCategoriesPage() {
     setName(category.name);
     setDescription(category.description || "");
     setParentId(category.parent_id || "");
+    setShowInHeader(Boolean(category.show_in_header));
+    setHeaderLabel(category.header_label || "");
+    setMetaTitle(category.meta_title || "");
+    setMetaDescription(category.meta_description || "");
     setCoverImageUrl(category.image_url || null);
     setCoverImageFile(null); // Reset any selected file
   };
@@ -68,6 +76,10 @@ export default function AdminCategoriesPage() {
     setName("");
     setDescription("");
     setParentId("");
+    setShowInHeader(false);
+    setHeaderLabel("");
+    setMetaTitle("");
+    setMetaDescription("");
     setCoverImageUrl(null);
     setCoverImageFile(null);
   };
@@ -129,6 +141,10 @@ export default function AdminCategoriesPage() {
         parent_id: parentId || null,
         image_url: finalImageUrl,
         is_active: true,
+        show_in_header: !parentId && showInHeader,
+        header_label: headerLabel.trim() || null,
+        meta_title: metaTitle.trim() || null,
+        meta_description: metaDescription.trim() || null,
       };
 
       if (isEditing) {
@@ -165,6 +181,10 @@ export default function AdminCategoriesPage() {
         setName("");
         setDescription("");
         setParentId("");
+        setShowInHeader(false);
+        setHeaderLabel("");
+        setMetaTitle("");
+        setMetaDescription("");
         setCoverImageUrl(null);
         setCoverImageFile(null);
         await fetch("/api/revalidate?tag=categories").catch(() => {});
@@ -181,6 +201,10 @@ export default function AdminCategoriesPage() {
         parent_id: parentId || null,
         sort_order: isEditing ? editingCategory.sort_order : categories.length + 1,
         is_active: true,
+        show_in_header: !parentId && showInHeader,
+        header_label: headerLabel.trim() || null,
+        meta_title: metaTitle.trim() || null,
+        meta_description: metaDescription.trim() || null,
         created_at: new Date().toISOString(),
         image_url: finalImageUrl,
       };
@@ -196,6 +220,10 @@ export default function AdminCategoriesPage() {
         setName("");
         setDescription("");
         setParentId("");
+        setShowInHeader(false);
+        setHeaderLabel("");
+        setMetaTitle("");
+        setMetaDescription("");
         setCoverImageUrl(null);
         setCoverImageFile(null);
         toast.success("Collection created successfully (Simulated)!");
@@ -224,7 +252,7 @@ export default function AdminCategoriesPage() {
         setCategories((prev) => prev.filter((c) => c.id !== id));
         toast.success("Collection deleted successfully!");
       }
-    } catch (err) {
+    } catch {
       // Local simulation if DB fails
       setCategories((prev) => prev.filter((c) => c.id !== id));
       toast.success("Collection deleted successfully (Simulated)!");
@@ -267,7 +295,10 @@ export default function AdminCategoriesPage() {
                 <label className={styles.formLabel}>Parent Collection</label>
                 <select
                   value={parentId}
-                  onChange={(e) => setParentId(e.target.value)}
+                  onChange={(e) => {
+                    setParentId(e.target.value);
+                    if (e.target.value) setShowInHeader(false);
+                  }}
                   className={styles.formSelect}
                 >
                   <option value="" className={styles.filterOption}>None (Create as Parent Collection)</option>
@@ -279,6 +310,57 @@ export default function AdminCategoriesPage() {
                       </option>
                     ))}
                 </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Header Navigation</label>
+                <label style={{ display: "flex", alignItems: "center", gap: "10px", color: "var(--admin-text-sub)", fontSize: "13px", fontFamily: "var(--font-body)" }}>
+                  <input
+                    type="checkbox"
+                    checked={showInHeader}
+                    disabled={Boolean(parentId)}
+                    onChange={(e) => setShowInHeader(e.target.checked)}
+                  />
+                  Show this parent collection in header
+                </label>
+                {parentId && (
+                  <span style={{ fontSize: "11px", color: "var(--admin-text-sub)" }}>
+                    Only parent collections can be shown in the header.
+                  </span>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Header Label</label>
+                <input
+                  type="text"
+                  value={headerLabel}
+                  onChange={(e) => setHeaderLabel(e.target.value)}
+                  className={styles.formInput}
+                  placeholder="Optional, e.g. Pret instead of Garments"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>SEO Title</label>
+                <input
+                  type="text"
+                  value={metaTitle}
+                  onChange={(e) => setMetaTitle(e.target.value)}
+                  className={styles.formInput}
+                  placeholder="Optional custom browser/search title"
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>SEO Description</label>
+                <textarea
+                  value={metaDescription}
+                  onChange={(e) => setMetaDescription(e.target.value)}
+                  className={styles.formTextarea}
+                  rows={3}
+                  placeholder="Optional custom search description"
+                />
               </div>
 
               {/* Cover Image Upload field */}
@@ -390,6 +472,7 @@ export default function AdminCategoriesPage() {
                       <th className={styles.tableTh} style={{ width: "60px" }}>Cover</th>
                       <th className={styles.tableTh}>Name</th>
                       <th className={styles.tableTh}>Slug</th>
+                      <th className={styles.tableTh}>Header</th>
                       <th className={styles.tableTh}>Description</th>
                       <th className={styles.tableTh}>Actions</th>
                     </tr>
@@ -423,6 +506,15 @@ export default function AdminCategoriesPage() {
                           </td>
                           <td className={styles.tableTd}>
                             <span className={styles.dateBadge} style={{ padding: "4px 8px" }}>{c.slug}</span>
+                          </td>
+                          <td className={styles.tableTd}>
+                            {c.show_in_header ? (
+                              <span className={styles.badgeActive}>
+                                {c.header_label || c.name}
+                              </span>
+                            ) : (
+                              <span className={styles.badgeDraft}>Hidden</span>
+                            )}
                           </td>
                           <td className={styles.tableTd} style={{ maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {c.description || "—"}
