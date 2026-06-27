@@ -48,17 +48,26 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Ayraa | Premium Eastern Luxury Fashion",
     description:
-      "Exquisite Eastern couture and luxury prêt-à-porter collection.",
+      "Exquisite Eastern couture and luxury prêt-à-porter collection for women. Indulge in premium quality fabrics, intricate craftsmanship, and timeless gold-threaded embroidery.",
     url: baseUrl,
     siteName: "Ayraa Collection",
     locale: "en_PK",
     type: "website",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Ayraa Premium Eastern Luxury Fashion",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Ayraa | Premium Eastern Luxury Fashion",
     description:
-      "Exquisite Eastern couture and luxury prêt-à-porter collection.",
+      "Exquisite Eastern couture and luxury prêt-à-porter collection for women. Indulge in premium quality fabrics, intricate craftsmanship, and timeless gold-threaded embroidery.",
+    images: ["/og-image.jpg"],
   },
 };
 
@@ -90,4 +99,3 @@ export default function RootLayout({
     </html>
   );
 }
-

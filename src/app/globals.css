@@ -1476,5 +1476,10 @@ html {
   pointer-events: none;
 }
 
-
-
+/* Global utility classes replacing missing Tailwind classes */
+.text-error {
+  color: var(--color-error) !important;
+}
+.text-error:hover {
+  color: #b91c1c !important; /* Tailwind red-700 equivalent */
+}
