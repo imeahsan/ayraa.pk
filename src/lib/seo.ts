@@ -1,6 +1,6 @@
 export const SITE_NAME = "Ayraa Collection";
 export const BRAND_NAME = "Ayraa";
-export const DEFAULT_SITE_URL = "https://ayraa.pk";
+export const DEFAULT_SITE_URL = "https://store.ayraa.pk";
 export const DEFAULT_OG_IMAGE = "/og-image.jpg";
 
 export const DEFAULT_SEO_TITLE = "Ayraa | Pakistani Lawn, Pret, Festive Wear and Home Textiles";

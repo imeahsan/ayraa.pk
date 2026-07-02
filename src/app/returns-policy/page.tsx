@@ -37,7 +37,7 @@ const ACCEPTED = [
 ];
 
 export default function ReturnsPolicyPage() {
-  const baseUrl = "https://ayraa.pk";
+  const baseUrl = "https://store.ayraa.pk";
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Returns Policy", item: "/returns-policy" },

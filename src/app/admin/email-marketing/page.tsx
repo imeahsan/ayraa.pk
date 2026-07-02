@@ -66,7 +66,7 @@ const DEFAULT_FORM: CampaignForm = {
   body: "Discover fresh silhouettes, seasonal textures, and polished everyday pieces from Ayraa.\n\nShop the latest collection before sizes sell out.",
   heroImageUrl: "",
   ctaLabel: "Shop New Arrivals",
-  ctaUrl: "https://ayraa.pk/collections",
+  ctaUrl: "https://store.ayraa.pk/collections",
   accentColor: "#d4af37",
   footerNote: "",
 };

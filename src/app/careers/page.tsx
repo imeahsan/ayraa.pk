@@ -49,7 +49,7 @@ const VALUES = [
 ];
 
 export default function CareersPage() {
-  const baseUrl = "https://ayraa.pk";
+  const baseUrl = "https://store.ayraa.pk";
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Careers", item: "/careers" },

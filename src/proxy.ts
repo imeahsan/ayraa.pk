@@ -5,8 +5,9 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || "live";
   const isVerificationFile = /^\/google[a-z0-9]+\.html$/i.test(pathname);
+  const isMetadataFile = pathname === "/sitemap.xml" || pathname === "/robots.txt" || isVerificationFile;
 
-  if (isVerificationFile) {
+  if (isMetadataFile) {
     return NextResponse.next();
   }
 
@@ -94,6 +95,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|google[a-z0-9]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap\\.xml|robots\\.txt|google[a-z0-9]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

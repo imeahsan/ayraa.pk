@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
-  const baseUrl = "https://ayraa.pk";
+  const baseUrl = "https://store.ayraa.pk";
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Our Story", item: "/about" },

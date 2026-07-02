@@ -61,7 +61,7 @@ const ARTICLES = [
 const CATEGORIES = ["All", "Fabric Notes", "Style Guide", "Festive"];
 
 export default function EditorialPage() {
-  const baseUrl = "https://ayraa.pk";
+  const baseUrl = "https://store.ayraa.pk";
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Editorial Journal", item: "/editorial" },
