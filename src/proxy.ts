@@ -4,6 +4,11 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || "live";
+  const isVerificationFile = /^\/google[a-z0-9]+\.html$/i.test(pathname);
+
+  if (isVerificationFile) {
+    return NextResponse.next();
+  }
 
   const isAdminRoute = pathname.startsWith("/admin");
   const isApiRoute = pathname.startsWith("/api");
@@ -89,6 +94,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|google[a-z0-9]+\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
