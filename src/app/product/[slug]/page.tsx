@@ -1,4 +1,4 @@
-import React, { cache } from "react";
+import React from "react";
 import { Metadata } from "next";
 import { createCacheClient } from "@/lib/supabase/cache-client";
 import { Product } from "@/types";
@@ -8,6 +8,7 @@ import { ProductDetailClient } from "./ProductDetailClient";
 import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { notFound } from "next/navigation";
+import { absoluteUrl, getSiteUrl, productSeoTitle, truncateSeoText } from "@/lib/seo";
 
 
 export const dynamic = "force-dynamic";
@@ -278,30 +279,39 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   if (!product) {
     return {
       title: "Product Not Found",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
-  const title = product.meta_title || `${product.name} | Premium Eastern Luxury Wear`;
-  const description = product.meta_description || product.description || "";
+  const title = product.meta_title || productSeoTitle(product.name);
+  const description = truncateSeoText(
+    product.meta_description || product.description,
+    `Shop ${product.name} at Ayraa Collection with COD and nationwide delivery in Pakistan.`
+  );
   const primaryImage = product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url || "";
+  const canonical = `/product/${slug}`;
 
   return {
     title,
     description,
     alternates: {
-      canonical: `/product/${slug}`,
+      canonical,
     },
     openGraph: {
       title,
       description,
-      images: primaryImage ? [{ url: primaryImage, alt: product.name }] : [],
-      type: "article",
+      url: absoluteUrl(canonical),
+      images: primaryImage ? [{ url: absoluteUrl(primaryImage), alt: product.name }] : [],
+      type: "website",
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: primaryImage ? [primaryImage] : [],
+      images: primaryImage ? [absoluteUrl(primaryImage)] : [],
     },
   };
 }
@@ -381,7 +391,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
     relatedProducts = MOCK_PRODUCTS.filter((p) => p.slug !== slug).slice(0, 4);
   }
 
-  const baseUrl = "https://ayraa.pk";
+  const baseUrl = getSiteUrl();
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Collections", item: "/collections" },

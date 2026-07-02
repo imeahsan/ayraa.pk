@@ -1,5 +1,6 @@
 import React from "react";
 import { Product } from "@/types";
+import { SITE_NAME } from "@/lib/seo";
 
 interface ProductJsonLdProps {
   product: Product;
@@ -8,40 +9,50 @@ interface ProductJsonLdProps {
 
 export function ProductJsonLd({ product, baseUrl }: ProductJsonLdProps) {
   const primaryImage = product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url;
-  const imageUrls = product.images?.map((img) => img.url) || [];
+  const productUrl = `${baseUrl}/product/${product.slug}`;
+  const imageUrls = product.images?.map((img) => absoluteImageUrl(img.url, baseUrl)) || [];
 
   const offers = product.variants?.map((v) => ({
     "@type": "Offer",
     "sku": `${product.sku || product.id}-${v.size}`,
-    "price": product.price,
+    "price": Number(product.price),
     "priceCurrency": "PKR",
     "itemCondition": "https://schema.org/NewCondition",
     "availability": v.is_available && v.stock_quantity > 0 
       ? "https://schema.org/InStock" 
       : "https://schema.org/OutOfStock",
-    "url": `${baseUrl}/product/${product.slug}`,
+    "url": productUrl,
+    "seller": {
+      "@id": `${baseUrl}/#organization`,
+    },
   })) || [
     {
       "@type": "Offer",
       "sku": product.sku || product.id,
-      "price": product.price,
+      "price": Number(product.price),
       "priceCurrency": "PKR",
       "itemCondition": "https://schema.org/NewCondition",
       "availability": "https://schema.org/InStock",
-      "url": `${baseUrl}/product/${product.slug}`,
+      "url": productUrl,
+      "seller": {
+        "@id": `${baseUrl}/#organization`,
+      },
     }
   ];
 
   const schema = {
     "@context": "https://schema.org",
     "@type": "Product",
+    "@id": `${productUrl}#product`,
     "name": product.name,
-    "image": imageUrls.length > 0 ? imageUrls : (primaryImage ? [primaryImage] : []),
+    "url": productUrl,
+    "image": imageUrls.length > 0 ? imageUrls : (primaryImage ? [absoluteImageUrl(primaryImage, baseUrl)] : []),
     "description": product.description || "",
     "sku": product.sku || product.id,
+    "category": product.category?.name,
     "brand": {
       "@type": "Brand",
-      "name": "Ayraa"
+      "name": SITE_NAME,
     },
     "offers": offers.length === 1 ? offers[0] : offers,
   };
@@ -52,4 +63,9 @@ export function ProductJsonLd({ product, baseUrl }: ProductJsonLdProps) {
       dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
     />
   );
+}
+
+function absoluteImageUrl(url: string, baseUrl: string) {
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${baseUrl}${url.startsWith("/") ? url : `/${url}`}`;
 }

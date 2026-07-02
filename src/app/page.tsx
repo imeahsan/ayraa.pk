@@ -11,18 +11,29 @@ import { FeaturedSlider } from "@/components/storefront/FeaturedSlider/FeaturedS
 import { NewsletterCTA } from "@/components/storefront/NewsletterCTA/NewsletterCTA";
 import { HeroSlider } from "@/components/storefront/HeroSlider/HeroSlider";
 import { unstable_cache } from "next/cache";
+import { DEFAULT_OG_IMAGE, DEFAULT_SEO_DESCRIPTION, DEFAULT_SEO_TITLE, absoluteUrl, getSiteUrl } from "@/lib/seo";
+import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Ayraa Collection - Premium Eastern Luxury Wear",
-  description:
-    "Discover Ayraa's curated collection of premium lawn, pret, bedding, and hijab essentials. Handcrafted heritage meets contemporary elegance.",
+  title: DEFAULT_SEO_TITLE,
+  description: DEFAULT_SEO_DESCRIPTION,
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "Ayraa Collection - Premium Eastern Luxury Wear",
-    description:
-      "Discover Ayraa's curated collection of premium lawn, pret, bedding, and hijab essentials.",
+    title: DEFAULT_SEO_TITLE,
+    description: DEFAULT_SEO_DESCRIPTION,
+    url: "/",
+    images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE), alt: "Ayraa Pakistani fashion and home textiles" }],
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: DEFAULT_SEO_TITLE,
+    description: DEFAULT_SEO_DESCRIPTION,
+    images: [absoluteUrl(DEFAULT_OG_IMAGE)],
   },
 };
 
@@ -416,9 +427,26 @@ export default async function Home() {
     return !["bed", "home"].some((key) => searchable.includes(key));
   });
   const pakistaniEditCategories = wardrobeCategories.length >= 3 ? wardrobeCategories : displayCategories;
+  const baseUrl = getSiteUrl();
 
   return (
     <div className={`${styles.homeShell} flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out`}>
+      <ItemListJsonLd
+        name="Ayraa wardrobe collections"
+        baseUrl={baseUrl}
+        items={pakistaniEditCategories.map((category) => ({
+          name: category.name,
+          url: `/collections/${category.slug}`,
+        }))}
+      />
+      <ItemListJsonLd
+        name="Featured Ayraa products"
+        baseUrl={baseUrl}
+        items={featuredProducts.slice(0, 8).map((product) => ({
+          name: product.name,
+          url: `/product/${product.slug}`,
+        }))}
+      />
       <Header />
 
       <main className={`${styles.main} grow pt-20 md:pt-16`}>

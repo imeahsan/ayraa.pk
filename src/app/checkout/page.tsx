@@ -5,8 +5,12 @@ import { CheckoutForm } from "./CheckoutForm";
 import styles from "./checkout.module.css";
 
 export const metadata = {
-  title: "Checkout | Ayraa Collection",
+  title: "Checkout",
   description: "Securely place your order with Cash on Delivery across Pakistan.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function CheckoutPage() {

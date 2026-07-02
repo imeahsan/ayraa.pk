@@ -9,6 +9,8 @@ import { Category, Product } from "@/types";
 import { CollectionClient } from "./CollectionClient";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { notFound } from "next/navigation";
+import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
+import { absoluteUrl, collectionSeoTitle, getSiteUrl, truncateSeoText } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -295,15 +297,31 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
   const { slug } = await params;
   const category = await getCachedCategory(slug);
   const name = category?.name || CATEGORY_NAMES[slug] || "Collection";
-  const title = category?.meta_title || name;
-  const desc = category?.meta_description || category?.description || `Explore our premium range of ${name.toLowerCase()} at Ayraa.`;
+  const title = category?.meta_title || collectionSeoTitle(name);
+  const desc = truncateSeoText(
+    category?.meta_description || category?.description,
+    `Shop ${name.toLowerCase()} at Ayraa Collection. Explore Pakistani wardrobe edits with COD and nationwide delivery.`
+  );
+  const image = category?.image_url ? absoluteUrl(category.image_url) : undefined;
+  const canonical = `/collections/${slug}`;
 
   return {
     title,
     description: desc,
-    alternates: { canonical: `/collections/${slug}` },
-    openGraph: { title: `${title} | Ayraa`, description: desc, type: "website" },
-    twitter: { card: "summary_large_image", title: `${title} | Ayraa`, description: desc },
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description: desc,
+      url: absoluteUrl(canonical),
+      type: "website",
+      images: image ? [{ url: image, alt: name }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: desc,
+      images: image ? [image] : [],
+    },
   };
 }
 
@@ -318,7 +336,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
-  const baseUrl = "https://ayraa.pk";
+  const baseUrl = getSiteUrl();
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Collections", item: "/collections" },
@@ -369,6 +387,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     return (
       <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
         <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
+        <ItemListJsonLd
+          name={`${categoryName} subcategories`}
+          baseUrl={baseUrl}
+          items={subCategories.map((sub) => ({
+            name: sub.name,
+            url: `/collections/${sub.slug}`,
+          }))}
+        />
         <Header />
         <main className="grow pt-20 md:pt-16 pb-20">
           <div className="container" style={{ maxWidth: "1400px", marginInline: "auto", paddingInline: "var(--space-8)" }}>
@@ -462,6 +488,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
       <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
+      <ItemListJsonLd
+        name={`${categoryName} products`}
+        baseUrl={baseUrl}
+        items={products.map((product) => ({
+          name: product.name,
+          url: `/product/${product.slug}`,
+        }))}
+      />
       <Header />
       <main className="grow pt-20 md:pt-16">
         <CollectionClient

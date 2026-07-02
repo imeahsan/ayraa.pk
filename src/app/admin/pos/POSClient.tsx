@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import { Product, Category, ProductVariant, UserProfile } from "@/types";
+import { sendOrderEmailForOrder } from "@/app/actions/email";
 
 interface CartItem {
   id: string; // variant_id
@@ -127,7 +128,7 @@ export default function POSClient() {
   }, [cart, discountType, discountValue, paymentMethod, customerType, selectedCustomer, guestForm, loadingCatalog]);
 
   // Load Draft Session on Startup
-  function loadDraftSession(availableVariants: ProductVariant[], availableProducts: Product[]) {
+  function loadDraftSession(availableVariants: ProductVariant[]) {
     try {
       const saved = localStorage.getItem(DRAFT_SALE_KEY);
       if (saved) {
@@ -167,7 +168,7 @@ export default function POSClient() {
             setProducts(parsed.products);
             setCategories(parsed.categories);
             setVariants(parsed.variants);
-            loadDraftSession(parsed.variants, parsed.products);
+            loadDraftSession(parsed.variants);
             setLoadingCatalog(false);
             return;
           }
@@ -205,7 +206,7 @@ export default function POSClient() {
         variants: vars,
       };
       localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(cacheData));
-      loadDraftSession(vars, prods);
+      loadDraftSession(vars);
     } catch (e: any) {
       console.error("Failed to fetch fresh catalog:", e);
       toast.error(`Failed to load catalog: ${e.message}`);
@@ -478,6 +479,12 @@ export default function POSClient() {
         }
       }
 
+      const emailResult = await sendOrderEmailForOrder(pendingOrderObj.order_id);
+      if (!emailResult.success) {
+        console.error(`POS order ${pendingOrderObj.order_id} email failed:`, emailResult.error);
+        toast.warning("Order recorded, but email could not be sent.");
+      }
+
       toast.success("Order recorded successfully!");
       setCompletedOrder(pendingOrderObj);
       clearCart();
@@ -549,6 +556,11 @@ export default function POSClient() {
               .update({ stock_quantity: newQty })
               .eq("id", item.variant_id);
           }
+        }
+
+        const emailResult = await sendOrderEmailForOrder(order.order_id);
+        if (!emailResult.success) {
+          console.error(`Offline synced order ${order.order_id} email failed:`, emailResult.error);
         }
       } catch (err) {
         console.error(`Failed to sync offline order ${order.order_id}:`, err);

@@ -31,10 +31,9 @@ export function AnalyticsConsentBanner() {
 
   return (
     <div className={styles.banner} role="dialog" aria-live="polite" aria-label="Analytics consent">
-      <h2 className={styles.title}>Analytics preferences</h2>
+      <h2 className={styles.title}>Cookie preferences</h2>
       <p className={styles.text}>
-        We use privacy-conscious Google Analytics to understand storefront performance and shopping
-        journeys. No names, emails, phone numbers, or addresses are sent.
+        We use cookies to measure site traffic and improve your shopping experience.
       </p>
       <div className={styles.actions}>
         <button type="button" className={styles.button} onClick={reject}>

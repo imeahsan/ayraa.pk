@@ -54,7 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.refresh();
   };
 
-  const navGroups = [
+  const navGroups = useMemo(() => [
     {
       title: "Store Overview",
       links: [
@@ -84,6 +84,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "Customers & Reviews",
       links: [
         { name: "Customers List", href: "/admin/customers", icon: "Cust" },
+        { name: "Email Marketing", href: "/admin/email-marketing", icon: "Mail" },
         { name: "Product Q&A", href: "/admin/qa", icon: "Q&A" },
         { name: "Product Reviews", href: "/admin/reviews", icon: "Rev" },
       ],
@@ -95,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: "Settings", href: "/admin/settings", icon: "Set" },
       ],
     },
-  ];
+  ], []);
 
   const flatLinks = navGroups.flatMap((g) => g.links);
   const activeLink =
@@ -116,7 +117,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return { ...group, links };
       })
       .filter((group) => group.links.length > 0);
-  }, [navSearchTerm]);
+  }, [navGroups, navSearchTerm]);
 
   if (loading) {
     return (

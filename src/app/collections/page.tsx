@@ -6,10 +6,12 @@ import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { createCacheClient } from "@/lib/supabase/cache-client";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
+import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
 import { Product, Category } from "@/types";
 import { AllProductsClient } from "./AllProductsClient";
 import styles from "./collections.module.css";
 import { unstable_cache } from "next/cache";
+import { DEFAULT_OG_IMAGE, absoluteUrl, getSiteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -23,12 +25,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: "All Collections | Ayraa Collection",
     description: "Explore Ayraa's lawn, pret, festive, and home edits crafted for Pakistani seasons.",
+    url: "/collections",
+    images: [{ url: absoluteUrl(DEFAULT_OG_IMAGE), alt: "Ayraa collections" }],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "All Collections | Ayraa Collection",
     description: "Explore Ayraa's lawn, pret, festive, and home edits crafted for Pakistani seasons.",
+    images: [absoluteUrl(DEFAULT_OG_IMAGE)],
   },
 };
 
@@ -202,7 +207,7 @@ export default async function CollectionsPage() {
     return "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=100&auto=format&fit=crop&q=80";
   };
 
-  const baseUrl = "https://ayraa.pk";
+  const baseUrl = getSiteUrl();
   const breadcrumbItems = [
     { name: "Home", item: "/" },
     { name: "Collections", item: "/collections" },
@@ -211,6 +216,22 @@ export default async function CollectionsPage() {
   return (
     <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
       <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
+      <ItemListJsonLd
+        name="Ayraa collections"
+        baseUrl={baseUrl}
+        items={categories.map((cat) => ({
+          name: cat.name,
+          url: `/collections/${cat.slug}`,
+        }))}
+      />
+      <ItemListJsonLd
+        name="Ayraa products"
+        baseUrl={baseUrl}
+        items={products.map((product) => ({
+          name: product.name,
+          url: `/product/${product.slug}`,
+        }))}
+      />
       <Header />
 
       <main className="grow pt-20 md:pt-16">

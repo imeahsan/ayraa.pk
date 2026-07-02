@@ -317,6 +317,9 @@ export const CheckoutForm: React.FC = () => {
       setOrderId(result.orderId);
       clearCart();
       toast.success("Order placed successfully!");
+      if (result.emailSent === false) {
+        toast.warning("Order saved, but the confirmation email could not be sent.");
+      }
     } else {
       trackEvent("order_failed", {
         error_category: result.error ? "server_error" : "unknown",

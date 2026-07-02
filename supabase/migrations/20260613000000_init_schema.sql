@@ -264,6 +264,6 @@ INSERT INTO public.store_settings (
     meta_description
 ) VALUES (
     1, 'Ayra Collection', 'Premium Eastern Haute Couture.',
-    'care@ayracollection.com', '+92 21 111-999-888',
+    'care@ayraa.pk', '+92 21 111-999-888',
     250, 5000, 'Ayra | %s', 'Luxury prêt-à-porter collection for women.'
 ) ON CONFLICT (id) DO NOTHING;

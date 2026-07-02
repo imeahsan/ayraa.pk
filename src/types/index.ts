@@ -306,6 +306,8 @@ export interface StoreSettings {
   smtp_port?: number | null;
   smtp_user?: string | null;
   smtp_pass?: string | null;
+  email_from_address?: string | null;
+  email_from_name?: string | null;
 }
 
 // ---------- Admin Dashboard Types ----------

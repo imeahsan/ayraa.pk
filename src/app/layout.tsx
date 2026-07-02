@@ -11,6 +11,8 @@ import { WhatsAppFAB } from "@/components/storefront/WhatsAppFAB";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { AnalyticsConsentBanner } from "@/components/analytics/AnalyticsConsentBanner";
 import { WebVitals } from "@/components/analytics/WebVitals";
+import { DEFAULT_OG_IMAGE, DEFAULT_SEO_DESCRIPTION, DEFAULT_SEO_TITLE, SITE_NAME, absoluteUrl, getSiteUrl } from "@/lib/seo";
+import { WebSiteJsonLd } from "@/components/seo/WebSiteJsonLd";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -25,52 +27,77 @@ const montserrat = Montserrat({
   display: "swap",
 });
 
-const baseUrl = "https://ayraa.pk";
+const baseUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
+  applicationName: SITE_NAME,
   title: {
-    default: "Ayraa | Pakistani Lawn, Pret, and Festive Wear",
-    template: "%s | Ayraa Collection"
+    default: DEFAULT_SEO_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "Ayraa offers Pakistani lawn, pret, festive wear, and home pieces with considered fabrics and modern everyday grace.",
+  description: DEFAULT_SEO_DESCRIPTION,
   keywords: [
-    "Eastern Fashion",
-    "Luxury Pret",
-    "Couture",
+    "Pakistani lawn suits",
+    "Pakistani pret wear",
+    "festive wear Pakistan",
     "Ayraa Collection",
-    "Pakistani Designer Wear",
+    "hijabs Pakistan",
+    "bedsheets Pakistan",
+    "COD clothing Pakistan",
   ],
+  authors: [{ name: SITE_NAME, url: baseUrl }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: "Fashion",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   alternates: {
-    canonical: "./",
+    canonical: "/",
+    languages: {
+      "en-PK": "/",
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   icons: {
     icon: "/favicon.png",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.png",
   },
   openGraph: {
-    title: "Ayraa | Pakistani Lawn, Pret, and Festive Wear",
-    description:
-      "Ayraa offers Pakistani lawn, pret, festive wear, and home pieces with considered fabrics and modern everyday grace.",
+    title: DEFAULT_SEO_TITLE,
+    description: DEFAULT_SEO_DESCRIPTION,
     url: baseUrl,
-    siteName: "Ayraa Collection",
+    siteName: SITE_NAME,
     locale: "en_PK",
     type: "website",
     images: [
       {
-        url: "/og-image.jpg",
+        url: absoluteUrl(DEFAULT_OG_IMAGE),
         width: 800,
         height: 420,
-        alt: "Ayraa Pakistani lawn, pret, and festive wear",
+        alt: "Ayraa Pakistani lawn, pret, festive wear, hijabs, and home textiles",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ayraa | Pakistani Lawn, Pret, and Festive Wear",
-    description:
-      "Ayraa offers Pakistani lawn, pret, festive wear, and home pieces with considered fabrics and modern everyday grace.",
-    images: ["/og-image.jpg"],
+    title: DEFAULT_SEO_TITLE,
+    description: DEFAULT_SEO_DESCRIPTION,
+    images: [absoluteUrl(DEFAULT_OG_IMAGE)],
   },
 };
 
@@ -91,6 +118,7 @@ export default function RootLayout({
             <CartProvider>
               <WishlistProvider>
                 <OrganizationJsonLd baseUrl={baseUrl} />
+                <WebSiteJsonLd baseUrl={baseUrl} />
                 <GoogleAnalytics />
                 <WebVitals />
                 {children}

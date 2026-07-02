@@ -408,7 +408,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
             <div>
               <h1 style={{ fontSize: "32px", fontWeight: "bold", letterSpacing: "2px", margin: "0 0 5px 0" }}>AYRAA</h1>
               <p style={{ fontSize: "14px", color: "#555", margin: 0 }}>Premium Apparel &amp; Home Decor</p>
-              <p style={{ fontSize: "12px", color: "#777", margin: "5px 0 0 0" }}>www.ayraacollection.com</p>
+              <p style={{ fontSize: "12px", color: "#777", margin: "5px 0 0 0" }}>www.ayraa.pk</p>
             </div>
             <div style={{ textAlign: "right" }}>
               <h2 style={{ fontSize: "20px", fontWeight: "bold", margin: "0 0 10px 0", color: "#d4af37" }}>INVOICE / RECEIPT</h2>

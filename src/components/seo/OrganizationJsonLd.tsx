@@ -1,4 +1,5 @@
 import React from "react";
+import { DEFAULT_SEO_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 
 interface OrganizationJsonLdProps {
   baseUrl: string;
@@ -8,18 +9,23 @@ export function OrganizationJsonLd({ baseUrl }: OrganizationJsonLdProps) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "ClothingStore",
-    "name": "Ayraa Collection",
+    "@id": `${baseUrl}/#organization`,
+    "name": SITE_NAME,
+    "alternateName": "Ayraa",
     "url": baseUrl,
-    "logo": `${baseUrl}/favicon.ico`,
-    "description": "Exquisite Eastern couture and luxury prêt-à-porter collection for women. Indulge in premium quality fabrics, intricate craftsmanship, and timeless designs.",
+    "logo": `${baseUrl}/favicon.png`,
+    "image": `${baseUrl}/og-image.jpg`,
+    "description": DEFAULT_SEO_DESCRIPTION,
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Karachi",
       "addressRegion": "Sindh",
       "addressCountry": "PK",
     },
+    "areaServed": "PK",
+    "currenciesAccepted": "PKR",
+    "paymentAccepted": ["Cash on Delivery"],
     "priceRange": "PKR",
-    "telephone": "+923001234567",
   };
 
   return (

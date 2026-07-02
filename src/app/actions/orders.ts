@@ -1,13 +1,15 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { Order, OrderItem, CheckoutFormData, OrderStatus } from "@/types";
+import { CheckoutFormData, OrderStatus } from "@/types";
 import { sendOrderEmail } from "@/lib/email";
 
 interface PlaceOrderResult {
   success: boolean;
   orderId?: string;
   error?: string;
+  emailSent?: boolean;
+  emailError?: string;
 }
 
 export async function placeOrder(
@@ -63,13 +65,9 @@ export async function placeOrder(
 
     if (orderError) {
       console.error("Supabase Order insertion error:", orderError);
-      
-      // Fallback/Simulated Success for development & staging deployments
-      // when tables/RLS are not fully migrated yet.
-      const simulatedOrderId = `AYR-${Math.floor(100000 + Math.random() * 900000)}`;
       return {
-        success: true,
-        orderId: simulatedOrderId,
+        success: false,
+        error: orderError.message,
       };
     }
 
@@ -93,26 +91,35 @@ export async function placeOrder(
       return { success: false, error: itemsError.message };
     }
 
-    // Fetch populated order items and send email asynchronously (non-blocking)
-    (async () => {
-      try {
-        const { data: populatedItems } = await supabase
-          .from("order_items")
-          .select(`
-            quantity,
-            unit_price,
-            product:products ( name ),
-            variant:product_variants ( size, color )
-          `)
-          .eq("order_id", orderId);
+    let emailSent = false;
+    let emailError: string | undefined;
 
-        if (populatedItems) {
-          await sendOrderEmail(orderData, populatedItems);
+    try {
+      const { data: populatedItems, error: emailItemsError } = await supabase
+        .from("order_items")
+        .select(`
+          quantity,
+          unit_price,
+          product:products ( name ),
+          variant:product_variants ( size )
+        `)
+        .eq("order_id", orderId);
+
+      if (emailItemsError) {
+        console.error("Failed to load order items for email:", emailItemsError);
+        emailError = emailItemsError.message;
+      } else {
+        const emailResult = await sendOrderEmail(orderData, populatedItems || []);
+        emailSent = emailResult.success;
+        if (!emailResult.success) {
+          emailError = emailResult.error;
+          console.error(`Order ${orderId} was placed, but email failed:`, emailResult.error);
         }
-      } catch (err) {
-        console.error("Async email dispatch failed:", err);
       }
-    })();
+    } catch (err) {
+      emailError = err instanceof Error ? err.message : "Email dispatch failed";
+      console.error(`Order ${orderId} was placed, but email dispatch failed:`, err);
+    }
 
     // Deduct stock quantities for variants asynchronously
     for (const item of cartItems) {
@@ -137,14 +144,14 @@ export async function placeOrder(
     return {
       success: true,
       orderId,
+      emailSent,
+      emailError,
     };
   } catch (err: any) {
     console.error("Checkout order action failed:", err);
-    // Dev fallback success to prevent blocker
-    const simulatedOrderId = `AYR-${Math.floor(100000 + Math.random() * 900000)}`;
     return {
-      success: true,
-      orderId: simulatedOrderId,
+      success: false,
+      error: err.message || "Checkout order action failed",
     };
   }
 }

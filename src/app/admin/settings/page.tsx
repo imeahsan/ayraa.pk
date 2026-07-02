@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { getEmailRuntimeDiagnosticsAction } from "@/app/actions/email";
 import { createClient } from "@/lib/supabase/client";
 import { StoreSettings } from "@/types";
 import { useToast } from "@/context/ToastContext";
@@ -10,7 +11,7 @@ import styles from "../admin.module.css";
 const DEFAULT_SETTINGS: StoreSettings = {
   brand_name: "Ayraa Collection",
   brand_description: "Premium Eastern Haute Couture.",
-  contact_email: "care@ayraacollection.com",
+  contact_email: "care@ayraa.pk",
   contact_phone: "+92 21 111-999-888",
   shipping_flat_rate: 250,
   free_shipping_threshold: 5000,
@@ -22,6 +23,24 @@ const DEFAULT_SETTINGS: StoreSettings = {
   smtp_port: 587,
   smtp_user: "",
   smtp_pass: "",
+  email_from_address: "",
+  email_from_name: "Ayraa Collection",
+};
+
+type EmailDiagnostics = {
+  provider: "brevo_api" | "smtp";
+  canSend: boolean;
+  smtpHost: string | null;
+  smtpPort: number;
+  hasSmtpUser: boolean;
+  hasSmtpPass: boolean;
+  hasBrevoApiKey: boolean;
+  fromAddress: string | null;
+  fromName: string | null;
+  fromSource: string | null;
+  supportEmail: string | null;
+  brandName: string | null;
+  issues: string[];
 };
 
 export default function AdminSettingsPage() {
@@ -30,6 +49,20 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [emailDiagnostics, setEmailDiagnostics] = useState<EmailDiagnostics | null>(null);
+
+  const loadEmailDiagnostics = async () => {
+    try {
+      const result = await getEmailRuntimeDiagnosticsAction();
+      if ("error" in result) {
+        console.error("Failed to load email diagnostics:", result.error);
+        return;
+      }
+      setEmailDiagnostics(result);
+    } catch (err) {
+      console.error("Failed to load email diagnostics:", err);
+    }
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -58,6 +91,7 @@ export default function AdminSettingsPage() {
     };
 
     fetchSettings();
+    void loadEmailDiagnostics();
   }, [supabase]);
 
   const handleInputChange = (
@@ -87,7 +121,8 @@ export default function AdminSettingsPage() {
       } else {
         toast.success("Settings updated successfully in Database.");
       }
-    } catch (err) {
+      await loadEmailDiagnostics();
+    } catch {
       localStorage.setItem("ayra_store_settings", JSON.stringify(settings));
       toast.success("Settings saved successfully (Locally)");
     } finally {
@@ -217,6 +252,32 @@ export default function AdminSettingsPage() {
                 />
               </div>
             </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginTop: "16px" }}>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Sender Email Address</label>
+                <input
+                  type="email"
+                  name="email_from_address"
+                  value={settings.email_from_address || ""}
+                  onChange={handleInputChange}
+                  placeholder="e.g. info@ayraa.pk"
+                  className={styles.formInput}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Sender Name</label>
+                <input
+                  type="text"
+                  name="email_from_name"
+                  value={settings.email_from_name || ""}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Ayraa Collection"
+                  className={styles.formInput}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -248,6 +309,38 @@ export default function AdminSettingsPage() {
                 required
               />
             </div>
+          </div>
+
+          <div className={styles.formCard}>
+            <h3 className={styles.formCardTitle}>Email Runtime</h3>
+            <div className={styles.card} style={{ padding: "16px", marginBottom: "16px" }}>
+              <span className={styles.cardLabel}>Provider</span>
+              <strong className={styles.cardValue}>{emailDiagnostics?.provider === "brevo_api" ? "Brevo API" : "SMTP"}</strong>
+              <span className={styles.reportSummaryText}>
+                Sender: {emailDiagnostics?.fromAddress || "Not resolved"} ({emailDiagnostics?.fromSource || "unknown source"})
+              </span>
+            </div>
+
+            <div style={{ display: "grid", gap: "10px", fontSize: "12px", color: "var(--admin-text-sub)" }}>
+              <div>Sender name: {emailDiagnostics?.fromName || "Not set"}</div>
+              <div>Support email: {emailDiagnostics?.supportEmail || "Not set"}</div>
+              <div>SMTP host: {emailDiagnostics?.smtpHost || "Not set"}:{emailDiagnostics?.smtpPort || 587}</div>
+              <div>SMTP login present: {emailDiagnostics?.hasSmtpUser ? "Yes" : "No"}</div>
+              <div>SMTP/API secret present: {emailDiagnostics?.hasSmtpPass ? "Yes" : "No"}</div>
+              <div>Brevo API key present: {emailDiagnostics?.hasBrevoApiKey ? "Yes" : "No"}</div>
+              <div>Status: {emailDiagnostics?.canSend ? "Ready to send" : "Blocked"}</div>
+            </div>
+
+            {emailDiagnostics && emailDiagnostics.issues.length > 0 ? (
+              <div style={{ marginTop: "16px", padding: "14px", border: "1px solid var(--admin-border)", background: "rgba(255,255,255,0.03)" }}>
+                <strong style={{ display: "block", fontSize: "12px", color: "var(--admin-text)", marginBottom: "8px" }}>Detected issues</strong>
+                {emailDiagnostics.issues.map((issue) => (
+                  <div key={issue} className={styles.reportSummaryText} style={{ marginTop: "6px" }}>
+                    {issue}
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           <div className={styles.formActionGroup}>

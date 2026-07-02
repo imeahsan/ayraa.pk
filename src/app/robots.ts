@@ -1,21 +1,27 @@
 import { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = "https://ayraacollection.vercel.app";
+  const baseUrl = getSiteUrl();
 
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: [
-        "/admin/",
-        "/checkout/",
-        "/cart",
-        "/wishlist",
-        "/login",
-        "/register"
-      ],
-    },
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/admin/",
+          "/api/",
+          "/auth/",
+          "/checkout",
+          "/cart",
+          "/wishlist",
+          "/orders",
+          "/login",
+          "/register",
+        ],
+      },
+    ],
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }
