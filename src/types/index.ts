@@ -30,6 +30,7 @@ export interface Product {
   price: number;
   compare_at_price: number | null;
   sku: string | null;
+  barcode?: string | null;
   category_id: string | null;
   category?: Category;
   is_active: boolean;

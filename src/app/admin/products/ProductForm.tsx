@@ -26,6 +26,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
   // Form Fields
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
+  const [barcode, setBarcode] = useState("");
   const [price, setPrice] = useState(0);
   const [compareAtPrice, setCompareAtPrice] = useState<number | "">("");
   const [categoryId, setCategoryId] = useState("");
@@ -94,6 +95,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           const p = data as Product;
           setName(p.name);
           setSku(p.sku || "");
+          const { data: barcodeData } = await supabase
+            .from("product_barcodes")
+            .select("barcode")
+            .eq("product_id", productId)
+            .maybeSingle();
+          setBarcode(barcodeData?.barcode || "");
           setPrice(p.price);
           setCompareAtPrice(p.compare_at_price || "");
           setCategoryId(p.category_id || "");
@@ -254,6 +261,24 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     };
 
     try {
+      const normalizedBarcode = barcode.trim();
+
+      if (normalizedBarcode) {
+        const { data: existingBarcode, error: barcodeLookupError } = await supabase
+          .from("product_barcodes")
+          .select("product_id")
+          .eq("barcode", normalizedBarcode)
+          .maybeSingle();
+
+        if (barcodeLookupError) throw barcodeLookupError;
+
+        if (existingBarcode && existingBarcode.product_id !== productId) {
+          toast.error("This barcode is already assigned to another product.");
+          setSaving(false);
+          return;
+        }
+      }
+
       let insertedProduct: Product | null = null;
 
       if (isEditing) {
@@ -278,6 +303,26 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       }
 
       const id = insertedProduct.id;
+
+      if (normalizedBarcode) {
+        const { error: barcodeError } = await supabase
+          .from("product_barcodes")
+          .upsert(
+            { product_id: id, barcode: normalizedBarcode },
+            { onConflict: "product_id" }
+          );
+
+        if (barcodeError) {
+          if (barcodeError.code === "23505") {
+            toast.error("This barcode is already assigned to another product.");
+            setSaving(false);
+            return;
+          }
+          throw barcodeError;
+        }
+      } else if (isEditing) {
+        await supabase.from("product_barcodes").delete().eq("product_id", id);
+      }
 
       // Handle product images save
       // 1. Delete removed images from storage bucket
@@ -429,9 +474,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       router.refresh();
     } catch (err: any) {
       console.error("Failed to save product:", err);
-      // Simulate success locally during workspace mocks run
-      toast.success("Product saved successfully (Simulated)");
-      router.push("/admin/products");
+      toast.error(err.message || "Failed to save product.");
     } finally {
       setSaving(false);
     }
@@ -453,6 +496,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       name,
       slug: calculatedSlug,
       sku: sku || null,
+      barcode: barcode || null,
       price,
       compare_at_price: compareAtPrice === "" ? null : Number(compareAtPrice),
       category_id: categoryId || null,
@@ -558,6 +602,25 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
                 className={styles.formInput}
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Barcode</label>
+              <input
+                type="text"
+                value={barcode}
+                onChange={(e) => setBarcode(e.target.value)}
+                onInput={(e) => setBarcode(e.currentTarget.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    setBarcode(e.currentTarget.value.trim());
+                  }
+                }}
+                onBlur={(e) => setBarcode(e.currentTarget.value.trim())}
+                className={styles.formInput}
+                autoComplete="off"
               />
             </div>
 

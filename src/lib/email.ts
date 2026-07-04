@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import nodemailer from "nodemailer";
 
 type StoreEmailSettings = {
@@ -81,7 +81,7 @@ const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 export async function getSMTPSettings(): Promise<StoreEmailSettings | null> {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data, error } = await supabase
       .from("store_settings")
       .select("*")

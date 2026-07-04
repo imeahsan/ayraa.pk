@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * Checks if the currently logged-in user has purchased a specific product.
@@ -76,7 +77,8 @@ export async function submitReview(
     const reviewerName = profile?.full_name?.trim() || "Verified Buyer";
 
     // Insert review
-    const { error: insertError } = await supabase.from("product_reviews").insert({
+    const adminSupabase = createAdminClient();
+    const { error: insertError } = await adminSupabase.from("product_reviews").insert({
       product_id: productId,
       user_id: user.id,
       reviewer_name: reviewerName,
@@ -129,7 +131,8 @@ export async function submitManualAdminReview(
     }
 
     // Insert review
-    const { error } = await supabase.from("product_reviews").insert({
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase.from("product_reviews").insert({
       product_id: productId,
       reviewer_name: reviewerName.trim(),
       rating,
@@ -174,7 +177,8 @@ export async function deleteReview(reviewId: string) {
       return { success: false, error: "Unauthorized: Admin role required." };
     }
 
-    const { error } = await supabase
+    const adminSupabase = createAdminClient();
+    const { error } = await adminSupabase
       .from("product_reviews")
       .delete()
       .eq("id", reviewId);

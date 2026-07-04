@@ -286,13 +286,18 @@ export const CheckoutForm: React.FC = () => {
     setIsLoading(false);
 
     if (result.success && result.orderId) {
+      const trackedSubtotal = result.subtotal ?? cart.subtotal;
+      const trackedShipping = result.shippingCost ?? cart.shipping;
+      const trackedDiscount = result.discountAmount ?? discountAmount;
+      const trackedTotal = result.total ?? finalTotal;
+
       if (!isPurchaseAlreadyTracked(result.orderId)) {
         trackEcommerceEvent("purchase", {
           transaction_id: result.orderId,
-          value: finalTotal,
-          subtotal: cart.subtotal,
-          shipping: cart.shipping,
-          discount: discountAmount,
+          value: trackedTotal,
+          subtotal: trackedSubtotal,
+          shipping: trackedShipping,
+          discount: trackedDiscount,
           coupon: appliedPromo?.code,
           payment_type: "cod",
           items: cartToAnalyticsItems(cart, appliedPromo?.code),

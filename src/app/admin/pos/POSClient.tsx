@@ -35,7 +35,7 @@ interface PendingOrder {
   created_at: string;
 }
 
-const CATALOG_CACHE_KEY = "ayra_pos_catalog_cache";
+const CATALOG_CACHE_KEY = "ayra_pos_catalog_cache_v2";
 const CATALOG_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 const DRAFT_SALE_KEY = "ayra_pos_draft_sale";
 const OFFLINE_ORDERS_KEY = "ayra_pos_offline_orders";
@@ -48,6 +48,7 @@ export default function POSClient() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [productBarcodes, setProductBarcodes] = useState<Record<string, string>>({});
   const [customers, setCustomers] = useState<UserProfile[]>([]);
   const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [syncingCatalog, setSyncingCatalog] = useState(false);
@@ -86,6 +87,14 @@ export default function POSClient() {
 
   // Print Ref
   const receiptRef = useRef<HTMLDivElement>(null);
+  const scanInputRef = useRef<HTMLInputElement>(null);
+
+  const focusScanInput = () => {
+    window.setTimeout(() => {
+      scanInputRef.current?.focus();
+      scanInputRef.current?.select();
+    }, 0);
+  };
 
   // Monitor network status
   useEffect(() => {
@@ -108,6 +117,7 @@ export default function POSClient() {
       await loadCatalog();
       await fetchCustomers();
       loadOfflineOrders();
+      focusScanInput();
     };
     initialize();
   }, []);
@@ -168,6 +178,7 @@ export default function POSClient() {
             setProducts(parsed.products);
             setCategories(parsed.categories);
             setVariants(parsed.variants);
+            setProductBarcodes(parsed.productBarcodes || {});
             loadDraftSession(parsed.variants);
             setLoadingCatalog(false);
             return;
@@ -180,23 +191,32 @@ export default function POSClient() {
 
     setSyncingCatalog(true);
     try {
-      const [productsRes, categoriesRes, variantsRes] = await Promise.all([
+      const [productsRes, categoriesRes, variantsRes, barcodesRes] = await Promise.all([
         supabase.from("products").select("*").eq("is_active", true).order("name", { ascending: true }),
         supabase.from("categories").select("*").eq("is_active", true).order("sort_order", { ascending: true }),
         supabase.from("product_variants").select("*").order("size", { ascending: true }),
+        supabase.from("product_barcodes").select("product_id, barcode"),
       ]);
 
       if (productsRes.error) throw productsRes.error;
       if (categoriesRes.error) throw categoriesRes.error;
       if (variantsRes.error) throw variantsRes.error;
+      if (barcodesRes.error) throw barcodesRes.error;
 
       const prods = productsRes.data as Product[];
       const cats = categoriesRes.data as Category[];
       const vars = variantsRes.data as ProductVariant[];
+      const barcodes = Object.fromEntries(
+        ((barcodesRes.data || []) as { product_id: string; barcode: string }[]).map((row) => [
+          row.product_id,
+          row.barcode,
+        ])
+      );
 
       setProducts(prods);
       setCategories(cats);
       setVariants(vars);
+      setProductBarcodes(barcodes);
 
       // Save to cache
       const cacheData = {
@@ -204,6 +224,7 @@ export default function POSClient() {
         products: prods,
         categories: cats,
         variants: vars,
+        productBarcodes: barcodes,
       };
       localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(cacheData));
       loadDraftSession(vars);
@@ -249,14 +270,18 @@ export default function POSClient() {
 
   // Filter products based on search term & category selection
   const filteredProducts = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
     return products.filter((p) => {
+      if (!query) return !selectedCategoryId || p.category_id === selectedCategoryId;
+
       const matchesSearch =
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+        p.name.toLowerCase().includes(query) ||
+        (p.sku && p.sku.toLowerCase().includes(query)) ||
+        (productBarcodes[p.id] && productBarcodes[p.id].toLowerCase().includes(query));
       const matchesCategory = !selectedCategoryId || p.category_id === selectedCategoryId;
       return matchesSearch && matchesCategory;
     });
-  }, [products, searchTerm, selectedCategoryId]);
+  }, [products, productBarcodes, searchTerm, selectedCategoryId]);
 
   const filteredCustomers = useMemo(() => {
     if (!customerSearchTerm.trim()) return [];
@@ -271,6 +296,41 @@ export default function POSClient() {
   // Cart operations
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
+  };
+
+  const handleScanLookup = (rawCode = searchTerm) => {
+    const code = rawCode.trim();
+    if (!code) return;
+
+    const normalizedCode = code.toLowerCase();
+    const product = products.find((p) => {
+      const barcode = productBarcodes[p.id]?.toLowerCase();
+      const sku = p.sku?.toLowerCase();
+      return barcode === normalizedCode || sku === normalizedCode;
+    });
+
+    if (!product) {
+      toast.warning("No product found for this barcode.");
+      return;
+    }
+
+    const productVariants = variants.filter((v) => v.product_id === product.id);
+    const availableVariants = productVariants.filter((v) => v.is_available && v.stock_quantity > 0);
+
+    if (availableVariants.length === 0) {
+      toast.warning(`${product.name} is out of stock.`);
+      return;
+    }
+
+    if (availableVariants.length === 1) {
+      addToCart(product, availableVariants[0]);
+      setSearchTerm("");
+      focusScanInput();
+      return;
+    }
+
+    setSelectedProduct(product);
+    setSearchTerm("");
   };
 
   const addToCart = (product: Product, variant: ProductVariant) => {
@@ -306,6 +366,7 @@ export default function POSClient() {
     }
     toast.success(`Added ${product.name} (Size: ${variant.size}) to cart.`);
     setSelectedProduct(null);
+    focusScanInput();
   };
 
   const updateQuantity = (variantId: string, delta: number) => {
@@ -488,6 +549,7 @@ export default function POSClient() {
       toast.success("Order recorded successfully!");
       setCompletedOrder(pendingOrderObj);
       clearCart();
+      focusScanInput();
       // Reload catalog to sync stock quantities
       await loadCatalog(true);
     } catch (err: any) {
@@ -498,6 +560,7 @@ export default function POSClient() {
       toast.warning(`Transaction error: ${err.message || "Saved locally in sync queue."}`);
       setCompletedOrder(pendingOrderObj);
       clearCart();
+      focusScanInput();
     } finally {
       setRecordingOrder(false);
     }
@@ -864,10 +927,18 @@ export default function POSClient() {
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               <div className="pos-search-wrapper">
                 <input
+                  ref={scanInputRef}
                   type="text"
-                  placeholder="Search products by SKU or Name..."
+                  placeholder="Scan barcode or search name/SKU..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onInput={(e) => setSearchTerm(e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleScanLookup(e.currentTarget.value);
+                    }
+                  }}
                   className="font-body text-sm text-admin-text-main"
                   style={{
                     width: "100%",
@@ -879,7 +950,13 @@ export default function POSClient() {
                   }}
                 />
                 {searchTerm && (
-                  <button className="pos-search-clear" onClick={() => setSearchTerm("")}>
+                  <button
+                    className="pos-search-clear"
+                    onClick={() => {
+                      setSearchTerm("");
+                      focusScanInput();
+                    }}
+                  >
                     &times;
                   </button>
                 )}
@@ -899,6 +976,21 @@ export default function POSClient() {
                 }}
               >
                 {syncingCatalog ? "🔄 Syncing..." : "🔄 Sync"}
+              </button>
+              <button
+                onClick={() => handleScanLookup()}
+                disabled={!searchTerm.trim()}
+                style={{
+                  padding: "8px 14px",
+                  background: "rgba(212,175,55,0.12)",
+                  border: "1px solid rgba(212,175,55,0.35)",
+                  borderRadius: "4px",
+                  color: "#fff",
+                  fontSize: "12px",
+                  cursor: searchTerm.trim() ? "pointer" : "not-allowed",
+                }}
+              >
+                Scan
               </button>
             </div>
 
@@ -952,6 +1044,11 @@ export default function POSClient() {
                         <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)" }}>
                           {product.sku || "No SKU"}
                         </span>
+                        {productBarcodes[product.id] && (
+                          <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", display: "block", marginTop: "2px" }}>
+                            Barcode: {productBarcodes[product.id]}
+                          </span>
+                        )}
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: "8px" }}>
                         <span style={{ color: "var(--admin-card-border, #d4af37)", fontWeight: 600, fontSize: "13px" }}>
@@ -1250,14 +1347,23 @@ export default function POSClient() {
           <div className="pos-panel" style={{ width: "380px", background: "#1f1f1f", border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }}>
             <div style={{ padding: "18px 24px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "15px", fontWeight: "bold", margin: 0 }}>{selectedProduct.name}</h3>
-              <button onClick={() => setSelectedProduct(null)} style={{ background: "none", border: "none", color: "#fff", fontSize: "20px", cursor: "pointer", padding: 0 }}>
+              <button
+                onClick={() => {
+                  setSelectedProduct(null);
+                  focusScanInput();
+                }}
+                style={{ background: "none", border: "none", color: "#fff", fontSize: "20px", cursor: "pointer", padding: 0 }}
+              >
                 &times;
               </button>
             </div>
 
             <div style={{ padding: "20px 24px" }}>
               <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginBottom: "16px" }}>
-                SKU: {selectedProduct.sku || "No SKU"} | Price: {formatPKR(Number(selectedProduct.price))}
+                SKU: {selectedProduct.sku || "No SKU"}
+                {productBarcodes[selectedProduct.id] ? ` | Barcode: ${productBarcodes[selectedProduct.id]}` : ""}
+                {" | "}
+                Price: {formatPKR(Number(selectedProduct.price))}
               </div>
 
               <strong style={{ fontSize: "12px", display: "block", marginBottom: "10px", color: "var(--admin-card-border, #d4af37)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
@@ -1295,7 +1401,15 @@ export default function POSClient() {
                 ))}
               </div>
 
-              <Button variant="outline" size="sm" onClick={() => setSelectedProduct(null)} style={{ width: "100%", justifyContent: "center" }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedProduct(null);
+                  focusScanInput();
+                }}
+                style={{ width: "100%", justifyContent: "center" }}
+              >
                 Cancel
               </Button>
             </div>
@@ -1371,7 +1485,10 @@ export default function POSClient() {
                 Print Receipt
               </button>
               <button
-                onClick={() => setCompletedOrder(null)}
+                onClick={() => {
+                  setCompletedOrder(null);
+                  focusScanInput();
+                }}
                 style={{ padding: "10px", background: "none", border: "1px solid #ccc", borderRadius: "4px", fontWeight: 600, cursor: "pointer" }}
               >
                 Close / New
