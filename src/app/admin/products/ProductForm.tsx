@@ -238,7 +238,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     }
 
     setSaving(true);
-    const slug = name
+    const slugBase = sku.trim() ? `${name}-${sku.trim()}` : name;
+    const slug = slugBase
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
@@ -486,7 +487,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       return;
     }
 
-    const calculatedSlug = name
+    const slugBase = sku.trim() ? `${name}-${sku.trim()}` : name;
+    const calculatedSlug = slugBase
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "");
