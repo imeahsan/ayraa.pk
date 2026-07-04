@@ -12,7 +12,7 @@ const DEFAULT_SETTINGS: StoreSettings = {
   brand_name: "Ayraa Collection",
   brand_description: "Premium Eastern Haute Couture.",
   contact_email: "care@ayraa.pk",
-  contact_phone: "+92 21 111-999-888",
+  contact_phone: "+92 329 5822495",
   shipping_flat_rate: 250,
   free_shipping_threshold: 5000,
   meta_title_template: "Ayraa | %s",

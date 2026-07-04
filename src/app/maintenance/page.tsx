@@ -32,7 +32,7 @@ export default function MaintenancePage() {
 
         <div className={styles.infoBox}>
           <p className={styles.infoItem}>
-            <strong>Helpline:</strong> +92 21 111-999-888
+            <strong>Helpline:</strong> +92 329 5822495
           </p>
           <p className={styles.infoItem}>
             <strong>Email Support:</strong>{" "}

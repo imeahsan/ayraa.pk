@@ -1,9 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getBypassCookieName, hasValidBypassCookie } from "@/lib/access-bypass";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const appMode = process.env.NEXT_PUBLIC_APP_MODE || "live";
+  const bypassCookie = request.cookies.get(getBypassCookieName())?.value;
+  const hasBypassAccess = await hasValidBypassCookie(bypassCookie);
   const isVerificationFile = /^\/google[a-z0-9]+\.html$/i.test(pathname);
   const isMetadataFile = pathname === "/sitemap.xml" || pathname === "/robots.txt" || isVerificationFile;
 
@@ -15,10 +18,11 @@ export async function proxy(request: NextRequest) {
   const isApiRoute = pathname.startsWith("/api");
   const isAuthCallback = pathname.startsWith("/auth/callback");
   const isAuthRoute = pathname === "/login" || pathname === "/register";
+  const isAccessRoute = pathname === "/access";
   const isSpecialPage = pathname === "/coming-soon" || pathname === "/maintenance";
 
   // Check if we need to apply coming-soon / maintenance redirect
-  if (!isAdminRoute && !isApiRoute && !isAuthCallback && !isAuthRoute) {
+  if (!hasBypassAccess && !isAdminRoute && !isApiRoute && !isAuthCallback && !isAuthRoute && !isAccessRoute) {
     if (appMode === "coming-soon") {
       if (pathname !== "/coming-soon") {
         return NextResponse.rewrite(new URL("/coming-soon", request.url));

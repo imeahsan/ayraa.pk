@@ -73,7 +73,7 @@ export default function ContactClient() {
                   <span className={styles.infoIcon}>Phone</span>
                   <div>
                     <h4 className={styles.infoTitle}>Phone Helpline</h4>
-                    <p className={styles.infoText}>+92 21 111-999-888 (10AM - 6PM PKT)</p>
+                    <p className={styles.infoText}>+92 329 5822495 (10AM - 6PM PKT)</p>
                   </div>
                 </div>
 

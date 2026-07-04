@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:migrate": "node scripts/run-supabase-migrations.js --target=current",
+    "db:migrate:beta:baseline": "node scripts/run-supabase-migrations.js --target=beta --baseline",
+    "db:migrate:beta": "node scripts/run-supabase-migrations.js --target=beta",
+    "db:migrate:prod": "node scripts/run-supabase-migrations.js --target=prod",
+    "db:migrate:prod:baseline": "node scripts/run-supabase-migrations.js --target=prod --baseline"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
