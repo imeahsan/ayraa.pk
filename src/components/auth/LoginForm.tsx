@@ -169,7 +169,6 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
       <div className={styles.trustStrip}>
         <span>Cash on Delivery</span>
         <span>Pakistan-wide delivery</span>
-        <span>Wishlist sync</span>
       </div>
 
       <div className={styles.footerText}>

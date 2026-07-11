@@ -62,18 +62,10 @@ export default function ContactClient() {
 
               <div className={styles.infoList}>
                 <div className={styles.infoItem}>
-                  <span className={styles.infoIcon}>Location</span>
-                  <div>
-                    <h4 className={styles.infoTitle}>Flagship Studio</h4>
-                    <p className={styles.infoText}>Block 4, Clifton, Karachi, Pakistan</p>
-                  </div>
-                </div>
-
-                <div className={styles.infoItem}>
                   <span className={styles.infoIcon}>Phone</span>
                   <div>
                     <h4 className={styles.infoTitle}>Phone Helpline</h4>
-                    <p className={styles.infoText}>+92 329 5822495 (10AM - 6PM PKT)</p>
+                    <p className={styles.infoText}>+92 329 5822495 (24/7)</p>
                   </div>
                 </div>
 
