@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { updateTag } from "next/cache";
 
 export async function submitQuestion(productId: string, questionText: string) {
   try {
@@ -14,6 +15,7 @@ export async function submitQuestion(productId: string, questionText: string) {
       });
 
     if (error) throw error;
+    updateTag("questions");
     return { success: true };
   } catch (err: any) {
     console.error("Failed to submit question:", err);
@@ -34,6 +36,7 @@ export async function answerQuestion(questionId: string, answerText: string) {
       .eq("id", questionId);
 
     if (error) throw error;
+    updateTag("questions");
     return { success: true };
   } catch (err: any) {
     console.error("Failed to answer question:", err);

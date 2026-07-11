@@ -20,8 +20,6 @@ interface NavCategory {
   sub: Array<{ label: string; href: string }>;
 }
 
-const GENERIC_NAV_LINKS = [{ label: "New In", href: "/collections" }];
-
 const getCategoryNavLabel = (category: Category) =>
   category.header_label?.trim() || category.name;
 
@@ -243,18 +241,6 @@ export const Header: React.FC = () => {
                 </div>
               </li>
 
-              {GENERIC_NAV_LINKS.map((item) => (
-                <li key={item.label} className={styles.navItem}>
-                  <Link
-                    href={item.href}
-                    className={isActiveHref(pathname, item.href) ? "premium-underline-active" : "premium-underline"}
-                    onClick={() => trackNavClick(item.label, item.href)}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-
               {headerCategories.map((cat) => (
                 <li key={cat.id} className={styles.navItem}>
                   <Link
@@ -396,19 +382,6 @@ export const Header: React.FC = () => {
         </div>
 
         <ul className={styles.mobileMenuList}>
-          <li className={styles.mobileMenuItem}>
-            <Link
-              href="/collections"
-              className={`${styles.mobileMenuLink} ${pathname === "/collections" ? styles.mobileMenuLinkActive : styles.mobileMenuLinkInactive}`}
-              onClick={() => {
-                trackNavClick("New In", "/collections", "mobile_menu");
-                setIsMobileMenuOpen(false);
-              }}
-            >
-              New In
-            </Link>
-          </li>
-
           {headerCategories.map((cat) => {
             const hasSubs = cat.sub.length > 0;
             return (

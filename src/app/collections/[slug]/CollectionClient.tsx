@@ -20,6 +20,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
 }) => {
   const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [limit, setLimit] = useState<number>(6);
 
@@ -49,11 +50,21 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   const clearFilters = () => {
     setSelectedFabrics([]);
     setSelectedSizes([]);
+    setInStockOnly(false);
   };
 
   // Filter & sort logic
   const filteredProducts = useMemo(() => {
     let result = [...initialProducts];
+
+    // Filter by Availability (In Stock Only)
+    if (inStockOnly) {
+      result = result.filter(
+        (p) =>
+          p.variants &&
+          p.variants.some((v) => v.stock_quantity > 0)
+      );
+    }
 
     // Filter by Fabric
     if (selectedFabrics.length > 0) {
@@ -65,7 +76,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
       result = result.filter(
         (p) =>
           p.variants &&
-          p.variants.some((v) => selectedSizes.includes(v.size) && v.stock_quantity > 0)
+          p.variants.some((v) => selectedSizes.includes(v.size) && (!inStockOnly || v.stock_quantity > 0))
       );
     }
 
@@ -85,7 +96,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
     }
 
     return result;
-  }, [initialProducts, selectedFabrics, selectedSizes, sortBy]);
+  }, [initialProducts, selectedFabrics, selectedSizes, inStockOnly, sortBy]);
 
   const displayedProducts = useMemo(() => {
     return filteredProducts.slice(0, limit);
@@ -156,6 +167,21 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
         {/* Sidebar Filters */}
         <aside className={styles.sidebar}>
           <div className={styles.filterGroup}>
+            <h3 className={styles.filterHeading}>Availability</h3>
+            <div className={styles.checkboxList}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span className="leading-none">In Stock Only</span>
+              </label>
+            </div>
+          </div>
+
+          <div className={styles.filterGroup}>
             <h3 className={styles.filterHeading}>Fabric</h3>
             <div className={styles.checkboxList}>
               {fabrics.length === 0 ? (
@@ -198,7 +224,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
             </div>
           </div>
 
-          {(selectedFabrics.length > 0 || selectedSizes.length > 0) && (
+          {(selectedFabrics.length > 0 || selectedSizes.length > 0 || inStockOnly) && (
             <button
               onClick={clearFilters}
               className={styles.clearBtn}

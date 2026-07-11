@@ -9,187 +9,9 @@ import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { notFound } from "next/navigation";
 import { absoluteUrl, getSiteUrl, productSeoTitle, truncateSeoText } from "@/lib/seo";
-
+import { unstable_cache } from "next/cache";
 
 export const dynamic = "force-dynamic";
-
-// Fallback Mock products
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: "f1111111-1111-1111-1111-111111111111",
-    name: "Noir Silk Blouse",
-    slug: "noir-silk-blouse",
-    description: "A sleek black pret blouse crafted from premium raw silk, featuring structured tailoring.",
-    price: 18500,
-    compare_at_price: 22000,
-    sku: "AYR-NOI-01",
-    category_id: "cat-pret",
-    is_active: true,
-    is_featured: true,
-    fabric: "Raw Silk",
-    color: "Black",
-    includes: "Blouse Only",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img1",
-        product_id: "f1111111-1111-1111-1111-111111111111",
-        url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Noir Silk Blouse",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-    variants: [
-      { id: "v1-xs", product_id: "f1111111-1111-1111-1111-111111111111", size: "XS", stock_quantity: 4, is_available: true },
-      { id: "v1-s", product_id: "f1111111-1111-1111-1111-111111111111", size: "S", stock_quantity: 12, is_available: true },
-      { id: "v1-m", product_id: "f1111111-1111-1111-1111-111111111111", size: "M", stock_quantity: 15, is_available: true },
-      { id: "v1-l", product_id: "f1111111-1111-1111-1111-111111111111", size: "L", stock_quantity: 8, is_available: true },
-    ],
-  },
-  {
-    id: "f2222222-2222-2222-2222-222222222222",
-    name: "Ivory Drape Dress",
-    slug: "ivory-drape-dress",
-    description: "A flowing ivory white maxi dress with intricate hand-embroidered details and keyhole necklines.",
-    price: 32000,
-    compare_at_price: null,
-    sku: "AYR-IVO-02",
-    category_id: "cat-luxury-pret",
-    is_active: true,
-    is_featured: true,
-    fabric: "Georgette Chiffon",
-    color: "Ivory White",
-    includes: "Maxi Dress, Slip",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img2",
-        product_id: "f2222222-2222-2222-2222-222222222222",
-        url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Ivory Drape Dress",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-    variants: [
-      { id: "v2-s", product_id: "f2222222-2222-2222-2222-222222222222", size: "S", stock_quantity: 6, is_available: true },
-      { id: "v2-m", product_id: "f2222222-2222-2222-2222-222222222222", size: "M", stock_quantity: 8, is_available: true },
-      { id: "v2-l", product_id: "f2222222-2222-2222-2222-222222222222", size: "L", stock_quantity: 0, is_available: false },
-    ],
-  },
-  {
-    id: "f3333333-3333-3333-3333-333333333333",
-    name: "Olive Linen Set",
-    slug: "olive-linen-set",
-    description: "A modern relaxed-fit linen two-piece set in a rich olive tone with buttoned cuffs.",
-    price: 21000,
-    compare_at_price: 25000,
-    sku: "AYR-OLI-03",
-    category_id: "cat-pret",
-    is_active: true,
-    is_featured: true,
-    fabric: "Premium Linen",
-    color: "Olive Green",
-    includes: "Shirt, Trousers",
-    care_instructions: "Hand wash cold",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img3",
-        product_id: "f3333333-3333-3333-3333-333333333333",
-        url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Olive Linen Set",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-    variants: [
-      { id: "v3-s", product_id: "f3333333-3333-3333-3333-333333333333", size: "S", stock_quantity: 10, is_available: true },
-      { id: "v3-m", product_id: "f3333333-3333-3333-3333-333333333333", size: "M", stock_quantity: 12, is_available: true },
-      { id: "v3-l", product_id: "f3333333-3333-3333-3333-333333333333", size: "L", stock_quantity: 10, is_available: true },
-    ],
-  },
-  {
-    id: "f4444444-4444-4444-4444-444444444444",
-    name: "Terra Geometric Tunic",
-    slug: "terra-geometric-tunic",
-    description: "A lightweight summer lawn tunic featuring abstract geo prints in warm terracotta tones.",
-    price: 9500,
-    compare_at_price: null,
-    sku: "AYR-TER-04",
-    category_id: "cat-lawn",
-    is_active: true,
-    is_featured: true,
-    fabric: "Lawn Cotton",
-    color: "Terracotta",
-    includes: "Tunic Only",
-    care_instructions: "Gentle machine wash",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img4",
-        product_id: "f4444444-4444-4444-4444-444444444444",
-        url: "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Terra Geometric Tunic",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-    variants: [
-      { id: "v4-xs", product_id: "f4444444-4444-4444-4444-444444444444", size: "XS", stock_quantity: 2, is_available: true },
-      { id: "v4-s", product_id: "f4444444-4444-4444-4444-444444444444", size: "S", stock_quantity: 5, is_available: true },
-      { id: "v4-m", product_id: "f4444444-4444-4444-4444-444444444444", size: "M", stock_quantity: 12, is_available: true },
-      { id: "v4-l", product_id: "f4444444-4444-4444-4444-444444444444", size: "L", stock_quantity: 4, is_available: true },
-    ],
-  },
-  {
-    id: "f5555555-5555-5555-5555-555555555555",
-    name: "Midnight Chiffon Suit",
-    slug: "midnight-chiffon-suit",
-    description: "Exude effortless elegance in this hand-embellished midnight chiffon suit. Featuring intricate detailing and a flowing silhouette.",
-    price: 85000,
-    compare_at_price: 95000,
-    sku: "AYR-MCF-05",
-    category_id: "cat-luxury-formal",
-    is_active: true,
-    is_featured: true,
-    fabric: "Pure Chiffon",
-    color: "Midnight Black",
-    includes: "Shirt, Dupatta, Trousers, Inner",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img5",
-        product_id: "f5555555-5555-5555-5555-555555555555",
-        url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Midnight Chiffon Suit",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-    variants: [
-      { id: "v5-s", product_id: "f5555555-5555-5555-5555-555555555555", size: "S", stock_quantity: 4, is_available: true },
-      { id: "v5-m", product_id: "f5555555-5555-5555-5555-555555555555", size: "M", stock_quantity: 6, is_available: true },
-      { id: "v5-l", product_id: "f5555555-5555-5555-5555-555555555555", size: "L", stock_quantity: 2, is_available: true },
-    ],
-  },
-];
-
-import { unstable_cache } from "next/cache";
 
 interface ProductPageProps {
   params: Promise<{
@@ -219,10 +41,10 @@ const getCachedProduct = unstable_cache(
     } catch (err) {
       console.error("Error loading product detail from Supabase:", err);
     }
-    return MOCK_PRODUCTS.find((p) => p.slug === slug) || null;
+    return null;
   },
   ["product-by-slug"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["products", "categories"] }
 );
 
 const getCachedRelatedProducts = unstable_cache(
@@ -230,16 +52,15 @@ const getCachedRelatedProducts = unstable_cache(
     const supabase = createCacheClient();
     const { data: related } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
       .eq("category_id", categoryId)
       .neq("id", productId)
       .eq("is_active", true)
-      .gt("variants.stock_quantity", 0)
       .limit(4);
     return related || [];
   },
   ["related-products-by-category"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["products", "categories"] }
 );
 
 const getCachedProductQuestions = unstable_cache(
@@ -254,7 +75,7 @@ const getCachedProductQuestions = unstable_cache(
     return qData || [];
   },
   ["product-questions-by-id"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["questions"] }
 );
 
 const getCachedProductReviews = unstable_cache(
@@ -269,7 +90,7 @@ const getCachedProductReviews = unstable_cache(
     return rData || [];
   },
   ["product-reviews-by-id"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["reviews"] }
 );
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
@@ -388,7 +209,7 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   }
 
   if (relatedProducts.length === 0) {
-    relatedProducts = MOCK_PRODUCTS.filter((p) => p.slug !== slug).slice(0, 4);
+    relatedProducts = [];
   }
 
   const baseUrl = getSiteUrl();

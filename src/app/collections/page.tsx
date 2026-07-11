@@ -37,82 +37,15 @@ export const metadata: Metadata = {
   },
 };
 
-const MOCK_CATEGORIES = [
-  { name: "Lawn", slug: "lawn", image: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80" },
-  { name: "Pret", slug: "pret", image: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=600&auto=format&fit=crop&q=80" },
-  { name: "Festive", slug: "festive", image: "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=600&auto=format&fit=crop&q=80" },
-  { name: "Home", slug: "home", image: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600&auto=format&fit=crop&q=80" },
-];
-
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: "p1",
-    name: "Noir Silk Blouse",
-    slug: "noir-silk-blouse",
-    description: "A sleek pret blouse crafted from premium raw silk.",
-    price: 18500,
-    compare_at_price: 22000,
-    sku: "AYR-NOI-01",
-    category_id: "pret",
-    is_active: true,
-    is_featured: true,
-    fabric: "Raw Silk",
-    color: "Black",
-    includes: "Blouse Only",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img1",
-        product_id: "p1",
-        url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Noir Silk Blouse",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-  },
-  {
-    id: "p2",
-    name: "Ivory Drape Dress",
-    slug: "ivory-drape-dress",
-    description: "A flowing ivory dress with hand-finished detailing.",
-    price: 32000,
-    compare_at_price: null,
-    sku: "AYR-IVO-02",
-    category_id: "festive",
-    is_active: true,
-    is_featured: true,
-    fabric: "Georgette Chiffon",
-    color: "Ivory White",
-    includes: "Dress, Slip",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img2",
-        product_id: "p2",
-        url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Ivory Drape Dress",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-  },
-];
+// Fallbacks removed
 
 const getCachedCollectionsProducts = unstable_cache(
   async () => {
     const supabase = createCacheClient();
     const { data, error } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
       .eq("is_active", true)
-      .gt("variants.stock_quantity", 0)
       .order("created_at", { ascending: false })
       .limit(12);
     if (error) throw error;
@@ -129,9 +62,8 @@ const getCachedCollectionsCategories = unstable_cache(
     const activeCategoryIds = new Set<string>();
     const { data: prodCats } = await supabase
       .from("products")
-      .select("category_id, variants:product_variants!inner(*)")
-      .eq("is_active", true)
-      .gt("variants.stock_quantity", 0);
+      .select("category_id, variants:product_variants(*)")
+      .eq("is_active", true);
     if (prodCats) {
       prodCats.forEach((p) => {
         if (p.category_id) activeCategoryIds.add(p.category_id);
@@ -160,42 +92,20 @@ export default async function CollectionsPage() {
 
   try {
     const data = await getCachedCollectionsProducts();
-    products = data.length > 0 ? data : MOCK_PRODUCTS;
+    products = data;
   } catch (err) {
     console.error("Error fetching products:", err);
-    products = MOCK_PRODUCTS;
+    products = [];
   }
 
   try {
     const data = await getCachedCollectionsCategories();
     if (data && data.length > 0) {
       categories = data;
-    } else {
-      categories = MOCK_CATEGORIES.map((c, idx) => ({
-        id: `mock-cat-${idx}`,
-        name: c.name,
-        slug: c.slug,
-        description: "",
-        parent_id: null,
-        sort_order: idx + 1,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        image_url: c.image,
-      }));
     }
   } catch (err) {
     console.error("Error fetching categories:", err);
-    categories = MOCK_CATEGORIES.map((c, idx) => ({
-      id: `mock-cat-${idx}`,
-      name: c.name,
-      slug: c.slug,
-      description: "",
-      parent_id: null,
-      sort_order: idx + 1,
-      is_active: true,
-      created_at: new Date().toISOString(),
-      image_url: c.image,
-    }));
+    categories = [];
   }
 
   const getCategoryImage = (cat: Category) => {

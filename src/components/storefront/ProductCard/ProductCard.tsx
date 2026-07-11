@@ -19,6 +19,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, listName, ind
     product.images?.find((img) => img.is_primary) || product.images?.[0];
   const secondaryImage = product.images?.[1] || primaryImage;
   const wishlisted = isWishlisted(product.id);
+  const isOutOfStock = product.variants !== undefined && (product.variants.length === 0 || product.variants.every((v) => v.stock_quantity <= 0));
 
   const formattedPrice = Intl.NumberFormat("en-PK", {
     style: "currency",
@@ -56,7 +57,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, listName, ind
               fill
               sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className={styles.image}
-              priority={false}
+              priority={index !== undefined && index < 2}
             />
           ) : (
             <div className="w-full h-full bg-surface-container-high" />
@@ -72,11 +73,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, listName, ind
             />
           ) : null}
 
-          {product.compare_at_price && product.compare_at_price > product.price ? (
-            <span className={styles.badge} id={`sale-badge-${product.id}`}>
-              Sale
-            </span>
-          ) : null}
+          <div className={styles.badgeContainer}>
+            {isOutOfStock && (
+              <span className={styles.outOfStockBadge} id={`out-of-stock-badge-${product.id}`}>
+                Out of Stock
+              </span>
+            )}
+            {product.compare_at_price && product.compare_at_price > product.price ? (
+              <span className={styles.badge} id={`sale-badge-${product.id}`}>
+                Sale
+              </span>
+            ) : null}
+          </div>
         </Link>
 
         <button

@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { updateTag } from "next/cache";
 
 /**
  * Checks if the currently logged-in user has purchased a specific product.
@@ -91,6 +92,8 @@ export async function submitReview(
 
     if (insertError) throw insertError;
 
+    updateTag("reviews");
+
     return { success: true };
   } catch (err: any) {
     console.error("Failed to submit review:", err);
@@ -145,6 +148,8 @@ export async function submitManualAdminReview(
 
     if (error) throw error;
 
+    updateTag("reviews");
+
     return { success: true };
   } catch (err: any) {
     console.error("Failed to submit manual review:", err);
@@ -184,6 +189,8 @@ export async function deleteReview(reviewId: string) {
       .eq("id", reviewId);
 
     if (error) throw error;
+
+    updateTag("reviews");
 
     return { success: true };
   } catch (err: any) {

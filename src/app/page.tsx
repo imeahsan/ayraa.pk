@@ -37,132 +37,7 @@ export const metadata: Metadata = {
   },
 };
 
-// ─── Fallback mock data ────────────────────────────────────────────────────────
-const MOCK_PRODUCTS: Product[] = [
-  {
-    id: "p1",
-    name: "Noir Silk Blouse",
-    slug: "noir-silk-blouse",
-    description: "A sleek black pret blouse crafted from premium raw silk.",
-    price: 18500,
-    compare_at_price: 22000,
-    sku: "AYR-NOI-01",
-    category_id: "cat-pret",
-    is_active: true,
-    is_featured: true,
-    fabric: "Raw Silk",
-    color: "Black",
-    includes: "Blouse Only",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img1",
-        product_id: "p1",
-        url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Noir Silk Blouse",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-  },
-  {
-    id: "p2",
-    name: "Ivory Drape Dress",
-    slug: "ivory-drape-dress",
-    description: "A flowing ivory white maxi dress with intricate hand-embroidered details.",
-    price: 32000,
-    compare_at_price: null,
-    sku: "AYR-IVO-02",
-    category_id: "cat-luxury-pret",
-    is_active: true,
-    is_featured: true,
-    fabric: "Georgette Chiffon",
-    color: "Ivory White",
-    includes: "Maxi Dress, Slip",
-    care_instructions: "Dry clean only",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img2",
-        product_id: "p2",
-        url: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Ivory Drape Dress",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-  },
-  {
-    id: "p3",
-    name: "Olive Linen Set",
-    slug: "olive-linen-set",
-    description: "A modern relaxed-fit linen co-ord set in a rich olive tone.",
-    price: 21000,
-    compare_at_price: 25000,
-    sku: "AYR-OLI-03",
-    category_id: "cat-pret",
-    is_active: true,
-    is_featured: true,
-    fabric: "Premium Linen",
-    color: "Olive Green",
-    includes: "Shirt, Trousers",
-    care_instructions: "Hand wash cold",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img3",
-        product_id: "p3",
-        url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Olive Linen Set",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-  },
-  {
-    id: "p4",
-    name: "Terra Geometric Tunic",
-    slug: "terra-geometric-tunic",
-    description: "A lightweight lawn tunic featuring abstract geo prints in warm terracotta.",
-    price: 9500,
-    compare_at_price: null,
-    sku: "AYR-TER-04",
-    category_id: "cat-lawn",
-    is_active: true,
-    is_featured: true,
-    fabric: "Lawn Cotton",
-    color: "Terracotta",
-    includes: "Tunic Only",
-    care_instructions: "Gentle machine wash",
-    meta_title: null,
-    meta_description: null,
-    created_at: new Date().toISOString(),
-    images: [
-      {
-        id: "img4",
-        product_id: "p4",
-        url: "https://images.unsplash.com/photo-1581044777550-4cfa60707c03?w=600&auto=format&fit=crop&q=80",
-        alt_text: "Terra Geometric Tunic",
-        sort_order: 1,
-        is_primary: true,
-      },
-    ],
-  },
-];
-
-const FALLBACK_CATEGORIES = [
-  { id: "c1", name: "Lawn Prints", slug: "lawn-prints", description: null, image_url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 1, is_active: true, created_at: "" },
-  { id: "c2", name: "Garments", slug: "garments", description: null, image_url: "https://images.unsplash.com/photo-1609357605129-26f69add5d6e?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 2, is_active: true, created_at: "" },
-  { id: "c3", name: "Bedding", slug: "bedding", description: null, image_url: "https://images.unsplash.com/photo-1539008885128-40d24b2d7015?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 3, is_active: true, created_at: "" },
-  { id: "c4", name: "Hijab Collection", slug: "hijab-collection", description: null, image_url: "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop&q=80", parent_id: null, sort_order: 4, is_active: true, created_at: "" },
-] as Category[];
+// No fallback mock products or categories
 
 const PAKISTANI_EDIT_PROFILES = [
   {
@@ -231,17 +106,7 @@ const VALUE_PILLARS = [
   },
 ];
 
-const MOCK_SLIDES = [
-  {
-    id: "slide1",
-    image_url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1920&auto=format&fit=crop&q=85",
-    badge: "Summer 2025",
-    title: "New Lawn Prints\nSummer Collection",
-    subtitle: "Heritage craftsmanship. Contemporary elegance.",
-    button_text: "Shop Collection",
-    button_link: "/collections/lawn-prints"
-  }
-];
+// No fallback hero slides
 
 const getCachedHeroSlides = unstable_cache(
   async () => {
@@ -354,40 +219,50 @@ const getCachedTestimonials = unstable_cache(
 );
 
 export default async function Home() {
+  const filterInStockOnly = (prods: Product[]) => {
+    return prods.filter((p) => {
+      if (!p.variants || p.variants.length === 0) return true;
+      return p.variants.some((v) => v.stock_quantity > 0);
+    });
+  };
+
   // ── Hero slides ──────────────────────────────
-  let heroSlides = MOCK_SLIDES;
+  let heroSlides: any[] = [];
   try {
     const data = await getCachedHeroSlides();
     if (data && data.length > 0) {
       heroSlides = data;
     }
   } catch {
-    // Fallback to mock
+    // Fallback
   }
 
   // ── Featured products ──────────────────────────────
   let featuredProducts: Product[] = [];
   try {
     const data = await getCachedFeaturedProducts();
-    featuredProducts = data && data.length > 0 ? data : MOCK_PRODUCTS;
+    featuredProducts = data && data.length > 0 ? data : [];
   } catch {
-    featuredProducts = MOCK_PRODUCTS;
+    featuredProducts = [];
   }
+  featuredProducts = filterInStockOnly(featuredProducts);
 
   // ── New arrivals (latest 8) ────────────────────────
   let newArrivals: Product[] = [];
   try {
     newArrivals = await getCachedNewArrivals();
   } catch { /* ignore */ }
+  newArrivals = filterInStockOnly(newArrivals);
 
   // ── Sale products ──────────────────────────────────
   let saleProducts: Product[] = [];
   try {
     saleProducts = await getCachedSaleProducts();
   } catch { /* ignore */ }
+  saleProducts = filterInStockOnly(saleProducts);
 
   // ── Active parent categories for mosaic ───────────
-  let displayCategories: Category[] = FALLBACK_CATEGORIES;
+  let displayCategories: Category[] = [];
   try {
     const data = await getCachedDisplayCategories();
     if (data && data.length > 0) displayCategories = data;

@@ -45,9 +45,8 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
 
             const { data, error } = await supabase
               .from("products")
-              .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
+              .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
               .eq("is_active", true)
-              .gt("variants.stock_quantity", 0)
               .order("created_at", { ascending: false })
               .range(from, to);
 
