@@ -178,7 +178,7 @@ export default async function CollectionsPage() {
 
         <section className={styles.productSection}>
           <h2 className={styles.sectionTitle}>All Products</h2>
-          <AllProductsClient initialProducts={products} gridClassName={styles.productGrid} />
+          <AllProductsClient initialProducts={products} />
         </section>
       </main>
 

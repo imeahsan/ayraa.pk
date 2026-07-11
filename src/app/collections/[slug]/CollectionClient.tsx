@@ -4,6 +4,8 @@ import React, { useState, useMemo } from "react";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { Breadcrumb } from "@/components/storefront/Breadcrumb/Breadcrumb";
+import { ListingLayoutSelector } from "@/components/storefront/ListingLayoutSelector/ListingLayoutSelector";
+import { useListingLayoutPreference } from "@/components/storefront/useListingLayoutPreference";
 import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 import styles from "./CollectionClient.module.css";
 
@@ -18,6 +20,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   categoryName,
   categorySlug,
 }) => {
+  const { layout, setLayout } = useListingLayoutPreference();
   const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
@@ -148,18 +151,21 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
 
       <div className={styles.header}>
         <h1 className={styles.title}>{categoryName}</h1>
-        <div className={styles.sortContainer}>
-          <span className={styles.sortLabel}>Sort by:</span>
-          <select
-            className={styles.sortSelect}
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="best-sellers">Best Sellers</option>
-            <option value="newest">Newest Arrivals</option>
-            <option value="price-asc">Price: Low to High</option>
-            <option value="price-desc">Price: High to Low</option>
-          </select>
+        <div className={styles.toolbar}>
+          <ListingLayoutSelector value={layout} onChange={setLayout} />
+          <div className={styles.sortContainer}>
+            <span className={styles.sortLabel}>Sort by:</span>
+            <select
+              className={styles.sortSelect}
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="best-sellers">Best Sellers</option>
+              <option value="newest">Newest Arrivals</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -246,9 +252,23 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
             </div>
           ) : (
             <>
-              <div className={styles.grid}>
+              <div
+                className={`${styles.grid} ${
+                  layout === "compact-grid"
+                    ? styles.gridCompact
+                    : layout === "editorial-grid"
+                      ? styles.gridEditorial
+                      : styles.gridFeatured
+                }`}
+              >
                 {displayedProducts.map((product, index) => (
-                  <ProductCard key={product.id} product={product} listName={categoryName} index={index} />
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    listName={categoryName}
+                    index={index}
+                    layout={layout}
+                  />
                 ))}
               </div>
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Product } from "@/types";
 import { useWishlist } from "@/context/WishlistContext";
 import { getProductSaleState, productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
+import { ListingLayout } from "@/lib/listing-layout";
 import styles from "./ProductCard.module.css";
 
 interface ProductCardProps {
@@ -11,9 +12,16 @@ interface ProductCardProps {
   listName?: string;
   index?: number;
   onProductClick?: () => void;
+  layout?: ListingLayout;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, listName, index, onProductClick }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  listName,
+  index,
+  onProductClick,
+  layout = "compact-grid",
+}) => {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const primaryImage =
     product.images?.find((img) => img.is_primary) || product.images?.[0];
@@ -46,10 +54,37 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, listName, ind
     onProductClick?.();
   };
 
+  const cardClassName = [
+    styles.card,
+    layout === "compact-grid"
+      ? styles.cardCompactGrid
+      : layout === "editorial-grid"
+        ? styles.cardEditorialGrid
+        : styles.cardFeaturedGrid,
+  ].join(" ");
+
+  const imageWrapperClassName = [
+    styles.imageWrapper,
+    layout === "editorial-grid" ? styles.imageWrapperEditorialGrid : "",
+    layout === "featured-grid" ? styles.imageWrapperFeaturedGrid : "",
+  ].filter(Boolean).join(" ");
+
+  const detailsClassName = [
+    styles.details,
+    layout === "editorial-grid" ? styles.detailsEditorialGrid : "",
+    layout === "featured-grid" ? styles.detailsFeaturedGrid : "",
+  ].filter(Boolean).join(" ");
+
+  const titleClassName = [
+    styles.title,
+    layout === "editorial-grid" ? styles.titleEditorialGrid : "",
+    layout === "featured-grid" ? styles.titleFeaturedGrid : "",
+  ].filter(Boolean).join(" ");
+
   return (
-    <div className={styles.card} id={`product-card-${product.id}`}>
+    <div className={cardClassName} id={`product-card-${product.id}`}>
       <div className={styles.media}>
-        <Link href={`/product/${product.slug}`} className={styles.imageWrapper} onClick={handleProductClick}>
+        <Link href={`/product/${product.slug}`} className={imageWrapperClassName} onClick={handleProductClick}>
           {primaryImage ? (
             <Image
               src={primaryImage.url}
@@ -104,16 +139,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, listName, ind
         </button>
       </div>
 
-      <div className={styles.details}>
+      <div className={detailsClassName}>
         {product.category?.name ? (
           <span className={styles.category}>{product.category.name}</span>
         ) : null}
-        <h3 className={styles.title}>
+        <h3 className={titleClassName}>
           <Link href={`/product/${product.slug}`} className={styles.titleLink} onClick={handleProductClick}>
             {product.name}
           </Link>
         </h3>
-        <div className={styles.priceContainer}>
+        <div className={`${styles.priceContainer} ${layout === "featured-grid" ? styles.priceContainerFeaturedGrid : ""}`}>
           <span className={styles.price}>{formattedPrice}</span>
           {formattedComparePrice ? (
             <span className={styles.comparePrice}>{formattedComparePrice}</span>

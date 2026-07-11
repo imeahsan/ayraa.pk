@@ -3,19 +3,21 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
+import { ListingLayoutSelector } from "@/components/storefront/ListingLayoutSelector/ListingLayoutSelector";
+import { useListingLayoutPreference } from "@/components/storefront/useListingLayoutPreference";
 import { createClient } from "@/lib/supabase/client";
 import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
+import styles from "./AllProductsClient.module.css";
 
 interface AllProductsClientProps {
   initialProducts: Product[];
-  gridClassName?: string;
 }
 
 export const AllProductsClient: React.FC<AllProductsClientProps> = ({
   initialProducts,
-  gridClassName,
 }) => {
   const supabase = createClient();
+  const { layout, setLayout } = useListingLayoutPreference();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -87,11 +89,34 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
     };
   }, [page, hasMore, loading, supabase]);
 
+  const gridClassName = [
+    styles.grid,
+    layout === "compact-grid"
+      ? styles.compactGrid
+      : layout === "editorial-grid"
+        ? styles.editorialGrid
+        : styles.featuredGrid,
+  ].join(" ");
+
   return (
     <>
+      <div className={styles.header}>
+        <div className={styles.summary}>
+          <span className={styles.eyebrow}>Product View</span>
+          <span className={styles.count}>{products.length} products loaded</span>
+        </div>
+        <ListingLayoutSelector value={layout} onChange={setLayout} />
+      </div>
+
       <div className={gridClassName}>
         {products.map((product, index) => (
-          <ProductCard key={product.id} product={product} listName="All products" index={index} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            listName="All products"
+            index={index}
+            layout={layout}
+          />
         ))}
       </div>
 
