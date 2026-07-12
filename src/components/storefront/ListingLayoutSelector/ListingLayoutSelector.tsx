@@ -15,7 +15,6 @@ const LAYOUT_OPTIONS: Array<{
   label: string;
   shortLabel: string;
 }> = [
-  { value: "compact-grid", label: "Compact Grid", shortLabel: "Grid" },
   { value: "editorial-grid", label: "Editorial Grid", shortLabel: "Editorial" },
   { value: "featured-grid", label: "Large Preview", shortLabel: "Large" },
 ];
@@ -36,15 +35,26 @@ export const ListingLayoutSelector: React.FC<ListingLayoutSelectorProps> = ({
             <button
               key={option.value}
               type="button"
-              className={`${styles.option} ${isActive ? styles.optionActive : ""}`}
+              className={`${styles.option} ${isActive ? styles.optionActive : ""} ${option.value === "featured-grid" ? styles.optionLarge : ""}`}
               onClick={() => onChange(option.value)}
               aria-pressed={isActive}
+              aria-label={option.label}
               title={option.label}
             >
               <span className={styles.optionIcon} aria-hidden="true">
-                {option.value === "compact-grid" ? "▦" : option.value === "editorial-grid" ? "▥" : "◫"}
+                {option.value === "editorial-grid" ? (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="1.5" y="1.5" width="3.5" height="13" />
+                    <rect x="6.25" y="1.5" width="3.5" height="13" />
+                    <rect x="11" y="1.5" width="3.5" height="13" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="1.5" y="1.5" width="6" height="13" />
+                    <rect x="8.5" y="1.5" width="6" height="13" />
+                  </svg>
+                )}
               </span>
-              <span className={styles.optionText}>{option.shortLabel}</span>
             </button>
           );
         })}

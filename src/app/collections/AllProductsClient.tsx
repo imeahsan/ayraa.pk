@@ -84,11 +84,9 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
 
   const gridClassName = [
     styles.grid,
-    layout === "compact-grid"
-      ? styles.compactGrid
-      : layout === "editorial-grid"
-        ? styles.editorialGrid
-        : styles.featuredGrid,
+    layout === "editorial-grid"
+      ? styles.editorialGrid
+      : styles.featuredGrid,
   ].join(" ");
 
   return (

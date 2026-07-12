@@ -95,57 +95,102 @@
   gap: 32px;
 }
 
-@media (min-width: 1024px) {
-  .mainLayout {
-    flex-direction: row;
-    align-items: flex-start;
-  }
-}
-
-.sidebar {
-  width: 100%;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+/* --- Combined Filter & Sort Container --- */
+.filterAndSortContainer {
+  margin-bottom: var(--space-8);
   border-bottom: 1px solid var(--color-border);
-  padding-bottom: 32px;
+  padding-bottom: var(--space-4);
 }
 
-@media (min-width: 1024px) {
-  .sidebar {
-    width: 260px;
-    position: sticky;
-    top: 100px;
-    border-bottom: 0;
-    padding-bottom: 0;
-    border-right: 1px solid var(--color-border);
-    padding-right: 24px;
-  }
+.mobileBar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: var(--space-4);
 }
 
-.filterGroup {
+.mobileToggleBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 8px 18px;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  cursor: pointer;
+  border-radius: var(--radius-none);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.mobileToggleBtn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.mobileToggleIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.filterBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-gold);
+  color: var(--color-badge-text);
+  font-size: 9px;
+  font-weight: var(--weight-bold);
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  margin-left: 4px;
+}
+
+/* Collapsible Filter Content */
+.filterContent {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: var(--space-4);
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border-subtle);
+  margin-top: var(--space-2);
+}
+
+.filterContent.expanded {
+  display: flex;
+}
+
+.filtersWrapper {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-6);
 }
 
-.filterHeading {
+.filterGroupInline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.filterGroupLabel {
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: 10px;
   font-weight: var(--weight-bold);
   text-transform: uppercase;
   letter-spacing: var(--tracking-widest);
-  color: var(--color-on-surface);
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 8px;
-  margin: 0;
+  color: var(--color-gold);
 }
 
-.checkboxList {
+.inlineOptions {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: var(--space-4);
 }
 
 .checkboxLabel {
@@ -170,21 +215,21 @@
   cursor: pointer;
 }
 
-.sizeList {
+.sizeListInline {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
-.sizeBtn {
-  width: 40px;
-  height: 40px;
+.sizeBtnInline {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--color-border);
   font-family: var(--font-body);
-  font-size: var(--text-label);
+  font-size: 11px;
   font-weight: var(--weight-medium);
   cursor: pointer;
   border-radius: var(--radius-none);
@@ -193,17 +238,18 @@
   transition: all var(--duration-fast) var(--ease-out);
 }
 
-.sizeBtn:hover {
+.sizeBtnInline:hover {
   border-color: var(--color-on-surface);
 }
 
-.sizeBtnActive {
+.sizeBtnInlineActive {
   background-color: var(--color-on-surface) !important;
   color: var(--color-bg) !important;
   border-color: var(--color-on-surface) !important;
 }
 
-.clearBtn {
+.clearBtnInline {
+  align-self: flex-start;
   font-family: var(--font-body);
   font-size: 10px;
   font-weight: var(--weight-bold);
@@ -212,15 +258,97 @@
   color: var(--color-error);
   background: transparent;
   border: 1px solid var(--color-error);
-  padding: 10px;
+  padding: 8px 16px;
   cursor: pointer;
-  text-align: center;
   border-radius: var(--radius-none);
   transition: all var(--duration-fast) var(--ease-out);
 }
 
-.clearBtn:hover {
+.clearBtnInline:hover {
   background-color: var(--color-error-bg);
+}
+
+.sortContainerInline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--space-4);
+}
+
+.sortLabelInline {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--color-gold);
+}
+
+.sortSelectInline {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface);
+  border: 1px solid var(--color-border);
+  padding: 8px 16px;
+  background-color: var(--color-bg-elevated);
+  cursor: pointer;
+  border-radius: var(--radius-none);
+  outline: none;
+  width: 100%;
+  max-width: 280px;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.sortSelectInline:focus {
+  border-color: var(--color-gold);
+}
+
+/* --- Responsive Desktop Rules (showing them in one line) --- */
+@media (min-width: 1024px) {
+  .mobileBar {
+    display: none;
+  }
+
+  .filterContent {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin-top: 0;
+    gap: var(--space-8);
+  }
+
+  .filtersWrapper {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-8);
+  }
+
+  .filterGroupInline {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .inlineOptions {
+    gap: var(--space-4);
+  }
+
+  .sortContainerInline {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .sortSelectInline {
+    width: auto;
+  }
 }
 
 .contentArea {

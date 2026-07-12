@@ -9,6 +9,16 @@ import { useListingLayoutPreference } from "@/components/storefront/useListingLa
 import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 import styles from "./CollectionClient.module.css";
 
+const normalizeFabricName = (name: string): string => {
+  if (!name) return "";
+  const trimmed = name.trim();
+  return trimmed
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 interface CollectionClientProps {
   initialProducts: Product[];
   categoryName: string;
@@ -26,14 +36,18 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>("newest");
   const [limit, setLimit] = useState<number>(6);
+  const [isMobileFiltersExpanded, setIsMobileFiltersExpanded] = useState<boolean>(false);
 
   // Available filters from products
   const fabrics = useMemo(() => {
     const list = new Set<string>();
     initialProducts.forEach((p) => {
-      if (p.fabric) list.add(p.fabric);
+      if (p.fabric) {
+        const normalized = normalizeFabricName(p.fabric);
+        if (normalized) list.add(normalized);
+      }
     });
-    return Array.from(list);
+    return Array.from(list).sort();
   }, [initialProducts]);
 
   const sizes = ["XS", "S", "M", "L", "XL"];
@@ -71,7 +85,9 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
 
     // Filter by Fabric
     if (selectedFabrics.length > 0) {
-      result = result.filter((p) => p.fabric && selectedFabrics.includes(p.fabric));
+      result = result.filter(
+        (p) => p.fabric && selectedFabrics.includes(normalizeFabricName(p.fabric))
+      );
     }
 
     // Filter by Size
@@ -153,11 +169,106 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
         <h1 className={styles.title}>{categoryName}</h1>
         <div className={styles.toolbar}>
           <ListingLayoutSelector value={layout} onChange={setLayout} />
-          <div className={styles.sortContainer}>
-            <label htmlFor="sort-select" className={styles.sortLabel}>Sort by:</label>
+        </div>
+      </div>
+
+      {/* Combined Filter & Sort Bar */}
+      <div className={styles.filterAndSortContainer}>
+        {/* Mobile Toggle Button */}
+        <div className={styles.mobileBar}>
+          <button
+            type="button"
+            className={styles.mobileToggleBtn}
+            onClick={() => setIsMobileFiltersExpanded(!isMobileFiltersExpanded)}
+          >
+            <span className={styles.mobileToggleIcon}>🎛</span>
+            <span>{isMobileFiltersExpanded ? "Hide Filters & Sort" : "Filters & Sort"}</span>
+            {(selectedFabrics.length > 0 || selectedSizes.length > 0 || inStockOnly) && (
+              <span className={styles.filterBadge}>
+                {selectedFabrics.length + selectedSizes.length + (inStockOnly ? 1 : 0)}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* The Collapsible Content Container */}
+        <div className={`${styles.filterContent} ${isMobileFiltersExpanded ? styles.expanded : ""}`}>
+          <div className={styles.filtersWrapper}>
+            {/* Availability Filter */}
+            <div className={styles.filterGroupInline}>
+              <span className={styles.filterGroupLabel}>Availability:</span>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <span className="leading-none">In Stock Only</span>
+              </label>
+            </div>
+
+            {/* Fabric Filter */}
+            {fabrics.length > 0 && (
+              <div className={styles.filterGroupInline}>
+                <span className={styles.filterGroupLabel}>Fabric:</span>
+                <div className={styles.inlineOptions}>
+                  {fabrics.map((fabric) => {
+                    const isChecked = selectedFabrics.includes(fabric);
+                    return (
+                      <label key={fabric} className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleFabric(fabric)}
+                          className={styles.checkbox}
+                        />
+                        <span className="leading-none">{fabric}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Size Filter */}
+            <div className={styles.filterGroupInline}>
+              <span className={styles.filterGroupLabel}>Size:</span>
+              <div className={styles.sizeListInline}>
+                {sizes.map((size) => {
+                  const isActive = selectedSizes.includes(size);
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      className={`${styles.sizeBtnInline} ${isActive ? styles.sizeBtnInlineActive : ""}`}
+                      onClick={() => toggleSize(size)}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Clear Filters Button */}
+            {(selectedFabrics.length > 0 || selectedSizes.length > 0 || inStockOnly) && (
+              <button
+                onClick={clearFilters}
+                className={styles.clearBtnInline}
+                type="button"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Sort By Container (moved here to sit on the same line on desktop) */}
+          <div className={styles.sortContainerInline}>
+            <label htmlFor="sort-select" className={styles.sortLabelInline}>Sort by:</label>
             <select
               id="sort-select"
-              className={styles.sortSelect}
+              className={styles.sortSelectInline}
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
@@ -171,76 +282,6 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
       </div>
 
       <div className={styles.mainLayout}>
-        {/* Sidebar Filters */}
-        <aside className={styles.sidebar}>
-          <div className={styles.filterGroup}>
-            <h2 className={styles.filterHeading}>Availability</h2>
-            <div className={styles.checkboxList}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={inStockOnly}
-                  onChange={(e) => setInStockOnly(e.target.checked)}
-                  className={styles.checkbox}
-                />
-                <span className="leading-none">In Stock Only</span>
-              </label>
-            </div>
-          </div>
-
-          <div className={styles.filterGroup}>
-            <h2 className={styles.filterHeading}>Fabric</h2>
-            <div className={styles.checkboxList}>
-              {fabrics.length === 0 ? (
-                <span className="font-body text-xs text-on-surface-muted italic">No fabric filters available</span>
-              ) : (
-                fabrics.map((fabric) => {
-                  const isChecked = selectedFabrics.includes(fabric);
-                  return (
-                    <label key={fabric} className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => toggleFabric(fabric)}
-                        className={styles.checkbox}
-                      />
-                      <span className="leading-none">{fabric}</span>
-                    </label>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          <div className={styles.filterGroup}>
-            <h2 className={styles.filterHeading}>Size</h2>
-            <div className={styles.sizeList}>
-              {sizes.map((size) => {
-                const isActive = selectedSizes.includes(size);
-                return (
-                  <button
-                    key={size}
-                    type="button"
-                    className={`${styles.sizeBtn} ${isActive ? styles.sizeBtnActive : ""}`}
-                    onClick={() => toggleSize(size)}
-                  >
-                    {size}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {(selectedFabrics.length > 0 || selectedSizes.length > 0 || inStockOnly) && (
-            <button
-              onClick={clearFilters}
-              className={styles.clearBtn}
-              type="button"
-            >
-              Clear Filters
-            </button>
-          )}
-        </aside>
 
         {/* Product Grid / Empty State */}
         <div className={styles.contentArea}>
@@ -255,11 +296,9 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
             <>
               <div
                 className={`${styles.grid} ${
-                  layout === "compact-grid"
-                    ? styles.gridCompact
-                    : layout === "editorial-grid"
-                      ? styles.gridEditorial
-                      : styles.gridFeatured
+                  layout === "editorial-grid"
+                    ? styles.gridEditorial
+                    : styles.gridFeatured
                 }`}
               >
                 {displayedProducts.map((product, index) => (
