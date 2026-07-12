@@ -112,6 +112,7 @@ export default function RootLayout({
       className={`${playfair.variable} ${montserrat.variable} theme-dark`}
       suppressHydrationWarning
     >
+      <head />
       <body>
         <ThemeProvider>
           <ToastProvider>

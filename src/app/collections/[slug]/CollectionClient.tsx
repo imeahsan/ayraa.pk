@@ -154,8 +154,9 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
         <div className={styles.toolbar}>
           <ListingLayoutSelector value={layout} onChange={setLayout} />
           <div className={styles.sortContainer}>
-            <span className={styles.sortLabel}>Sort by:</span>
+            <label htmlFor="sort-select" className={styles.sortLabel}>Sort by:</label>
             <select
+              id="sort-select"
               className={styles.sortSelect}
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -173,7 +174,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
         {/* Sidebar Filters */}
         <aside className={styles.sidebar}>
           <div className={styles.filterGroup}>
-            <h3 className={styles.filterHeading}>Availability</h3>
+            <h2 className={styles.filterHeading}>Availability</h2>
             <div className={styles.checkboxList}>
               <label className={styles.checkboxLabel}>
                 <input
@@ -188,7 +189,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
           </div>
 
           <div className={styles.filterGroup}>
-            <h3 className={styles.filterHeading}>Fabric</h3>
+            <h2 className={styles.filterHeading}>Fabric</h2>
             <div className={styles.checkboxList}>
               {fabrics.length === 0 ? (
                 <span className="font-body text-xs text-on-surface-muted italic">No fabric filters available</span>
@@ -212,7 +213,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
           </div>
 
           <div className={styles.filterGroup}>
-            <h3 className={styles.filterHeading}>Size</h3>
+            <h2 className={styles.filterHeading}>Size</h2>
             <div className={styles.sizeList}>
               {sizes.map((size) => {
                 const isActive = selectedSizes.includes(size);
