@@ -201,13 +201,15 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     try {
       const supabase = createClient();
       for (const file of selectedFiles) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}-${Date.now()}.${fileExt}`;
+        const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
         const filePath = `reviews/${fileName}`;
 
         const { data, error } = await supabase.storage
           .from("review-images")
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: "31536000",
+          });
 
         if (error) throw error;
 

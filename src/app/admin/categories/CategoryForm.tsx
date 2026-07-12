@@ -123,6 +123,10 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
   };
 
   const handleImagePick = (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      toast.warning("The collection cover must be 10 MB or smaller.");
+      return;
+    }
     setCoverImageFile(file);
     setCoverImageUrl(URL.createObjectURL(file));
   };
@@ -153,12 +157,11 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
 
       if (coverImageFile) {
         const fileExt = coverImageFile.name.split(".").pop() || "jpg";
-        const uniqueId = Math.random().toString(36).substring(2, 8);
-        const fileName = `categories/${categoryRecordId}/${Date.now()}-${uniqueId}.${fileExt}`;
+        const fileName = `categories/${categoryRecordId}/${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("products")
-          .upload(fileName, coverImageFile, { cacheControl: "31536000", upsert: true });
+          .upload(fileName, coverImageFile, { cacheControl: "31536000" });
 
         if (uploadError) throw uploadError;
 

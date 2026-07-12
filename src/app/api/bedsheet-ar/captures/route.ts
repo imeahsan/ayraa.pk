@@ -76,7 +76,7 @@ export async function POST(request: Request) {
       .from('ar-captures')
       .upload(storagePath, buffer, {
         contentType: file.type,
-        upsert: true,
+        cacheControl: '31536000',
       });
 
     if (uploadError) {

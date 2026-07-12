@@ -69,9 +69,13 @@ export default function AdminReviewsPage() {
       if (validFiles.length !== filesArray.length) {
         toast.warning("Only image files are allowed.");
       }
-      const newFiles = [...selectedFiles, ...validFiles];
+      const sizeValidFiles = validFiles.filter(file => file.size <= 10 * 1024 * 1024);
+      if (sizeValidFiles.length !== validFiles.length) {
+        toast.warning("Each review image must be 10 MB or smaller.");
+      }
+      const newFiles = [...selectedFiles, ...sizeValidFiles];
       setSelectedFiles(newFiles);
-      const newPreviews = validFiles.map(file => URL.createObjectURL(file));
+      const newPreviews = sizeValidFiles.map(file => URL.createObjectURL(file));
       setPreviews([...previews, ...newPreviews]);
     }
   };
@@ -145,13 +149,15 @@ export default function AdminReviewsPage() {
 
     try {
       for (const file of selectedFiles) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}-${Date.now()}.${fileExt}`;
+        const fileExt = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
         const filePath = `reviews/${fileName}`;
 
         const { data, error } = await supabase.storage
           .from("review-images")
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            cacheControl: "31536000",
+          });
 
         if (error) throw error;
 

@@ -3,6 +3,8 @@
 import React, { useRef, useState } from "react";
 import styles from "./ImageUploader.module.css";
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
 export interface ImageItem {
   id?: string;
   url: string;
@@ -58,6 +60,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
       if (!file.type.startsWith("image/")) continue;
+      if (file.size > MAX_IMAGE_BYTES) {
+        window.alert("Each image must be 10 MB or smaller.");
+        continue;
+      }
       newItems.push({
         url: URL.createObjectURL(file),
         file,

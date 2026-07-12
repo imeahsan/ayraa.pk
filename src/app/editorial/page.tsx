@@ -97,6 +97,7 @@ export default function EditorialPage() {
                 src={FEATURED_ARTICLE.image}
                 alt={FEATURED_ARTICLE.title}
                 fill
+                sizes="(max-width: 768px) 100vw, 60vw"
                 className="object-cover"
               />
               <div className={styles.featuredImageOverlay} />
@@ -123,6 +124,7 @@ export default function EditorialPage() {
                     src={article.image}
                     alt={article.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className={`object-cover ${styles.cardImage}`}
                   />
                 </div>

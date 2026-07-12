@@ -343,17 +343,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       const finalUrls: string[] = [];
 
       for (let i = 0; i < images.length; i++) {
-        const img = images[i];
-        if (img.file) {
-          const fileExt = img.file.name.split(".").pop() || "jpg";
-          const uniqueId = Math.random().toString(36).substring(2, 8);
-          const fileName = `${id}/${Date.now()}-${uniqueId}.${fileExt}`;
+          const img = images[i];
+          if (img.file) {
+            const fileExt = img.file.name.split(".").pop() || "jpg";
+            const fileName = `${id}/${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
 
           const { error: uploadError } = await supabase.storage
             .from("products")
             .upload(fileName, img.file, {
               cacheControl: "31536000",
-              upsert: true,
             });
 
           if (uploadError) {

@@ -45,6 +45,7 @@ export default function AboutPage() {
             src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop&q=80"
             alt="Ayraa atelier"
             fill
+            sizes="100vw"
             className="object-cover opacity-70"
           />
           <div className={styles.heroOverlay} />
@@ -74,6 +75,7 @@ export default function AboutPage() {
                     src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&auto=format&fit=crop&q=80"
                     alt="Embroidered details"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover"
                   />
                 </div>
