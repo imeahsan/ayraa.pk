@@ -119,6 +119,11 @@
   font-weight: var(--weight-bold);
 }
 
+.sidebarLinkHighlighted {
+  background-color: var(--admin-sidebar-hover);
+  color: var(--color-gold);
+}
+
 .sidebarFooter {
   padding: var(--space-6);
   border-top: 1px solid var(--admin-border);
