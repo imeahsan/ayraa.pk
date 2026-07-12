@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import styles from "./AnnouncementTicker.module.css";
 
 const FALLBACK_MESSAGES = [
@@ -15,19 +14,18 @@ const FALLBACK_MESSAGES = [
 
 export const AnnouncementTicker: React.FC = () => {
   const [messages, setMessages] = useState<string[]>(FALLBACK_MESSAGES);
-  const supabase = createClient();
 
   useEffect(() => {
+    let active = true;
+
     const fetchAnnouncements = async () => {
       try {
-        const { data, error } = await supabase
-          .from("ticker_announcements")
-          .select("message")
-          .eq("is_active", true)
-          .order("sort_order", { ascending: true });
+        const response = await fetch("/api/storefront/ticker");
+        if (!response.ok) return;
 
-        if (!error && data && data.length > 0) {
-          setMessages(data.map(d => d.message));
+        const data = (await response.json()) as string[];
+        if (active && data.length > 0) {
+          setMessages(data);
         }
       } catch (err) {
         console.error("Failed to fetch ticker announcements:", err);
@@ -35,7 +33,10 @@ export const AnnouncementTicker: React.FC = () => {
     };
 
     fetchAnnouncements();
-  }, [supabase]);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Duplicate so the marquee loops seamlessly
   const items = [...messages, ...messages];

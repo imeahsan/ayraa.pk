@@ -33,6 +33,23 @@
   transition: border-color var(--duration-normal) var(--ease-out);
 }
 
+.imageWrapperLoading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0.04) 8%,
+      rgba(255, 255, 255, 0.14) 18%,
+      rgba(255, 255, 255, 0.04) 33%
+    ),
+    var(--color-product-image-bg);
+  background-size: 200% 100%;
+  animation: imageShimmer 1.4s linear infinite;
+}
+
 .imageWrapperEditorialGrid {
   aspect-ratio: 4 / 5;
 }
@@ -77,27 +94,45 @@
 }
 
 .image {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   object-fit: cover;
-  transition: transform var(--duration-slow) var(--ease-out);
+  opacity: 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transition: opacity var(--duration-normal) var(--ease-out),
+              transform var(--duration-slow) var(--ease-out);
 }
 
-.card:hover .image {
+.imageLoaded {
+  opacity: 1;
+}
+
+.card:hover .imageLoaded {
   transform: scale(1.05);
 }
 
 .secondaryImage {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
+  z-index: 2;
   object-fit: cover;
   opacity: 0;
+  visibility: hidden;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  will-change: transform, opacity;
   transition: opacity var(--duration-slow) var(--ease-out),
               transform var(--duration-slow) var(--ease-out);
 }
 
-.card:hover .secondaryImage {
+.secondaryImageLoaded {
+  visibility: visible;
+}
+
+.card:hover .secondaryImageLoaded {
   opacity: 1;
   transform: scale(1.05);
 }
@@ -110,6 +145,16 @@
   flex-direction: column;
   gap: 6px;
   z-index: 10;
+}
+
+@keyframes imageShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .badge {

@@ -558,7 +558,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               isLoading={isAdding}
               disabled={isOutOfStock}
             >
-              {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+              {isOutOfStock ? "Sold out!" : "Add to Cart"}
             </Button>
 
             <Button

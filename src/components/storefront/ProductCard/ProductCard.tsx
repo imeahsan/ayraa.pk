@@ -25,9 +25,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { isWishlisted, toggleWishlist } = useWishlist();
   const primaryImage =
     product.images?.find((img) => img.is_primary) || product.images?.[0];
-  const secondaryImage = product.images?.[1] || primaryImage;
+  const alternateImage =
+    product.images?.find((img) => img.url !== primaryImage?.url) || null;
+  const [primaryLoaded, setPrimaryLoaded] = React.useState(false);
+  const [primaryFailed, setPrimaryFailed] = React.useState(false);
+  const [secondaryLoaded, setSecondaryLoaded] = React.useState(false);
   const wishlisted = isWishlisted(product.id);
   const isOutOfStock = product.variants !== undefined && (product.variants.length === 0 || product.variants.every((v) => v.stock_quantity <= 0));
+  const displayImage = primaryFailed && alternateImage ? alternateImage : primaryImage;
+  const hoverImage =
+    alternateImage && alternateImage.url !== displayImage?.url ? alternateImage : null;
+  const shouldPrioritize = index !== undefined && index < 4;
+  const imageSizes =
+    layout === "featured-grid"
+      ? "(max-width: 767px) 50vw, (max-width: 1023px) 50vw, 50vw"
+      : layout === "editorial-grid"
+        ? "(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+        : "(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw";
 
   const formattedPrice = Intl.NumberFormat("en-PK", {
     style: "currency",
@@ -67,6 +81,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     styles.imageWrapper,
     layout === "editorial-grid" ? styles.imageWrapperEditorialGrid : "",
     layout === "featured-grid" ? styles.imageWrapperFeaturedGrid : "",
+    !primaryLoaded ? styles.imageWrapperLoading : "",
   ].filter(Boolean).join(" ");
 
   const detailsClassName = [
@@ -85,33 +100,38 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div className={cardClassName} id={`product-card-${product.id}`}>
       <div className={styles.media}>
         <Link href={`/product/${product.slug}`} className={imageWrapperClassName} onClick={handleProductClick}>
-          {primaryImage ? (
+          {displayImage ? (
             <Image
-              src={primaryImage.url}
-              alt={primaryImage.alt_text || product.name}
+              src={displayImage.url}
+              alt={displayImage.alt_text || product.name}
               fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className={styles.image}
-              priority={index !== undefined && index < 2}
+              sizes={imageSizes}
+              className={`${styles.image} ${primaryLoaded ? styles.imageLoaded : ""}`}
+              fetchPriority={shouldPrioritize ? "high" : "auto"}
+              loading={shouldPrioritize ? "eager" : "lazy"}
+              onLoad={() => setPrimaryLoaded(true)}
+              onError={() => setPrimaryFailed(true)}
             />
           ) : (
             <div className="w-full h-full bg-surface-container-high" />
           )}
 
-          {secondaryImage && secondaryImage !== primaryImage ? (
+          {hoverImage ? (
             <Image
-              src={secondaryImage.url}
-              alt={secondaryImage.alt_text || product.name}
+              src={hoverImage.url}
+              alt={hoverImage.alt_text || product.name}
               fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className={styles.secondaryImage}
+              sizes={imageSizes}
+              className={`${styles.secondaryImage} ${secondaryLoaded ? styles.secondaryImageLoaded : ""}`}
+              loading="lazy"
+              onLoad={() => setSecondaryLoaded(true)}
             />
           ) : null}
 
           <div className={styles.badgeContainer}>
             {isOutOfStock && (
               <span className={styles.outOfStockBadge} id={`out-of-stock-badge-${product.id}`}>
-                Out of Stock
+                Sold out!
               </span>
             )}
             {product.compare_at_price && product.compare_at_price > product.price ? (

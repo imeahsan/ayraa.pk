@@ -40,6 +40,13 @@ const CATALOG_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 const DRAFT_SALE_KEY = "ayra_pos_draft_sale";
 const OFFLINE_ORDERS_KEY = "ayra_pos_offline_orders";
 
+async function revalidateStorefrontCaches() {
+  await Promise.allSettled([
+    fetch("/api/revalidate?tag=products"),
+    fetch("/api/revalidate?tag=categories"),
+  ]);
+}
+
 export default function POSClient() {
   const supabase = createClient();
   const toast = useToast();
@@ -318,7 +325,7 @@ export default function POSClient() {
     const availableVariants = productVariants.filter((v) => v.is_available && v.stock_quantity > 0);
 
     if (availableVariants.length === 0) {
-      toast.warning(`${product.name} is out of stock.`);
+      toast.warning(`${product.name} is sold out!`);
       return;
     }
 
@@ -335,7 +342,7 @@ export default function POSClient() {
 
   const addToCart = (product: Product, variant: ProductVariant) => {
     if (variant.stock_quantity <= 0) {
-      toast.warning(`${product.name} (Size: ${variant.size}) is out of stock!`);
+      toast.warning(`${product.name} (Size: ${variant.size}) is sold out!`);
       return;
     }
 
@@ -546,6 +553,8 @@ export default function POSClient() {
         toast.warning("Order recorded, but email could not be sent.");
       }
 
+      await revalidateStorefrontCaches();
+
       toast.success("Order recorded successfully!");
       setCompletedOrder(pendingOrderObj);
       clearCart();
@@ -625,6 +634,8 @@ export default function POSClient() {
         if (!emailResult.success) {
           console.error(`Offline synced order ${order.order_id} email failed:`, emailResult.error);
         }
+
+        await revalidateStorefrontCaches();
       } catch (err) {
         console.error(`Failed to sync offline order ${order.order_id}:`, err);
         remainingOrders.push(order);

@@ -5,7 +5,6 @@ import { Product } from "@/types";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { ListingLayoutSelector } from "@/components/storefront/ListingLayoutSelector/ListingLayoutSelector";
 import { useListingLayoutPreference } from "@/components/storefront/useListingLayoutPreference";
-import { createClient } from "@/lib/supabase/client";
 import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 import styles from "./AllProductsClient.module.css";
 
@@ -16,7 +15,6 @@ interface AllProductsClientProps {
 export const AllProductsClient: React.FC<AllProductsClientProps> = ({
   initialProducts,
 }) => {
-  const supabase = createClient();
   const { layout, setLayout } = useListingLayoutPreference();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [page, setPage] = useState(1);
@@ -42,17 +40,12 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
           setLoading(true);
           try {
             const nextPage = page + 1;
-            const from = nextPage * 12 - 12;
-            const to = from + 12 - 1;
+            const response = await fetch(`/api/storefront/products?page=${nextPage}&limit=12`);
+            if (!response.ok) {
+              throw new Error(`Failed to load products page ${nextPage}`);
+            }
 
-            const { data, error } = await supabase
-              .from("products")
-              .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
-              .eq("is_active", true)
-              .order("created_at", { ascending: false })
-              .range(from, to);
-
-            if (error) throw error;
+            const data = (await response.json()) as Product[];
 
             if (data && data.length > 0) {
               setProducts((prev) => {
@@ -87,7 +80,7 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
         observer.unobserve(currentSentinel);
       }
     };
-  }, [page, hasMore, loading, supabase]);
+  }, [page, hasMore, loading]);
 
   const gridClassName = [
     styles.grid,

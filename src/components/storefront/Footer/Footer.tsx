@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { Category } from "@/types";
 import { trackEvent } from "@/lib/analytics";
 import styles from "./Footer.module.css";
 
@@ -22,17 +20,18 @@ export const Footer: React.FC = () => {
 
     const loadCollections = async () => {
       try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("categories")
-          .select("*")
-          .eq("is_active", true)
-          .is("parent_id", null)
-          .order("sort_order", { ascending: true });
+        const response = await fetch("/api/storefront/navigation");
+        if (!response.ok || !active) return;
 
-        if (error || !data || data.length === 0 || !active) return;
-
-        const mapped = (data as Category[])
+        const data = (await response.json()) as Array<{
+          name: string;
+          slug: string;
+          parent_id: string | null;
+          header_label?: string | null;
+          show_in_header?: boolean | null;
+        }>;
+        const mapped = data
+          .filter((category) => category.parent_id === null)
           .filter((category) => category.show_in_header || category.name)
           .slice(0, 4)
           .map((category) => ({

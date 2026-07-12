@@ -352,7 +352,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           const { error: uploadError } = await supabase.storage
             .from("products")
             .upload(fileName, img.file, {
-              cacheControl: "3600",
+              cacheControl: "31536000",
               upsert: true,
             });
 

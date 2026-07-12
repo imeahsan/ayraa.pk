@@ -126,6 +126,7 @@ export default function AdminHomepageEditor() {
 
       setNewAnnouncement({ message: "", sort_order: 0, is_active: true });
       setEditingAnnouncementId(null);
+      await fetch("/api/revalidate?tag=ticker").catch(() => {});
       await fetch("/api/revalidate?path=/").catch(() => {});
       fetchAnnouncements();
     } catch (err) {
@@ -151,6 +152,7 @@ export default function AdminHomepageEditor() {
         .eq("id", id);
 
       if (error) throw error;
+      await fetch("/api/revalidate?tag=ticker").catch(() => {});
       await fetch("/api/revalidate?path=/").catch(() => {});
       toast.success("Announcement deleted.");
       fetchAnnouncements();
@@ -168,6 +170,7 @@ export default function AdminHomepageEditor() {
         .eq("id", ann.id);
 
       if (error) throw error;
+      await fetch("/api/revalidate?tag=ticker").catch(() => {});
       await fetch("/api/revalidate?path=/").catch(() => {});
       fetchAnnouncements();
     } catch (err) {

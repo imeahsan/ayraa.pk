@@ -11,7 +11,7 @@ import { notFound } from "next/navigation";
 import { absoluteUrl, getSiteUrl, productSeoTitle, truncateSeoText } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface ProductPageProps {
   params: Promise<{
@@ -28,15 +28,12 @@ const getCachedProduct = unstable_cache(
       const supabase = createCacheClient();
       const { data, error } = await supabase
         .from("products")
-        .select("*, category:categories(*), images:product_images(*)")
+        .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
         .eq("slug", slug)
         .single();
 
       if (data && !error) {
-        return {
-          ...data,
-          variants: []
-        } as Product;
+        return data as Product;
       }
     } catch (err) {
       console.error("Error loading product detail from Supabase:", err);
@@ -174,26 +171,6 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
 
   if (!product) {
     return null;
-  }
-
-  // Load real-time variants to ensure accurate stock quantities
-  if (product && product.id !== "preview-id") {
-    try {
-      const supabase = createCacheClient();
-      const { data: realTimeVariants } = await supabase
-        .from("product_variants")
-        .select("*")
-        .eq("product_id", product.id);
-
-      if (realTimeVariants) {
-        product = {
-          ...product,
-          variants: realTimeVariants,
-        };
-      }
-    } catch (err) {
-      console.error("Error loading real-time variants:", err);
-    }
   }
 
   let relatedProducts: Product[] = [];

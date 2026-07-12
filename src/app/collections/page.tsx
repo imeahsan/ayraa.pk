@@ -13,7 +13,7 @@ import styles from "./collections.module.css";
 import { unstable_cache } from "next/cache";
 import { DEFAULT_OG_IMAGE, absoluteUrl, getSiteUrl } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "All Collections | Ayraa Collection",
@@ -62,7 +62,7 @@ const getCachedCollectionsCategories = unstable_cache(
     const activeCategoryIds = new Set<string>();
     const { data: prodCats } = await supabase
       .from("products")
-      .select("category_id, variants:product_variants(*)")
+      .select("category_id")
       .eq("is_active", true);
     if (prodCats) {
       prodCats.forEach((p) => {

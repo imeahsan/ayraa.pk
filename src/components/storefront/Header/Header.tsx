@@ -114,17 +114,15 @@ export const Header: React.FC = () => {
   }, [supabase]);
 
   useEffect(() => {
+    let active = true;
+
     const fetchCategories = async () => {
       try {
-        const { data, error } = await supabase
-          .from("categories")
-          .select("*")
-          .eq("is_active", true)
-          .order("sort_order", { ascending: true });
+        const response = await fetch("/api/storefront/navigation");
+        if (!response.ok) return;
 
-        if (error || !data || data.length === 0) return;
-
-        const allCats = data as Category[];
+        const allCats = (await response.json()) as Category[];
+        if (!active || allCats.length === 0) return;
         const parents = allCats.filter((c) => c.parent_id === null);
 
         const mapped = parents.map((parent) => {
@@ -148,6 +146,9 @@ export const Header: React.FC = () => {
     };
 
     fetchCategories();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleSignOut = async () => {

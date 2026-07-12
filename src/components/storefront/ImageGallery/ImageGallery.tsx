@@ -101,7 +101,8 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ images, product }) =
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
-            priority
+            fetchPriority="high"
+            loading="eager"
           />
         </div>
       </div>

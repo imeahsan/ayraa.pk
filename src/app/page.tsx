@@ -14,7 +14,7 @@ import { unstable_cache } from "next/cache";
 import { DEFAULT_OG_IMAGE, DEFAULT_SEO_DESCRIPTION, DEFAULT_SEO_TITLE, absoluteUrl, getSiteUrl } from "@/lib/seo";
 import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: DEFAULT_SEO_TITLE,

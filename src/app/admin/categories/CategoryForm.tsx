@@ -158,7 +158,7 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
 
         const { error: uploadError } = await supabase.storage
           .from("products")
-          .upload(fileName, coverImageFile, { cacheControl: "3600", upsert: true });
+          .upload(fileName, coverImageFile, { cacheControl: "31536000", upsert: true });
 
         if (uploadError) throw uploadError;
 

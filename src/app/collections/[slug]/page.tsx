@@ -12,7 +12,7 @@ import { notFound } from "next/navigation";
 import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
 import { absoluteUrl, collectionSeoTitle, getSiteUrl, truncateSeoText } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 // ─── Category name map (all slugs) ───────────────────────────────────────────
 const CATEGORY_NAMES: Record<string, string> = {
@@ -104,9 +104,9 @@ const getCachedActiveCategoryIds = unstable_cache(
     const activeCategoryIds = new Set<string>();
     const { data: prodCats } = await supabase
       .from("products")
-      .select("category_id, variants:product_variants!inner(*)")
+      .select("category_id")
       .eq("is_active", true)
-      .gt("variants.stock_quantity", 0);
+;
     if (prodCats) {
       prodCats.forEach((p) => {
         if (p.category_id) activeCategoryIds.add(p.category_id);
@@ -123,10 +123,9 @@ const getCachedCategoryProducts = unstable_cache(
     const supabase = createCacheClient();
     const { data: productsData } = await supabase
       .from("products")
-      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants(*)")
       .eq("category_id", categoryId)
-      .eq("is_active", true)
-      .gt("variants.stock_quantity", 0);
+      .eq("is_active", true);
     return productsData || [];
   },
   ["category-products-by-id"],
