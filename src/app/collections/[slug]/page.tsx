@@ -25,8 +25,8 @@ export async function generateStaticParams() {
     "lawn-ready-to-wear",
     "intimate-wear",
     "sleep-wear",
-    "single-bedsheets",
-    "double-bedsheets",
+    "single-bed-sheets",
+    "double-bed-sheets",
     "chiffon-hijabs",
     "printed-hijabs",
     "night-wears"
@@ -49,8 +49,8 @@ const CATEGORY_NAMES: Record<string, string> = {
   "intimate-wear": "Intimate Wear",
   "sleep-wear": "Sleep Wear",
   // Bedding sub-categories
-  "single-bedsheets": "Single Bed-sheets",
-  "double-bedsheets": "Double Bed-sheets",
+  "single-bed-sheets": "Single Bed-sheets",
+  "double-bed-sheets": "Double Bed-sheets",
   // Hijab sub-categories
   "chiffon-hijabs": "Chiffon Hijabs",
   "printed-hijabs": "Printed Hijabs",
