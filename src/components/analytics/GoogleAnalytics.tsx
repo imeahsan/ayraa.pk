@@ -34,8 +34,10 @@ function AnalyticsRouteTracker() {
 
 export function GoogleAnalytics() {
   const measurementId = getMeasurementId();
+  const [mounted, setMounted] = React.useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (!isAnalyticsEnabled) return;
 
     window.dataLayer = window.dataLayer || [];
@@ -66,11 +68,13 @@ export function GoogleAnalytics() {
       <Script
         id="ga4-script"
         src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
-      <Suspense fallback={null}>
-        <AnalyticsRouteTracker />
-      </Suspense>
+      {mounted && (
+        <Suspense fallback={null}>
+          <AnalyticsRouteTracker />
+        </Suspense>
+      )}
     </>
   );
 }

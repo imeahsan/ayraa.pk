@@ -13,6 +13,10 @@ import { unstable_cache } from "next/cache";
 
 export const revalidate = 300;
 
+export async function generateStaticParams() {
+  return [{ slug: "single-bed-sheets-sbs-02" }];
+}
+
 interface ProductPageProps {
   params: Promise<{
     slug: string;

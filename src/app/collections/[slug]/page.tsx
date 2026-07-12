@@ -14,6 +14,26 @@ import { absoluteUrl, collectionSeoTitle, getSiteUrl, truncateSeoText } from "@/
 
 export const revalidate = 300;
 
+export async function generateStaticParams() {
+  const slugs = [
+    "lawn-prints",
+    "garments",
+    "bedding",
+    "hijab-collection",
+    "lawn-3-piece",
+    "lawn-2-piece",
+    "lawn-ready-to-wear",
+    "intimate-wear",
+    "sleep-wear",
+    "single-bedsheets",
+    "double-bedsheets",
+    "chiffon-hijabs",
+    "printed-hijabs",
+    "night-wears"
+  ];
+  return slugs.map((slug) => ({ slug }));
+}
+
 // ─── Category name map (all slugs) ───────────────────────────────────────────
 const CATEGORY_NAMES: Record<string, string> = {
   // Parent categories
