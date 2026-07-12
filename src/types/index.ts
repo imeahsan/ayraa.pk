@@ -14,6 +14,7 @@ export interface Category {
   sort_order: number;
   is_active: boolean;
   show_in_header?: boolean;
+  is_coming_soon?: boolean;
   header_label?: string | null;
   meta_title?: string | null;
   meta_description?: string | null;

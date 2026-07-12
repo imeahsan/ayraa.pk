@@ -173,7 +173,7 @@ export default function AdminCategoriesPage() {
                 <tr>
                   <th className={adminStyles.tableTh}>Collection</th>
                   <th className={adminStyles.tableTh}>Slug</th>
-                  <th className={adminStyles.tableTh}>Navigation</th>
+                  <th className={adminStyles.tableTh}>Status</th>
                   <th className={adminStyles.tableTh}>Description</th>
                   <th className={adminStyles.tableTh}>Actions</th>
                 </tr>
@@ -210,13 +210,18 @@ export default function AdminCategoriesPage() {
                         </span>
                       </td>
                       <td className={adminStyles.tableTd}>
-                        {category.show_in_header ? (
-                          <span className={adminStyles.badgeActive}>
-                            {category.header_label || category.name}
-                          </span>
-                        ) : (
-                          <span className={adminStyles.badgeDraft}>Hidden</span>
-                        )}
+                        <div className={styles.actionRow}>
+                          {category.is_coming_soon ? (
+                            <span className={adminStyles.badgePending}>Coming Soon</span>
+                          ) : (
+                            <span className={adminStyles.badgeActive}>Live</span>
+                          )}
+                          {category.show_in_header ? (
+                            <span className={adminStyles.badgeActive}>
+                              {category.header_label || category.name}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className={`${adminStyles.tableTd} ${styles.collectionDescription}`}>
                         {category.description || "No description"}

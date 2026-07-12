@@ -81,7 +81,7 @@ const getCachedCategory = unstable_cache(
     return null;
   },
   ["category-by-slug"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["categories"] }
 );
 
 const getCachedSubCategories = unstable_cache(
@@ -95,7 +95,7 @@ const getCachedSubCategories = unstable_cache(
     return dbSubs || [];
   },
   ["subcategories-by-parent-id"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["categories"] }
 );
 
 const getCachedActiveCategoryIds = unstable_cache(
@@ -115,7 +115,7 @@ const getCachedActiveCategoryIds = unstable_cache(
     return Array.from(activeCategoryIds);
   },
   ["active-category-ids-list"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["categories", "products"] }
 );
 
 const getCachedCategoryProducts = unstable_cache(
@@ -130,16 +130,242 @@ const getCachedCategoryProducts = unstable_cache(
     return productsData || [];
   },
   ["category-products-by-id"],
-  { revalidate: 300 }
+  { revalidate: 300, tags: ["categories", "products"] }
 );
+
+function CollectionComingSoon({
+  categoryName,
+  category,
+}: {
+  categoryName: string;
+  category: Category | null;
+}) {
+  const previewImage =
+    category?.image_url ||
+    "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80";
+
+  return (
+    <main className="grow pt-20 md:pt-16">
+      <section
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          minHeight: "calc(100vh - 96px)",
+          background:
+            "radial-gradient(circle at top, rgba(233, 195, 73, 0.12) 0%, rgba(28, 27, 27, 0.95) 48%, #161514 100%)",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `linear-gradient(180deg, rgba(22,21,20,0.3) 0%, rgba(22,21,20,0.92) 78%), url(${previewImage})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.42,
+            transform: "scale(1.04)",
+          }}
+        />
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            width: "100%",
+            maxWidth: "1180px",
+            marginInline: "auto",
+            paddingInline: "var(--space-6)",
+            paddingBlock: "clamp(72px, 12vw, 120px)",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: "760px",
+              marginInline: "auto",
+              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
+              alignItems: "center",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "8px 18px",
+                border: "1px solid rgba(233, 195, 73, 0.45)",
+                borderRadius: "999px",
+                fontFamily: "var(--font-body)",
+                fontSize: "11px",
+                fontWeight: "var(--weight-bold)",
+                letterSpacing: "0.24em",
+                textTransform: "uppercase",
+                color: "var(--color-gold)",
+                backgroundColor: "rgba(233, 195, 73, 0.06)",
+              }}
+            >
+              Launching Soon
+            </span>
+            <h1
+              style={{
+                margin: 0,
+                fontFamily: "var(--font-headline)",
+                fontSize: "clamp(34px, 7vw, 72px)",
+                lineHeight: 1.05,
+                letterSpacing: "var(--tracking-tight)",
+                color: "#fbf9f8",
+                textTransform: "uppercase",
+              }}
+            >
+              {categoryName}
+            </h1>
+            <p
+              style={{
+                margin: 0,
+                maxWidth: "620px",
+                fontFamily: "var(--font-body)",
+                fontSize: "clamp(15px, 2vw, 18px)",
+                lineHeight: 1.8,
+                color: "rgba(251, 249, 248, 0.78)",
+              }}
+            >
+              {category?.description ||
+                `This collection is being prepared and will be launched soon. Check back shortly for the full edit.`}
+            </p>
+            <div
+              style={{
+                width: "min(560px, 100%)",
+                marginTop: "10px",
+                padding: "22px 24px",
+                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(255,255,255,0.03)",
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "12px",
+                  marginBottom: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "11px",
+                    fontWeight: "var(--weight-bold)",
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "rgba(251, 249, 248, 0.72)",
+                  }}
+                >
+                  Collection Status
+                </span>
+                <span
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "12px",
+                    color: "var(--color-gold)",
+                  }}
+                >
+                  Curating the launch
+                </span>
+              </div>
+              <div
+                style={{
+                  height: "4px",
+                  width: "100%",
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: "72%",
+                    height: "100%",
+                    background:
+                      "linear-gradient(90deg, rgba(233,195,73,0.75) 0%, rgba(233,195,73,1) 100%)",
+                    boxShadow: "0 0 18px rgba(233, 195, 73, 0.35)",
+                  }}
+                />
+              </div>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: "14px",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                marginTop: "8px",
+              }}
+            >
+              <Link
+                href="/collections"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "48px",
+                  padding: "0 24px",
+                  border: "1px solid var(--color-gold)",
+                  color: "var(--color-gold)",
+                  textDecoration: "none",
+                  textTransform: "uppercase",
+                  letterSpacing: "var(--tracking-wider)",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "12px",
+                  fontWeight: "var(--weight-bold)",
+                  backgroundColor: "rgba(233, 195, 73, 0.06)",
+                }}
+              >
+                Explore Other Collections
+              </Link>
+              <Link
+                href="/contact"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minHeight: "48px",
+                  padding: "0 24px",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  color: "#fbf9f8",
+                  textDecoration: "none",
+                  textTransform: "uppercase",
+                  letterSpacing: "var(--tracking-wider)",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "12px",
+                  fontWeight: "var(--weight-bold)",
+                  backgroundColor: "rgba(255,255,255,0.02)",
+                }}
+              >
+                Contact Ayraa
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
   const category = await getCachedCategory(slug);
   const name = category?.name || CATEGORY_NAMES[slug] || "Collection";
-  const title = category?.meta_title || collectionSeoTitle(name);
+  const title = category?.is_coming_soon
+    ? category?.meta_title || `${name} Coming Soon | Ayraa Collection`
+    : category?.meta_title || collectionSeoTitle(name);
   const desc = truncateSeoText(
-    category?.meta_description || category?.description,
+    category?.meta_description ||
+      category?.description ||
+      (category?.is_coming_soon
+        ? `${name} is launching soon at Ayraa Collection. Explore the collection preview and check back for the full launch.`
+        : undefined),
     `Shop ${name.toLowerCase()} at Ayraa Collection. Explore Pakistani wardrobe edits with COD and nationwide delivery.`
   );
   const image = category?.image_url ? absoluteUrl(category.image_url) : undefined;
@@ -182,6 +408,17 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     { name: "Collections", item: "/collections" },
     { name: categoryName, item: `/collections/${slug}` },
   ];
+
+  if (category?.is_coming_soon) {
+    return (
+      <div className="flex flex-col min-h-screen bg-bg transition-colors duration-500 ease-out">
+        <BreadcrumbJsonLd items={breadcrumbItems} baseUrl={baseUrl} />
+        <Header />
+        <CollectionComingSoon categoryName={categoryName} category={category} />
+        <Footer />
+      </div>
+    );
+  }
 
   // Fetch sub-categories dynamically from database
   let subCategories: SubCategoryCard[] = [];

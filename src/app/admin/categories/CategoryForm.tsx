@@ -19,6 +19,7 @@ interface CategoryFormState {
   description: string;
   parentId: string;
   showInHeader: boolean;
+  isComingSoon: boolean;
   headerLabel: string;
   metaTitle: string;
   metaDescription: string;
@@ -32,6 +33,7 @@ const INITIAL_FORM_STATE: CategoryFormState = {
   description: "",
   parentId: "",
   showInHeader: false,
+  isComingSoon: false,
   headerLabel: "",
   metaTitle: "",
   metaDescription: "",
@@ -84,6 +86,7 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
               description: category.description || "",
               parentId: category.parent_id || "",
               showInHeader: Boolean(category.show_in_header),
+              isComingSoon: Boolean(category.is_coming_soon),
               headerLabel: category.header_label || "",
               metaTitle: category.meta_title || "",
               metaDescription: category.meta_description || "",
@@ -173,6 +176,7 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
         image_url: finalImageUrl,
         is_active: true,
         show_in_header: !formState.parentId && formState.showInHeader,
+        is_coming_soon: formState.isComingSoon,
         header_label: formState.headerLabel.trim() || null,
         meta_title: formState.metaTitle.trim() || null,
         meta_description: formState.metaDescription.trim() || null,
@@ -312,7 +316,7 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
 
           <div className={styles.formSidebar}>
             <div className={styles.panel}>
-              <h2 className={styles.panelTitle}>Navigation</h2>
+              <h2 className={styles.panelTitle}>Visibility</h2>
               <label className={styles.checkboxRow}>
                 <input
                   type="checkbox"
@@ -326,6 +330,18 @@ export function CategoryForm({ categoryId }: CategoryFormProps) {
                 {formState.parentId
                   ? "Header visibility is only available for top-level collections."
                   : "Use this for parent collections that should appear in the storefront header."}
+              </p>
+
+              <label className={styles.checkboxRow}>
+                <input
+                  type="checkbox"
+                  checked={formState.isComingSoon}
+                  onChange={(e) => updateField("isComingSoon", e.target.checked)}
+                />
+                Mark this collection as coming soon
+              </label>
+              <p className={styles.helperText}>
+                When enabled, the storefront will show a launch-soon landing page for this collection instead of its products.
               </p>
 
               <div className={adminStyles.formGroup}>
