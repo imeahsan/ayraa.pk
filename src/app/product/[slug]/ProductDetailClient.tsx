@@ -501,6 +501,9 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
                 <span className={styles.attrVal}>{product.includes}</span>
               </div>
             )}
+            <p className={styles.colorDisclaimer}>
+              *Note: Colors may vary slightly due to photographic lighting or your device settings.
+            </p>
           </div>
 
           {/* Color selection */}

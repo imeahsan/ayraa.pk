@@ -299,3 +299,13 @@
   align-items: center;
   gap: 4px;
 }
+
+.colorDisclaimer {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-on-surface-muted);
+  font-style: italic;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
