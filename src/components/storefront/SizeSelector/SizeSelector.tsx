@@ -19,7 +19,7 @@ export const SizeSelector: React.FC<SizeSelectorProps> = ({
       <div className={styles.list}>
         {variants.map((variant) => {
           const isSelected = selectedSize === variant.size;
-          const isOutOfStock = variant.stock_quantity <= 0;
+          const isOutOfStock = variant.stock_quantity <= 0 || !variant.is_available;
 
           return (
             <button

@@ -9,8 +9,15 @@ import {
   OrderReturnRequest,
   ReturnResolutionType,
   ReturnRequestStatus,
+  ReturnConditionStatus,
+  ReturnRestockAction,
 } from "@/types";
 import { Button } from "@/components/storefront/Button/Button";
+import {
+  restockReturnItems,
+  updateReturnItem,
+  batchUpdateReturnItems,
+} from "@/app/actions/returns";
 import styles from "../../admin.module.css";
 
 interface ReturnDetailClientProps {
@@ -174,31 +181,56 @@ export const ReturnDetailClient: React.FC<ReturnDetailClientProps> = ({ returnId
     }
   };
 
+  const handleItemRestockActionChange = async (itemId: string, action: ReturnRestockAction) => {
+    setItems((prev) =>
+      prev.map((it) => (it.id === itemId ? { ...it, restock_action: action } : it))
+    );
+    const res = await updateReturnItem(itemId, { restock_action: action });
+    if (!res.success) {
+      toast.error(res.error || "Failed to update item restock action.");
+    } else {
+      toast.success(`Restock action set to "${action}".`);
+    }
+  };
+
+  const handleItemConditionChange = async (itemId: string, condition: ReturnConditionStatus) => {
+    setItems((prev) =>
+      prev.map((it) => (it.id === itemId ? { ...it, condition_status: condition } : it))
+    );
+    const res = await updateReturnItem(itemId, { condition_status: condition });
+    if (!res.success) {
+      toast.error(res.error || "Failed to update item condition.");
+    }
+  };
+
+  const handleBatchRestockAction = async (action: ReturnRestockAction) => {
+    setItems((prev) => prev.map((it) => ({ ...it, restock_action: action })));
+    const res = await batchUpdateReturnItems(returnId, action);
+    if (!res.success) {
+      toast.error(res.error || "Failed to batch update items.");
+    } else {
+      toast.success(`All items set to "${action}".`);
+    }
+  };
+
   const handleRestock = async () => {
     const restockable = items.filter((item) => item.restock_action === "restock" && item.variant_id);
     if (restockable.length === 0) {
-      toast.warning("No variant items are marked for restock.");
+      toast.warning(
+        "No variant items are currently marked for restock. Select 'Restock' in the item dropdown or click 'Mark All for Restock'."
+      );
       return;
     }
 
     setRestocking(true);
     try {
-      for (const item of restockable) {
-        const { data: variant, error: variantError } = await supabase
-          .from("product_variants")
-          .select("stock_quantity")
-          .eq("id", item.variant_id)
-          .single();
-
-        if (variantError || !variant) continue;
-
-        await supabase
-          .from("product_variants")
-          .update({ stock_quantity: Number(variant.stock_quantity || 0) + item.quantity })
-          .eq("id", item.variant_id);
+      const res = await restockReturnItems(returnId);
+      if (!res.success) {
+        throw new Error(res.error || "Failed to restock items.");
       }
 
-      toast.success("Selected variant stock has been restocked.");
+      toast.success(`Successfully restocked ${res.restockedCount} item(s) to store inventory!`);
+      await fetchReturn();
     } catch (err: any) {
       toast.error(err.message || "Failed to restock items.");
     } finally {
@@ -248,7 +280,30 @@ export const ReturnDetailClient: React.FC<ReturnDetailClientProps> = ({ returnId
       <div className={styles.twoColLayout}>
         <div className={styles.mainFormCol}>
           <div className={styles.formCard}>
-            <h3 className={styles.formCardTitle}>Returned Items</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h3 className={styles.formCardTitle} style={{ margin: 0 }}>Returned Items</h3>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBatchRestockAction("restock")}
+                  style={{ fontSize: "11px", padding: "4px 8px" }}
+                >
+                  Mark All Restock
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBatchRestockAction("do_not_restock")}
+                  style={{ fontSize: "11px", padding: "4px 8px" }}
+                >
+                  Mark All Do Not Restock
+                </Button>
+              </div>
+            </div>
+
             <div className={styles.tableResponsive}>
               <table className={styles.table}>
                 <thead>
@@ -256,7 +311,7 @@ export const ReturnDetailClient: React.FC<ReturnDetailClientProps> = ({ returnId
                     <th className={styles.tableTh}>Product</th>
                     <th className={styles.tableTh}>Qty</th>
                     <th className={styles.tableTh}>Condition</th>
-                    <th className={styles.tableTh}>Restock</th>
+                    <th className={styles.tableTh}>Restock Action</th>
                     <th className={styles.tableTh}>Refund</th>
                   </tr>
                 </thead>
@@ -270,17 +325,55 @@ export const ReturnDetailClient: React.FC<ReturnDetailClientProps> = ({ returnId
                         )}
                       </td>
                       <td className={styles.tableTd}>{item.quantity}</td>
-                      <td className={styles.tableTd}>{item.condition_status}</td>
-                      <td className={styles.tableTd}>{item.restock_action}</td>
+                      <td className={styles.tableTd}>
+                        <select
+                          value={item.condition_status || "unopened"}
+                          onChange={(e) => handleItemConditionChange(item.id, e.target.value as ReturnConditionStatus)}
+                          className={styles.formSelect}
+                          style={{ padding: "4px 8px", fontSize: "12px", minWidth: "110px" }}
+                        >
+                          <option value="unopened">Unopened</option>
+                          <option value="unused">Unused</option>
+                          <option value="used">Used</option>
+                          <option value="damaged">Damaged</option>
+                          <option value="wrong_item">Wrong item</option>
+                          <option value="defective">Defective</option>
+                        </select>
+                      </td>
+                      <td className={styles.tableTd}>
+                        <select
+                          value={item.restock_action || "inspect_later"}
+                          onChange={(e) => handleItemRestockActionChange(item.id, e.target.value as ReturnRestockAction)}
+                          className={styles.formSelect}
+                          style={{
+                            padding: "4px 8px",
+                            fontSize: "12px",
+                            minWidth: "125px",
+                            borderColor: item.restock_action === "restock" ? "#10b981" : undefined,
+                            color: item.restock_action === "restock" ? "#10b981" : undefined,
+                            fontWeight: item.restock_action === "restock" ? 600 : 400,
+                          }}
+                        >
+                          <option value="inspect_later">Inspect later</option>
+                          <option value="restock">Restock</option>
+                          <option value="do_not_restock">Do not restock</option>
+                        </select>
+                      </td>
                       <td className={`${styles.tableTd} ${styles.tableTdHighlight}`}>{formatPKR(Number(item.refund_amount || 0))}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={handleRestock} isLoading={restocking} style={{ marginTop: "16px" }}>
-              Restock Marked Items
-            </Button>
+
+            <div style={{ marginTop: "16px", display: "flex", alignItems: "center", gap: "12px" }}>
+              <Button type="button" variant="luxury" size="sm" onClick={handleRestock} isLoading={restocking}>
+                Restock Marked Items ({items.filter((i) => i.restock_action === "restock" && i.variant_id).length})
+              </Button>
+              <span style={{ fontSize: "12px", color: "var(--admin-text-sub)" }}>
+                {items.filter((i) => i.restock_action === "restock" && i.variant_id).length} of {items.length} item(s) ready to return to store stock.
+              </span>
+            </div>
           </div>
 
           <form onSubmit={handleSave} className={styles.formCard}>

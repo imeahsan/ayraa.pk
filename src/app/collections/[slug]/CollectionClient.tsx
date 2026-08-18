@@ -79,7 +79,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
       result = result.filter(
         (p) =>
           p.variants &&
-          p.variants.some((v) => v.stock_quantity > 0)
+          p.variants.some((v) => v.stock_quantity > 0 && v.is_available)
       );
     }
 
@@ -95,7 +95,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
       result = result.filter(
         (p) =>
           p.variants &&
-          p.variants.some((v) => selectedSizes.includes(v.size) && (!inStockOnly || v.stock_quantity > 0))
+          p.variants.some((v) => selectedSizes.includes(v.size) && (!inStockOnly || (v.stock_quantity > 0 && v.is_available)))
       );
     }
 

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import { Product, Category, ProductVariant, UserProfile } from "@/types";
-import { sendOrderEmailForOrder } from "@/app/actions/email";
+import { recordPosOrder } from "@/app/actions/pos";
 
 interface CartItem {
   id: string; // variant_id
@@ -500,58 +500,45 @@ export default function POSClient() {
 
     setRecordingOrder(true);
     try {
-      // 1. Save order to Supabase
-      const { error: orderError } = await supabase.from("orders").insert({
-        id: pendingOrderObj.order_id,
-        user_id: selectedCustomer ? selectedCustomer.id : null,
-        status: "delivered", // Immediately fulfilled
+      const orderPayload = {
+        order_id: pendingOrderObj.order_id,
+        customer_id: selectedCustomer ? selectedCustomer.id : null,
         payment_method: paymentMethod,
-        subtotal: subtotal,
-        shipping_cost: 0,
-        total: total,
+        subtotal,
         discount_amount: discountAmount,
+        total,
         shipping_address: shippingAddress,
         contact_phone: contactPhone,
         contact_email: contactEmail,
         city: contactCity,
-      });
+        items: cart.map((item) => ({
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          price: item.price,
+          name: item.name,
+          size: item.size,
+        })),
+      };
 
-      if (orderError) throw orderError;
-
-      // 2. Save items
-      const orderItemsPayload = cart.map((item) => ({
-        order_id: pendingOrderObj.order_id,
-        product_id: item.product_id,
-        variant_id: item.variant_id,
-        quantity: item.quantity,
-        unit_price: item.price,
-      }));
-
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItemsPayload);
-      if (itemsError) throw itemsError;
-
-      // 3. Decrement stock levels in database
-      for (const item of cart) {
-        const { data: currentVariant, error: varError } = await supabase
-          .from("product_variants")
-          .select("stock_quantity")
-          .eq("id", item.variant_id)
-          .single();
-
-        if (!varError && currentVariant) {
-          const newQty = Math.max(0, currentVariant.stock_quantity - item.quantity);
-          await supabase
-            .from("product_variants")
-            .update({ stock_quantity: newQty })
-            .eq("id", item.variant_id);
-        }
+      const result = await recordPosOrder(orderPayload);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to record POS order.");
       }
 
-      const emailResult = await sendOrderEmailForOrder(pendingOrderObj.order_id);
-      if (!emailResult.success) {
-        console.error(`POS order ${pendingOrderObj.order_id} email failed:`, emailResult.error);
-        toast.warning("Order recorded, but email could not be sent.");
-      }
+      // Decrement variant stock locally in memory for instant feedback
+      setVariants((prev) =>
+        prev.map((v) => {
+          const cartMatch = cart.find((item) => item.variant_id === v.id);
+          if (!cartMatch) return v;
+          const newStock = Math.max(0, v.stock_quantity - cartMatch.quantity);
+          return {
+            ...v,
+            stock_quantity: newStock,
+            is_available: newStock > 0,
+          };
+        })
+      );
 
       await revalidateStorefrontCaches();
 
@@ -559,7 +546,7 @@ export default function POSClient() {
       setCompletedOrder(pendingOrderObj);
       clearCart();
       focusScanInput();
-      // Reload catalog to sync stock quantities
+      // Reload catalog to sync stock quantities from database
       await loadCatalog(true);
     } catch (err: any) {
       console.error("POS transaction failed:", err);
@@ -585,54 +572,30 @@ export default function POSClient() {
 
     for (const order of offlineOrders) {
       try {
-        const { error: orderError } = await supabase.from("orders").insert({
-          id: order.order_id,
-          status: "delivered",
+        const orderPayload = {
+          order_id: order.order_id,
+          customer_id: null,
           payment_method: order.payment_method,
           subtotal: order.subtotal,
-          shipping_cost: 0,
-          total: order.total,
           discount_amount: order.discount_amount,
+          total: order.total,
           shipping_address: order.shipping_address,
           contact_phone: order.contact_phone,
           contact_email: order.contact_email,
           city: order.city,
-          created_at: order.created_at,
-        });
+          items: order.items.map((item) => ({
+            product_id: item.product_id,
+            variant_id: item.variant_id,
+            quantity: item.quantity,
+            price: item.price,
+            name: item.name,
+            size: item.size,
+          })),
+        };
 
-        if (orderError) throw orderError;
-
-        const orderItemsPayload = order.items.map((item) => ({
-          order_id: order.order_id,
-          product_id: item.product_id,
-          variant_id: item.variant_id,
-          quantity: item.quantity,
-          unit_price: item.price,
-        }));
-
-        const { error: itemsError } = await supabase.from("order_items").insert(orderItemsPayload);
-        if (itemsError) throw itemsError;
-
-        // Decrement stock levels
-        for (const item of order.items) {
-          const { data: currentVariant } = await supabase
-            .from("product_variants")
-            .select("stock_quantity")
-            .eq("id", item.variant_id)
-            .single();
-
-          if (currentVariant) {
-            const newQty = Math.max(0, currentVariant.stock_quantity - item.quantity);
-            await supabase
-              .from("product_variants")
-              .update({ stock_quantity: newQty })
-              .eq("id", item.variant_id);
-          }
-        }
-
-        const emailResult = await sendOrderEmailForOrder(order.order_id);
-        if (!emailResult.success) {
-          console.error(`Offline synced order ${order.order_id} email failed:`, emailResult.error);
+        const result = await recordPosOrder(orderPayload);
+        if (!result.success) {
+          throw new Error(result.error || "Sync failed");
         }
 
         await revalidateStorefrontCaches();

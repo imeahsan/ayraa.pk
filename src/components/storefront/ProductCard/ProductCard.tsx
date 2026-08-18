@@ -31,7 +31,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [primaryFailed, setPrimaryFailed] = React.useState(false);
   const [secondaryLoaded, setSecondaryLoaded] = React.useState(false);
   const wishlisted = isWishlisted(product.id);
-  const isOutOfStock = product.variants !== undefined && (product.variants.length === 0 || product.variants.every((v) => v.stock_quantity <= 0));
+  const isOutOfStock =
+    product.variants !== undefined &&
+    (product.variants.length === 0 || product.variants.every((v) => v.stock_quantity <= 0 || !v.is_available));
   const displayImage = primaryFailed && alternateImage ? alternateImage : primaryImage;
   const hoverImage =
     alternateImage && alternateImage.url !== displayImage?.url ? alternateImage : null;

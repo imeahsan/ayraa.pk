@@ -7,6 +7,9 @@ export async function GET(request: NextRequest) {
 
   if (tag) {
     revalidateTag(tag, 'max');
+    if (tag === 'products' || tag === 'categories') {
+      revalidatePath('/', 'layout');
+    }
   }
 
   if (path) {

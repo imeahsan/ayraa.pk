@@ -365,17 +365,17 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     if (hasColors && hasSizes) {
       if (!selectedColor || !selectedSize) return false;
       const v = variants.find((v) => v.color === selectedColor && v.size === selectedSize);
-      return v ? v.stock_quantity <= 0 : true;
+      return v ? v.stock_quantity <= 0 || !v.is_available : true;
     } else if (hasColors) {
       if (!selectedColor) return false;
       const v = variants.find((v) => v.color === selectedColor);
-      return v ? v.stock_quantity <= 0 : true;
+      return v ? v.stock_quantity <= 0 || !v.is_available : true;
     } else if (hasSizes) {
       if (!selectedSize) return false;
       const v = variants.find((v) => v.size === selectedSize);
-      return v ? v.stock_quantity <= 0 : true;
+      return v ? v.stock_quantity <= 0 || !v.is_available : true;
     } else {
-      return variants[0] ? variants[0].stock_quantity <= 0 : true;
+      return variants[0] ? variants[0].stock_quantity <= 0 || !variants[0].is_available : true;
     }
   }, [hasColors, hasSizes, selectedColor, selectedSize, variants]);
 
