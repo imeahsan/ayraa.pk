@@ -115,6 +115,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "Storefront & System",
       links: [
         { name: "Homepage Editor", href: "/admin/homepage", icon: "Home" },
+        { name: "Careers & Jobs", href: "/admin/careers", icon: "Jobs" },
         { name: "Settings", href: "/admin/settings", icon: "Set" },
       ],
     },

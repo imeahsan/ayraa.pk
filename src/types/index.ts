@@ -582,3 +582,23 @@ export interface CourierRemittanceBreakdown {
   rtoFreightLoss: number;
 }
 
+// ---------- Careers & Job Openings ----------
+
+export interface JobOpening {
+  id: string;
+  title: string;
+  department: string;
+  location: string;
+  employment_type: string;
+  experience_level?: string | null;
+  description: string;
+  requirements?: string | null;
+  responsibilities?: string | null;
+  benefits?: string | null;
+  salary_range?: string | null;
+  is_active: boolean;
+  apply_email?: string | null;
+  sort_order?: number;
+  created_at: string;
+  updated_at?: string;
+}
