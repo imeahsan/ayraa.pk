@@ -29,6 +29,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
   const [barcode, setBarcode] = useState("");
   const [price, setPrice] = useState(0);
   const [compareAtPrice, setCompareAtPrice] = useState<number | "">("");
+  const [costPrice, setCostPrice] = useState<number | "">("");
   const [categoryId, setCategoryId] = useState("");
   const [fabric, setFabric] = useState("");
   const [color, setColor] = useState("");
@@ -103,6 +104,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           setBarcode(barcodeData?.barcode || "");
           setPrice(p.price);
           setCompareAtPrice(p.compare_at_price || "");
+          setCostPrice(p.cost_price || "");
           setCategoryId(p.category_id || "");
           setFabric(p.fabric || "");
           setColor(p.color || "");
@@ -250,6 +252,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       sku: sku || null,
       price,
       compare_at_price: compareAtPrice === "" ? null : compareAtPrice,
+      cost_price: costPrice === "" ? null : Number(costPrice),
       category_id: categoryId || null,
       fabric: fabric || null,
       color: color || null,
@@ -638,7 +641,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
           {/* Pricing & Stock */}
           <div className={styles.formCard}>
             <h3 className={styles.formCardTitle}>Pricing &amp; Inventory</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Price (PKR) *</label>
                 <input
@@ -659,6 +662,21 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                   }
                   className={styles.formInput}
                 />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Cost Price / COGS (PKR)</label>
+                <input
+                  type="number"
+                  placeholder="e.g. 2800"
+                  value={costPrice}
+                  onChange={(e) =>
+                    setCostPrice(e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                  className={styles.formInput}
+                />
+                <span style={{ fontSize: "11px", color: "var(--admin-text-sub)", marginTop: "2px", display: "block" }}>
+                  Manufacturing cost for P&amp;L
+                </span>
               </div>
             </div>
 

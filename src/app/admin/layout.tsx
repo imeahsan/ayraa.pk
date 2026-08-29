@@ -80,6 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       title: "Store Overview",
       links: [
         { name: "Dashboard", href: "/admin", icon: "Dash" },
+        { name: "Finance & P&L", href: "/admin/finance", icon: "Fin" },
         { name: "Reports", href: "/admin/reports", icon: "Data" },
       ],
     },

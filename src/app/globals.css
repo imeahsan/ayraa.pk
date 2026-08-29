@@ -1481,3 +1481,26 @@ html {
 .text-error:hover {
   color: #b91c1c !important; /* Tailwind red-700 equivalent */
 }
+
+/* =============================================
+   GLOBAL SELECT & DROPDOWN ACCESSIBILITY (DARK THEME)
+   ============================================= */
+select {
+  color-scheme: dark !important;
+  background-color: #1c1b1b !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+select option {
+  background-color: #1c1b1b !important;
+  color: #ffffff !important;
+  padding: 8px 12px;
+}
+
+select option:checked,
+select option:hover {
+  background-color: #2a2929 !important;
+  color: var(--color-gold, #e9c349) !important;
+}
+

@@ -1,0 +1,341 @@
+/* ================================================
+   Enterprise Finance & Intelligence Styles
+   ================================================ */
+
+.financeContainer {
+  padding-bottom: 48px;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.titleArea h1 {
+  margin: 0;
+  font-family: var(--font-headline);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--admin-text, #ffffff);
+}
+
+.titleArea p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--admin-text-sub, rgba(255, 255, 255, 0.6));
+}
+
+.headerControls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.presetSelect,
+.financeContainer select {
+  padding: 8px 12px;
+  background-color: #1c1b1b !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  color-scheme: dark;
+}
+
+.presetSelect:focus,
+.financeContainer select:focus {
+  border-color: var(--color-gold, #e9c349) !important;
+}
+
+.presetSelect option,
+.financeContainer select option {
+  background-color: #1c1b1b !important;
+  color: #ffffff !important;
+  padding: 8px 12px;
+}
+
+/* Tabs Navigation */
+.tabsNav {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.tabBtn {
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--admin-text-sub, rgba(255, 255, 255, 0.6));
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tabBtn:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.tabBtnActive {
+  background-color: rgba(233, 195, 73, 0.12) !important;
+  color: var(--color-gold, #e9c349) !important;
+  border-color: rgba(233, 195, 73, 0.4) !important;
+}
+
+/* KPI Cards Grid */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpiCard {
+  background-color: var(--admin-sidebar, #1c1b1b);
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  padding: 16px 20px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justifyContent: space-between;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.kpiCard:hover {
+  border-color: rgba(233, 195, 73, 0.3);
+  transform: translateY(-2px);
+}
+
+.kpiLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--admin-text-sub, rgba(255, 255, 255, 0.55));
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpiValue {
+  font-family: var(--font-headline);
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.kpiSub {
+  font-size: 11px;
+  margin-top: 6px;
+  color: var(--admin-text-sub, rgba(255, 255, 255, 0.5));
+}
+
+.positive {
+  color: #4ade80 !important;
+}
+
+.negative {
+  color: #f87171 !important;
+}
+
+.gold {
+  color: var(--color-gold, #e9c349) !important;
+}
+
+.blue {
+  color: #60a5fa !important;
+}
+
+.purple {
+  color: #c084fc !important;
+}
+
+/* Financial Waterfall Card */
+.waterfallCard {
+  background-color: var(--admin-sidebar, #1c1b1b);
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.cardTitle {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-gold, #e9c349);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cardSubtitle {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: var(--admin-text-sub, rgba(255, 255, 255, 0.55));
+}
+
+.waterfallSteps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+
+.waterfallItem {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.waterfallItemHighlight {
+  background-color: rgba(233, 195, 73, 0.08);
+  border: 1px solid rgba(233, 195, 73, 0.3);
+}
+
+.waterfallStepLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--admin-text-sub);
+  margin-bottom: 4px;
+}
+
+.waterfallStepVal {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Charts Grid */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .chartsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Data Table Card */
+.tableCard {
+  background-color: var(--admin-sidebar, #1c1b1b);
+  border: 1px solid var(--admin-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.tableHeaderBar {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tableResponsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.financeTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.financeTable th {
+  padding: 10px 16px;
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--admin-text-sub);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.financeTable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--admin-text);
+  vertical-align: middle;
+}
+
+.financeTable tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Modals */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modalContent {
+  background-color: #161515;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-md, 8px);
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.7);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--admin-text-sub);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}

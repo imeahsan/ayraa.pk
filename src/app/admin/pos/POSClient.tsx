@@ -15,8 +15,11 @@ interface CartItem {
   sku: string;
   size: string;
   price: number;
+  original_price?: number;
   quantity: number;
   stock: number;
+  is_gift?: boolean;
+  gift_reason?: string;
 }
 
 interface PendingOrder {
@@ -358,6 +361,7 @@ export default function POSClient() {
         prev.map((item, idx) => (idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item))
       );
     } else {
+      const unitPrice = Number(product.price);
       const newItem: CartItem = {
         id: variant.id,
         product_id: product.id,
@@ -365,15 +369,40 @@ export default function POSClient() {
         name: product.name,
         sku: product.sku || "N/A",
         size: variant.size,
-        price: Number(product.price),
+        price: unitPrice,
+        original_price: unitPrice,
         quantity: 1,
         stock: variant.stock_quantity,
+        is_gift: false,
       };
       setCart((prev) => [...prev, newItem]);
     }
     toast.success(`Added ${product.name} (Size: ${variant.size}) to cart.`);
     setSelectedProduct(null);
     focusScanInput();
+  };
+
+  const toggleGiftItem = (variantId: string) => {
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item.variant_id !== variantId) return item;
+        const willBeGift = !item.is_gift;
+        const basePrice = item.original_price ?? item.price;
+        return {
+          ...item,
+          is_gift: willBeGift,
+          original_price: basePrice,
+          price: willBeGift ? 0 : basePrice,
+          gift_reason: willBeGift ? (item.gift_reason || "VIP / In-Store Gift") : undefined,
+        };
+      })
+    );
+  };
+
+  const updateGiftReason = (variantId: string, reason: string) => {
+    setCart((prev) =>
+      prev.map((item) => (item.variant_id === variantId ? { ...item, gift_reason: reason } : item))
+    );
   };
 
   const updateQuantity = (variantId: string, delta: number) => {
@@ -518,6 +547,8 @@ export default function POSClient() {
           price: item.price,
           name: item.name,
           size: item.size,
+          is_gift: item.is_gift || false,
+          gift_reason: item.gift_reason || undefined,
         })),
       };
 
@@ -1072,28 +1103,113 @@ export default function POSClient() {
               ) : (
                 <div className="pos-cart-list">
                   {cart.map((item) => (
-                    <div key={item.variant_id} className="pos-cart-row">
-                      <div style={{ flex: 1, paddingRight: "8px" }}>
-                        <strong style={{ fontSize: "12px", display: "block", color: "#fff" }}>{item.name}</strong>
-                        <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)" }}>
-                          Size: {item.size} | {formatPKR(item.price)}
-                        </span>
+                    <div
+                      key={item.variant_id}
+                      className="pos-cart-row"
+                      style={{
+                        flexDirection: "column",
+                        alignItems: "stretch",
+                        gap: "6px",
+                        padding: "8px",
+                        borderLeft: item.is_gift ? "3px solid var(--color-gold, #e9c349)" : "3px solid transparent",
+                        backgroundColor: item.is_gift ? "rgba(233,195,73,0.04)" : "rgba(255,255,255,0.02)",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div style={{ flex: 1, paddingRight: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                            <strong style={{ fontSize: "12px", color: "#fff" }}>{item.name}</strong>
+                            {item.is_gift && (
+                              <span
+                                style={{
+                                  background: "rgba(233, 195, 73, 0.2)",
+                                  color: "var(--color-gold, #e9c349)",
+                                  padding: "1px 6px",
+                                  borderRadius: "4px",
+                                  fontSize: "9px",
+                                  fontWeight: 700,
+                                  letterSpacing: "0.05em",
+                                }}
+                              >
+                                🎁 GIFT / COMPLIMENTARY
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "10px", marginTop: "2px" }}>
+                            <span style={{ color: "rgba(255,255,255,0.4)" }}>Size: {item.size} | </span>
+                            {item.is_gift ? (
+                              <span>
+                                <del style={{ color: "rgba(255,255,255,0.35)", marginRight: "4px" }}>
+                                  {formatPKR(item.original_price || item.price)}
+                                </del>
+                                <strong style={{ color: "var(--color-gold, #e9c349)" }}>PKR 0</strong>
+                              </span>
+                            ) : (
+                              <span style={{ color: "rgba(255,255,255,0.6)" }}>{formatPKR(item.price)}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                          <button
+                            type="button"
+                            onClick={() => toggleGiftItem(item.variant_id)}
+                            title={item.is_gift ? "Remove Gift status" : "Mark as Complimentary Gift to customer"}
+                            style={{
+                              padding: "3px 8px",
+                              background: item.is_gift ? "var(--color-gold, #e9c349)" : "rgba(255,255,255,0.06)",
+                              border: "1px solid",
+                              borderColor: item.is_gift ? "var(--color-gold, #e9c349)" : "rgba(255,255,255,0.15)",
+                              color: item.is_gift ? "#000" : "#e9c349",
+                              borderRadius: "4px",
+                              fontSize: "10px",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "3px",
+                            }}
+                          >
+                            <span>🎁</span> {item.is_gift ? "Gifted" : "Gift"}
+                          </button>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <button
+                              onClick={() => updateQuantity(item.variant_id, -1)}
+                              style={{ width: "22px", height: "22px", background: "rgba(255,255,255,0.06)", border: "none", color: "#fff", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}
+                            >
+                              -
+                            </button>
+                            <span style={{ fontSize: "12px", width: "16px", textAlign: "center" }}>{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.variant_id, 1)}
+                              style={{ width: "22px", height: "22px", background: "rgba(255,255,255,0.06)", border: "none", color: "#fff", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <button
-                          onClick={() => updateQuantity(item.variant_id, -1)}
-                          style={{ width: "22px", height: "22px", background: "rgba(255,255,255,0.06)", border: "none", color: "#fff", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}
-                        >
-                          -
-                        </button>
-                        <span style={{ fontSize: "12px", width: "16px", textAlign: "center" }}>{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.variant_id, 1)}
-                          style={{ width: "22px", height: "22px", background: "rgba(255,255,255,0.06)", border: "none", color: "#fff", borderRadius: "4px", fontSize: "12px", cursor: "pointer" }}
-                        >
-                          +
-                        </button>
-                      </div>
+
+                      {item.is_gift && (
+                        <div style={{ marginTop: "4px" }}>
+                          <input
+                            type="text"
+                            placeholder="Gift Reason (e.g. VIP Gift, PR Sample, Store Promo)..."
+                            value={item.gift_reason || ""}
+                            onChange={(e) => updateGiftReason(item.variant_id, e.target.value)}
+                            style={{
+                              width: "100%",
+                              padding: "4px 8px",
+                              background: "rgba(0,0,0,0.3)",
+                              border: "1px solid rgba(233,195,73,0.3)",
+                              borderRadius: "4px",
+                              color: "#fff",
+                              fontSize: "11px",
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1426,10 +1542,23 @@ export default function POSClient() {
                       <tr key={item.variant_id}>
                         <td style={{ paddingTop: "6px" }}>
                           {item.name}
-                          <span style={{ fontSize: "10px", display: "block", color: "#555" }}>Size: {item.size}</span>
+                          <span style={{ fontSize: "10px", display: "block", color: "#555" }}>
+                            Size: {item.size} {item.is_gift ? "• 🎁 COMPLIMENTARY GIFT" : ""}
+                          </span>
+                          {item.is_gift && item.gift_reason && (
+                            <span style={{ fontSize: "9px", display: "block", color: "#777", fontStyle: "italic" }}>
+                              Reason: {item.gift_reason}
+                            </span>
+                          )}
                         </td>
                         <td style={{ textAlign: "center", paddingTop: "6px" }}>{item.quantity}</td>
-                        <td style={{ textAlign: "right", paddingTop: "6px" }}>{formatPKR(item.price * item.quantity)}</td>
+                        <td style={{ textAlign: "right", paddingTop: "6px" }}>
+                          {item.is_gift ? (
+                            <span style={{ fontWeight: "bold" }}>PKR 0 (GIFT)</span>
+                          ) : (
+                            formatPKR(item.price * item.quantity)
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

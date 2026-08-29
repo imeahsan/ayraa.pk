@@ -12,6 +12,8 @@ export interface PosOrderItemInput {
   price: number;
   name?: string;
   size?: string;
+  is_gift?: boolean;
+  gift_reason?: string;
 }
 
 export interface PosOrderPayload {
@@ -90,13 +92,26 @@ export async function recordPosOrder(payload: PosOrderPayload): Promise<PosOrder
       product_id: item.product_id,
       variant_id: item.variant_id,
       quantity: item.quantity,
-      unit_price: item.price,
+      unit_price: item.is_gift ? 0 : item.price,
+      is_gift: item.is_gift || false,
+      gift_reason: item.gift_reason || null,
     }));
 
     const { error: itemsError } = await adminSupabase.from("order_items").insert(orderItemsPayload);
     if (itemsError) {
       console.error("Failed to insert POS order items:", itemsError);
       return { success: false, error: itemsError.message };
+    }
+
+    // 2.1 Insert gift audit notes if any item was gifted
+    const giftItems = payload.items.filter((it) => it.is_gift);
+    if (giftItems.length > 0) {
+      const giftNotes = giftItems.map((g) => ({
+        order_id: payload.order_id,
+        admin_user_id: user.id,
+        note: `[POS COMPLIMENTARY GIFT: ${g.name || "Item"} (${g.size || "Standard"}) - Qty: ${g.quantity} - Retail Value: PKR ${g.price} - Reason: ${g.gift_reason || "Customer Gift"}]`,
+      }));
+      await adminSupabase.from("order_notes").insert(giftNotes);
     }
 
     // 3. Decrement stock levels and update is_available on product_variants

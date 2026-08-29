@@ -30,6 +30,7 @@ export interface Product {
   description: string | null;
   price: number;
   compare_at_price: number | null;
+  cost_price?: number | null;
   sku: string | null;
   barcode?: string | null;
   category_id: string | null;
@@ -64,12 +65,13 @@ export interface ProductVariant {
   size: string;
   color?: string;
   stock_quantity: number;
+  cost_price?: number | null;
   is_available: boolean;
 }
 
 // ---------- Order Types ----------
 
-export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
 export type PaymentMethod = 'cod';
 
 export interface Order {
@@ -102,6 +104,8 @@ export interface OrderItem {
   variant_id: string | null;
   quantity: number;
   unit_price: number;
+  is_gift?: boolean;
+  gift_reason?: string | null;
   product?: Product;
   variant?: ProductVariant;
 }
@@ -183,6 +187,8 @@ export interface OrderShipment {
   shipping_company?: ShippingCompany;
 }
 
+// ---------- Returns & Exchanges ----------
+
 export type ReturnRequestType = 'return' | 'exchange' | 'replacement';
 export type ReturnRequestStatus = 'draft' | 'requested' | 'approved' | 'rejected' | 'received' | 'inspected' | 'resolved' | 'cancelled';
 export type ReturnResolutionType = 'refund' | 'exchange_order' | 'store_credit' | 'no_action';
@@ -217,6 +223,7 @@ export interface OrderReturnRequest {
   updated_at: string;
   order?: Order;
   items?: OrderReturnItem[];
+  exchange_order?: Order | null;
 }
 
 export interface OrderReturnItem {
@@ -234,6 +241,8 @@ export interface OrderReturnItem {
   exchange_variant_id: string | null;
   exchange_quantity: number | null;
   created_at: string;
+  is_restocked?: boolean;
+  restocked_at?: string | null;
   product?: Product;
   variant?: ProductVariant;
   order_item?: OrderItem;
@@ -427,3 +436,149 @@ export interface PromoCode {
   applicable_category_ids: string[] | null;
   created_at: string;
 }
+
+// ---------- Enterprise Finance & Expenses ----------
+
+export type ExpenseCategory =
+  | 'marketing_ads'
+  | 'fabric_materials'
+  | 'packaging_supplies'
+  | 'salaries_wages'
+  | 'logistics_shipping'
+  | 'rent_utilities'
+  | 'software_tools'
+  | 'office_maintenance'
+  | 'taxes_legal'
+  | 'miscellaneous';
+
+export type ExpensePaymentMethod = 'cash' | 'bank_transfer' | 'credit_card' | 'cheque' | 'other';
+export type RecurringInterval = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+
+export interface Expense {
+  id: string;
+  title: string;
+  category: ExpenseCategory;
+  amount: number;
+  expense_date: string;
+  payment_method: ExpensePaymentMethod;
+  vendor?: string | null;
+  reference_number?: string | null;
+  receipt_url?: string | null;
+  is_recurring: boolean;
+  recurring_interval?: RecurringInterval | null;
+  notes?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type FinancialAccountType = 'bank' | 'cash_till' | 'courier_wallet' | 'other';
+
+export interface FinancialAccount {
+  id: string;
+  name: string;
+  account_type: FinancialAccountType;
+  account_number?: string | null;
+  bank_name?: string | null;
+  balance: number;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TreasuryTransfer {
+  id: string;
+  from_account_id: string;
+  to_account_id: string;
+  amount: number;
+  transfer_date: string;
+  reference_note?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  from_account?: FinancialAccount;
+  to_account?: FinancialAccount;
+}
+
+export interface FinancialOverviewStats {
+  period: { from: string; to: string; label: string };
+  grossRevenue: number;
+  discountsAmount: number;
+  refundsAmount: number;
+  netRevenue: number;
+  cogsAmount: number;
+  grossProfit: number;
+  grossProfitMargin: number;
+  operatingExpenses: number;
+  marketingExpenses: number;
+  shippingExpenses: number;
+  salariesExpenses: number;
+  otherExpenses: number;
+  rtoShippingLoss: number;
+  netProfit: number;
+  netProfitMargin: number;
+  totalOrdersCount: number;
+  deliveredOrdersCount: number;
+  returnedOrdersCount: number;
+  rtoRate: number;
+  averageOrderValue: number;
+  merRoas: number;
+  blendedCac: number;
+  inventoryHoldingCost: number;
+  inventoryRetailValue: number;
+  inventoryTotalUnits: number;
+  pendingCourierRemittance: number;
+  collectedCourierRemittance: number;
+  giftItemsCount: number;
+  giftRetailValue: number;
+  giftCogsCost: number;
+}
+
+export interface UnitEconomicsItem {
+  productId: string;
+  productName: string;
+  sku?: string | null;
+  imageUrl?: string | null;
+  categoryName: string;
+  unitsSold: number;
+  retailPrice: number;
+  costPrice: number;
+  grossRevenue: number;
+  cogsTotal: number;
+  contributionMargin1: number;
+  cm1Percentage: number;
+  estimatedAdSpend: number;
+  estimatedReturnLoss: number;
+  contributionMargin2: number;
+  cm2Percentage: number;
+  stockOnHand: number;
+  tier: 'hero' | 'solid' | 'drainer';
+}
+
+export interface InventoryAgingItem {
+  productId: string;
+  productName: string;
+  categoryName: string;
+  imageUrl?: string | null;
+  totalStock: number;
+  unitCost: number;
+  unitPrice: number;
+  totalCostValue: number;
+  totalRetailValue: number;
+  projectedProfit: number;
+  daysSinceCreation: number;
+  agingBracket: '<30_days' | '30-60_days' | '>60_days';
+  turnoverVelocity: 'fast' | 'moderate' | 'stagnant';
+}
+
+export interface CourierRemittanceBreakdown {
+  courierName: string;
+  deliveredOrdersCount: number;
+  expectedCodTotal: number;
+  estimatedDeliveryCharges: number;
+  estimatedCodHandlingFee: number;
+  netRemittableAmount: number;
+  rtoOrdersCount: number;
+  rtoFreightLoss: number;
+}
+

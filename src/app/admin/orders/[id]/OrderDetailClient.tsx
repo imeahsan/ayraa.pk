@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Order, OrderItem, OrderStatus, ShipmentStatus } from "@/types";
+import { Order, OrderItem, OrderReturnRequest, OrderStatus, ShipmentStatus } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import styles from "../../admin.module.css";
@@ -64,6 +64,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
   const supabase = createClient();
   const toast = useToast();
   const [order, setOrder] = useState<Order | null>(null);
+  const [orderReturns, setOrderReturns] = useState<OrderReturnRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -124,6 +125,15 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
           }
           setOrder(resolvedOrder);
         }
+
+        // Fetch associated return requests
+        const { data: returnsData } = await supabase
+          .from("order_return_requests")
+          .select("*, items:order_return_items(*)")
+          .eq("order_id", orderId)
+          .order("created_at", { ascending: false });
+
+        setOrderReturns((returnsData || []) as OrderReturnRequest[]);
       } catch (err) {
         console.error("Failed to load order detail:", err);
         setOrder(null);
@@ -582,9 +592,9 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
                 alignItems: "center",
                 gap: "8px",
                 padding: "8px 16px",
-                backgroundColor: "rgba(96, 165, 250, 0.06)",
-                color: "var(--color-info)",
-                border: "1px solid rgba(96, 165, 250, 0.2)",
+                backgroundColor: orderReturns.length > 0 ? "rgba(233, 195, 73, 0.12)" : "rgba(96, 165, 250, 0.06)",
+                color: orderReturns.length > 0 ? "var(--color-gold)" : "var(--color-info)",
+                border: orderReturns.length > 0 ? "1px solid rgba(233, 195, 73, 0.4)" : "1px solid rgba(96, 165, 250, 0.2)",
                 borderRadius: "var(--radius-sm)",
                 fontSize: "13px",
                 fontWeight: "var(--weight-bold)",
@@ -592,18 +602,64 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
                 transition: "all 0.2s"
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(96, 165, 250, 0.12)";
-                e.currentTarget.style.borderColor = "var(--color-info)";
+                e.currentTarget.style.backgroundColor = orderReturns.length > 0 ? "rgba(233, 195, 73, 0.2)" : "rgba(96, 165, 250, 0.12)";
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(96, 165, 250, 0.06)";
-                e.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.2)";
+                e.currentTarget.style.backgroundColor = orderReturns.length > 0 ? "rgba(233, 195, 73, 0.12)" : "rgba(96, 165, 250, 0.06)";
               }}
             >
-              <span>🔄</span> Return / Exchange
+              <span>🔄</span> Return / Exchange {orderReturns.length > 0 && `(${orderReturns.length})`}
             </Link>
           </div>
         </div>
+
+        {/* Return Cases Banner */}
+        {orderReturns.length > 0 && (
+          <div
+            style={{
+              backgroundColor: "rgba(233, 195, 73, 0.08)",
+              border: "1px solid rgba(233, 195, 73, 0.25)",
+              borderRadius: "var(--radius-md, 8px)",
+              padding: "16px 20px",
+              marginBottom: "24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "16px" }}>🔄</span>
+                <strong style={{ fontSize: "14px", color: "var(--color-gold)" }}>
+                  {orderReturns.length} Return / Exchange Case(s) Active for this Order
+                </strong>
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--admin-text-sub)", marginTop: "4px" }}>
+                {orderReturns.map((r) => (
+                  <span key={r.id} style={{ marginRight: "12px" }}>
+                    Case #{r.id.slice(0, 8)} ({r.request_type.toUpperCase()}) — Status: <strong style={{ color: "var(--admin-text)" }}>{r.status}</strong>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <Link
+              href={`/admin/returns/${orderReturns[0].id}`}
+              style={{
+                padding: "6px 14px",
+                backgroundColor: "var(--color-gold)",
+                color: "#121111",
+                fontWeight: 700,
+                fontSize: "12px",
+                borderRadius: "4px",
+                textDecoration: "none",
+              }}
+            >
+              View Return Case →
+            </Link>
+          </div>
+        )}
 
         {/* 2-Column Responsive Dashboard Layout */}
         <div className={styles.orderDetailLayout}>
