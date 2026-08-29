@@ -98,7 +98,10 @@ export function trackEvent(
   if (!options?.force && !canTrack(options?.pathname)) return;
   if (typeof window === "undefined" || !window.gtag) return;
 
-  const payload = cleanParams(params);
+  const payload = cleanParams({
+    ...(isAnalyticsDebug ? { debug_mode: true } : {}),
+    ...params,
+  });
   debugLog(eventName, payload);
   window.gtag("event", eventName, payload);
 }
