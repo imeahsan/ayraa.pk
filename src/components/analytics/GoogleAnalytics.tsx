@@ -43,8 +43,11 @@ export function GoogleAnalytics() {
     window.dataLayer = window.dataLayer || [];
     window.gtag =
       window.gtag ||
-      function gtag(...args: unknown[]) {
-        window.dataLayer?.push(args);
+      function gtag() {
+        // Google Tag's command processor expects the native `arguments`
+        // object used by the official gtag.js snippet, not a rest-parameter array.
+        // eslint-disable-next-line prefer-rest-params
+        window.dataLayer?.push(arguments);
       };
 
     window.gtag("consent", "default", {
