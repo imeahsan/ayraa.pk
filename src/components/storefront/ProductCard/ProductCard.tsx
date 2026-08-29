@@ -31,9 +31,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [primaryFailed, setPrimaryFailed] = React.useState(false);
   const [secondaryLoaded, setSecondaryLoaded] = React.useState(false);
   const wishlisted = isWishlisted(product.id);
-  const isOutOfStock =
-    product.variants !== undefined &&
-    (product.variants.length === 0 || product.variants.every((v) => v.stock_quantity <= 0 || !v.is_available));
+  const isOutOfStock = Boolean(
+    product.variants &&
+      product.variants.length > 0 &&
+      product.variants.every((v) => v.stock_quantity <= 0 || !v.is_available)
+  );
   const displayImage = primaryFailed && alternateImage ? alternateImage : primaryImage;
   const hoverImage =
     alternateImage && alternateImage.url !== displayImage?.url ? alternateImage : null;
@@ -131,9 +133,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           ) : null}
 
           <div className={styles.badgeContainer}>
-            {isOutOfStock && (
-              <span className={styles.outOfStockBadge} id={`out-of-stock-badge-${product.id}`}>
-                Sold out!
+            {product.bedsheet_ar_status === "ready" && (
+              <span
+                className={styles.badge}
+                id={`ar-badge-${product.id}`}
+                style={{
+                  backgroundColor: "rgba(212, 175, 55, 0.95)",
+                  color: "#1a1108",
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                AR 3D
               </span>
             )}
             {product.compare_at_price && product.compare_at_price > product.price ? (
@@ -141,6 +152,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 Sale
               </span>
             ) : null}
+            {isOutOfStock && (
+              <span className={styles.outOfStockBadge} id={`out-of-stock-badge-${product.id}`}>
+                Sold out!
+              </span>
+            )}
           </div>
         </Link>
 

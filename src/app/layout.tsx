@@ -11,6 +11,7 @@ import { WhatsAppFAB } from "@/components/storefront/WhatsAppFAB";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { AnalyticsConsentBanner } from "@/components/analytics/AnalyticsConsentBanner";
 import { WebVitals } from "@/components/analytics/WebVitals";
+import { DisableNumberScroll } from "@/components/common/DisableNumberScroll";
 import { DEFAULT_OG_IMAGE, DEFAULT_SEO_DESCRIPTION, DEFAULT_SEO_TITLE, SITE_NAME, absoluteUrl, getSiteUrl } from "@/lib/seo";
 import { WebSiteJsonLd } from "@/components/seo/WebSiteJsonLd";
 
@@ -122,6 +123,7 @@ export default function RootLayout({
                 <WebSiteJsonLd baseUrl={baseUrl} />
                 <GoogleAnalytics />
                 <WebVitals />
+                <DisableNumberScroll />
                 {children}
                 <CartDrawer />
                 <WhatsAppFAB />

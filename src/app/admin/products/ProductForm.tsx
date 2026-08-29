@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
+import { isBeddingProduct } from "@/lib/bedsheet-ar/is-bedding";
 import styles from "../admin.module.css";
 import { ImageUploader, ImageItem } from "./ImageUploader";
 
@@ -407,26 +408,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               { size: "XL", qty: cv.stockXL },
             ];
             sizesList.forEach((s) => {
-              if (s.qty > 0) {
-                variantsPayload.push({
-                  product_id: id,
-                  size: s.size,
-                  color: cv.color,
-                  stock_quantity: s.qty,
-                  is_available: true,
-                });
-              }
-            });
-          } else {
-            if (cv.singleStock >= 0) {
               variantsPayload.push({
                 product_id: id,
-                size: "Standard",
+                size: s.size,
                 color: cv.color,
-                stock_quantity: cv.singleStock,
-                is_available: cv.singleStock > 0,
+                stock_quantity: Math.max(0, Number(s.qty) || 0),
+                is_available: Number(s.qty) > 0,
               });
-            }
+            });
+          } else {
+            variantsPayload.push({
+              product_id: id,
+              size: "Standard",
+              color: cv.color,
+              stock_quantity: Math.max(0, Number(cv.singleStock) || 0),
+              is_available: Number(cv.singleStock) > 0,
+            });
           }
         });
       } else {
@@ -439,23 +436,21 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
             { size: "XL", qty: stockXL },
           ];
           sizesList.forEach((s) => {
-            if (s.qty > 0) {
-              variantsPayload.push({
-                product_id: id,
-                size: s.size,
-                color: "Standard",
-                stock_quantity: s.qty,
-                is_available: true,
-              });
-            }
+            variantsPayload.push({
+              product_id: id,
+              size: s.size,
+              color: "Standard",
+              stock_quantity: Math.max(0, Number(s.qty) || 0),
+              is_available: Number(s.qty) > 0,
+            });
           });
         } else {
           variantsPayload.push({
             product_id: id,
             size: "Standard",
             color: "Standard",
-            stock_quantity: singleStock,
-            is_available: singleStock > 0,
+            stock_quantity: Math.max(0, Number(singleStock) || 0),
+            is_available: Number(singleStock) > 0,
           });
         }
       }
@@ -646,9 +641,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                 <label className={styles.formLabel}>Price (PKR) *</label>
                 <input
                   type="number"
-                  value={price || ""}
+                  value={price !== undefined ? price : ""}
                   onChange={(e) => setPrice(Number(e.target.value))}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className={styles.formInput}
+                  min="0"
                   required
                 />
               </div>
@@ -660,7 +657,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                   onChange={(e) =>
                     setCompareAtPrice(e.target.value === "" ? "" : Number(e.target.value))
                   }
+                  onWheel={(e) => e.currentTarget.blur()}
                   className={styles.formInput}
+                  min="0"
                 />
               </div>
               <div className={styles.formGroup}>
@@ -672,7 +671,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                   onChange={(e) =>
                     setCostPrice(e.target.value === "" ? "" : Number(e.target.value))
                   }
+                  onWheel={(e) => e.currentTarget.blur()}
                   className={styles.formInput}
+                  min="0"
                 />
                 <span style={{ fontSize: "11px", color: "var(--admin-text-sub)", marginTop: "2px", display: "block" }}>
                   Manufacturing cost for P&amp;L
@@ -711,8 +712,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                 <label className={styles.formLabel}>Total Stock Inventory *</label>
                 <input
                   type="number"
-                  value={singleStock || ""}
-                  onChange={(e) => setSingleStock(Number(e.target.value))}
+                  value={singleStock !== undefined ? singleStock : 0}
+                  onChange={(e) => setSingleStock(e.target.value === "" ? 0 : Math.max(0, Number(e.target.value)))}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className={styles.formInput}
                   min="0"
                   required
@@ -738,8 +740,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                         <span className={styles.sizeStockLabel}>{size}</span>
                         <input
                           type="number"
-                          value={val || ""}
-                          onChange={(e) => setter(Number(e.target.value))}
+                          value={val !== undefined ? val : 0}
+                          onChange={(e) => setter(e.target.value === "" ? 0 : Math.max(0, Number(e.target.value)))}
+                          onWheel={(e) => e.currentTarget.blur()}
                           className={styles.sizeStockInput}
                           min="0"
                         />
@@ -832,8 +835,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                                   <span className={styles.sizeStockLabel}>{size}</span>
                                   <input
                                     type="number"
-                                    value={val || ""}
-                                    onChange={(e) => handleColorStockChange(cv.color, field, Number(e.target.value))}
+                                    value={val !== undefined ? val : 0}
+                                    onChange={(e) => handleColorStockChange(cv.color, field, e.target.value === "" ? 0 : Math.max(0, Number(e.target.value)))}
+                                    onWheel={(e) => e.currentTarget.blur()}
                                     className={styles.sizeStockInput}
                                     min="0"
                                   />
@@ -846,8 +850,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                             <label className={styles.formLabel}>Stock Quantity</label>
                             <input
                               type="number"
-                              value={cv.singleStock || ""}
-                              onChange={(e) => handleColorStockChange(cv.color, "singleStock", Number(e.target.value))}
+                              value={cv.singleStock !== undefined ? cv.singleStock : 0}
+                              onChange={(e) => handleColorStockChange(cv.color, "singleStock", e.target.value === "" ? 0 : Math.max(0, Number(e.target.value)))}
+                              onWheel={(e) => e.currentTarget.blur()}
                               className={styles.formInput}
                               min="0"
                             />
@@ -990,6 +995,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
             <Button type="submit" variant="luxury" size="lg" fullWidth isLoading={saving}>
               {isEditing ? "Save Product Changes" : "Publish Product"}
             </Button>
+            {isEditing && isBeddingProduct({ category_id: categoryId, name, fabric, slug: name }, categories) && (
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                fullWidth
+                style={{ borderColor: "var(--color-gold)", color: "var(--color-gold)" }}
+                onClick={() => router.push(`/admin/products/${productId}/bedsheet-ar`)}
+              >
+                🛏️ Configure AR & Texture
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"

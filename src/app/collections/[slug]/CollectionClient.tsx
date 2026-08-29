@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { Breadcrumb } from "@/components/storefront/Breadcrumb/Breadcrumb";
@@ -19,6 +19,8 @@ const normalizeFabricName = (name: string): string => {
     .join(" ");
 };
 
+const collectionSearchCache = new Map<string, Product[]>();
+
 interface CollectionClientProps {
   initialProducts: Product[];
   categoryName: string;
@@ -31,14 +33,18 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   categorySlug,
 }) => {
   const { layout, setLayout } = useListingLayoutPreference();
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [sortBy, setSortBy] = useState<string>("newest");
-  const [limit, setLimit] = useState<number>(6);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(12);
   const [isMobileFiltersExpanded, setIsMobileFiltersExpanded] = useState<boolean>(false);
 
-  // Available filters from products
+  const gridSectionRef = useRef<HTMLDivElement | null>(null);
+
+  // Available fabric filters from products
   const fabrics = useMemo(() => {
     const list = new Set<string>();
     initialProducts.forEach((p) => {
@@ -65,14 +71,48 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   };
 
   const clearFilters = () => {
+    setSearchTerm("");
     setSelectedFabrics([]);
     setSelectedSizes([]);
     setInStockOnly(false);
+    setCurrentPage(1);
   };
 
-  // Filter & sort logic
+  // Reset to page 1 whenever any filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedFabrics, selectedSizes, inStockOnly, sortBy, itemsPerPage]);
+
+  // Cached Filter & Sort Logic
   const filteredProducts = useMemo(() => {
+    const cleanSearch = searchTerm.trim().toLowerCase();
+    const cacheKey = JSON.stringify({
+      slug: categorySlug,
+      search: cleanSearch,
+      fabrics: selectedFabrics,
+      sizes: selectedSizes,
+      inStock: inStockOnly,
+      sort: sortBy,
+      baseLength: initialProducts.length,
+    });
+
+    if (collectionSearchCache.has(cacheKey)) {
+      return collectionSearchCache.get(cacheKey)!;
+    }
+
     let result = [...initialProducts];
+
+    // Filter by cached search keyword (name, description, sku, fabric, color)
+    if (cleanSearch) {
+      result = result.filter((p) => {
+        const nameMatch = p.name?.toLowerCase().includes(cleanSearch);
+        const skuMatch = p.sku?.toLowerCase().includes(cleanSearch);
+        const descMatch = p.description?.toLowerCase().includes(cleanSearch);
+        const fabricMatch = p.fabric?.toLowerCase().includes(cleanSearch);
+        const colorMatch = p.color?.toLowerCase().includes(cleanSearch);
+        return nameMatch || skuMatch || descMatch || fabricMatch || colorMatch;
+      });
+    }
 
     // Filter by Availability (In Stock Only)
     if (inStockOnly) {
@@ -95,7 +135,11 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
       result = result.filter(
         (p) =>
           p.variants &&
-          p.variants.some((v) => selectedSizes.includes(v.size) && (!inStockOnly || (v.stock_quantity > 0 && v.is_available)))
+          p.variants.some(
+            (v) =>
+              selectedSizes.includes(v.size) &&
+              (!inStockOnly || (v.stock_quantity > 0 && v.is_available))
+          )
       );
     }
 
@@ -114,16 +158,33 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
       });
     }
 
+    // Store in cache (limit cache size to 100 entries)
+    if (collectionSearchCache.size > 100) {
+      const firstKey = collectionSearchCache.keys().next().value;
+      if (firstKey) collectionSearchCache.delete(firstKey);
+    }
+    collectionSearchCache.set(cacheKey, result);
+
     return result;
-  }, [initialProducts, selectedFabrics, selectedSizes, inStockOnly, sortBy]);
+  }, [categorySlug, initialProducts, searchTerm, selectedFabrics, selectedSizes, inStockOnly, sortBy]);
 
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredProducts.length);
   const displayedProducts = useMemo(() => {
-    return filteredProducts.slice(0, limit);
-  }, [filteredProducts, limit]);
+    return filteredProducts.slice(startIndex, endIndex);
+  }, [filteredProducts, startIndex, endIndex]);
 
-  const sentinelRef = React.useRef<HTMLDivElement | null>(null);
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+    setCurrentPage(newPage);
+    if (gridSectionRef.current) {
+      gridSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
-  React.useEffect(() => {
+  useEffect(() => {
     trackEcommerceEvent("view_item_list", {
       item_list_name: categoryName,
       item_category: categoryName,
@@ -133,28 +194,23 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
     });
   }, [categoryName, displayedProducts]);
 
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && filteredProducts.length > limit) {
-          // Trigger loading more products by incrementing limit
-          setLimit((prev) => prev + 6);
-        }
-      },
-      { rootMargin: "200px" } // Load before element hits viewport
-    );
-
-    const currentSentinel = sentinelRef.current;
-    if (currentSentinel) {
-      observer.observe(currentSentinel);
-    }
-
-    return () => {
-      if (currentSentinel) {
-        observer.unobserve(currentSentinel);
+  // Generate page numbers with ellipsis
+  const paginationRange = useMemo(() => {
+    const delta = 2;
+    const range: (number | string)[] = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      } else if (range[range.length - 1] !== "...") {
+        range.push("...");
       }
-    };
-  }, [filteredProducts.length, limit]);
+    }
+    return range;
+  }, [currentPage, totalPages]);
+
+  const isFiltered = Boolean(
+    searchTerm || selectedFabrics.length > 0 || selectedSizes.length > 0 || inStockOnly
+  );
 
   return (
     <div className={styles.container}>
@@ -166,8 +222,41 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
       />
 
       <div className={styles.header}>
-        <h1 className={styles.title}>{categoryName}</h1>
+        <div className={styles.titleWrapper}>
+          <h1 className={styles.title}>{categoryName}</h1>
+          <span className={styles.productCountBadge}>
+            {filteredProducts.length} {filteredProducts.length === 1 ? "Product" : "Products"}
+          </span>
+        </div>
+
         <div className={styles.toolbar}>
+          {/* Instant Cached Search Bar */}
+          <div className={styles.searchBox}>
+            <span className={styles.searchIcon}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              placeholder={`Search in ${categoryName}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={styles.searchInput}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm("")}
+                className={styles.searchClear}
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
           <ListingLayoutSelector value={layout} onChange={setLayout} />
         </div>
       </div>
@@ -183,9 +272,9 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
           >
             <span className={styles.mobileToggleIcon}>🎛</span>
             <span>{isMobileFiltersExpanded ? "Hide Filters & Sort" : "Filters & Sort"}</span>
-            {(selectedFabrics.length > 0 || selectedSizes.length > 0 || inStockOnly) && (
+            {(selectedFabrics.length > 0 || selectedSizes.length > 0 || inStockOnly || searchTerm) && (
               <span className={styles.filterBadge}>
-                {selectedFabrics.length + selectedSizes.length + (inStockOnly ? 1 : 0)}
+                {selectedFabrics.length + selectedSizes.length + (inStockOnly ? 1 : 0) + (searchTerm ? 1 : 0)}
               </span>
             )}
           </button>
@@ -252,18 +341,18 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
             </div>
 
             {/* Clear Filters Button */}
-            {(selectedFabrics.length > 0 || selectedSizes.length > 0 || inStockOnly) && (
+            {isFiltered && (
               <button
                 onClick={clearFilters}
                 className={styles.clearBtnInline}
                 type="button"
               >
-                Clear
+                Clear Filters
               </button>
             )}
           </div>
 
-          {/* Sort By Container (moved here to sit on the same line on desktop) */}
+          {/* Sort By Container */}
           <div className={styles.sortContainerInline}>
             <label htmlFor="sort-select" className={styles.sortLabelInline}>Sort by:</label>
             <select
@@ -281,15 +370,14 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
         </div>
       </div>
 
-      <div className={styles.mainLayout}>
-
+      <div className={styles.mainLayout} ref={gridSectionRef}>
         {/* Product Grid / Empty State */}
         <div className={styles.contentArea}>
           {displayedProducts.length === 0 ? (
             <div className={styles.emptyState}>
-              <p>No products match your selected criteria.</p>
+              <p>No products match your selected search or filter criteria.</p>
               <button onClick={clearFilters} className={styles.resetBtn}>
-                Reset All Filters
+                Reset All Filters &amp; Search
               </button>
             </div>
           ) : (
@@ -306,29 +394,73 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
                     key={product.id}
                     product={product}
                     listName={categoryName}
-                    index={index}
+                    index={startIndex + index}
                     layout={layout}
                   />
                 ))}
               </div>
 
-              {filteredProducts.length > limit && (
-                <div
-                  ref={sentinelRef}
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    paddingBlock: "48px",
-                    color: "var(--color-gold)",
-                    fontFamily: "var(--font-body)",
-                    fontSize: "13px",
-                    letterSpacing: "2px",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  <span className="pulse-loader">
-                    Loading More...
-                  </span>
+              {/* Enhanced Pagination Controls */}
+              {totalPages > 1 && (
+                <div className={styles.paginationWrapper}>
+                  <div className={styles.paginationSummary}>
+                    Showing <strong>{startIndex + 1}–{endIndex}</strong> of <strong>{filteredProducts.length}</strong> products
+                  </div>
+
+                  <div className={styles.paginationNav}>
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      aria-label="Previous page"
+                    >
+                      ‹ Prev
+                    </button>
+
+                    {paginationRange.map((item, idx) => {
+                      if (item === "...") {
+                        return <span key={`ellipsis-${idx}`} className={styles.pageEllipsis}>…</span>;
+                      }
+
+                      const pageNum = Number(item);
+                      const isActive = pageNum === currentPage;
+                      return (
+                        <button
+                          key={`page-${pageNum}`}
+                          type="button"
+                          className={`${styles.pageBtn} ${isActive ? styles.pageBtnActive : ""}`}
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      aria-label="Next page"
+                    >
+                      Next ›
+                    </button>
+                  </div>
+
+                  <div className={styles.perPageContainer}>
+                    <label htmlFor="per-page" className={styles.paginationSummary}>Per page:</label>
+                    <select
+                      id="per-page"
+                      value={itemsPerPage}
+                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                      className={styles.perPageSelect}
+                    >
+                      <option value={12}>12</option>
+                      <option value={24}>24</option>
+                      <option value={48}>48</option>
+                    </select>
+                  </div>
                 </div>
               )}
             </>

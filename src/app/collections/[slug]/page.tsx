@@ -49,8 +49,16 @@ const CATEGORY_NAMES: Record<string, string> = {
   "intimate-wear": "Intimate Wear",
   "sleep-wear": "Sleep Wear",
   // Bedding sub-categories
+  "single-bedsheets": "Single Bed-sheets",
+  "double-bedsheets": "Double Bed-sheets",
   "single-bed-sheets": "Single Bed-sheets",
   "double-bed-sheets": "Double Bed-sheets",
+  "king-bed-sheets": "King Bed-sheets",
+  "fitted-bedsheets": "Fitted Bed-sheets",
+  "fitted-sheets": "Fitted Bed-sheets",
+  "bed-sets": "Bed Sets",
+  "duvet-covers": "Duvet Covers",
+  "quilt-covers": "Quilt Covers",
   // Hijab sub-categories
   "chiffon-hijabs": "Chiffon Hijabs",
   "printed-hijabs": "Printed Hijabs",
