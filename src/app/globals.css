@@ -10,44 +10,41 @@
 
 
 /* =============================================
-   DARK MODE (Default — Aureate Noir)
-   Based on Stitch design: primary-container = #1c1b1b dark charcoal,
-   secondary = champagne gold (#b5960a / #e9c349),
-   surface = pearl white for text on dark
+   DARK MODE (Default — Aureate Noir Obsidian)
+   Noticeably darker, richer noir palette
    ============================================= */
 :root,
 html.theme-dark,
 .theme-dark {
-  /* --- Core palette (dark mode = Aureate Noir) --- */
-  --color-bg:               #1c1b1b;    /* primary-container = deep charcoal */
-  --color-bg-elevated:      #242323;    /* slightly lighter surface */
-  --color-bg-card:          #2a2929;    /* card surface */
-  --color-bg-hover:         #333232;    /* hover state */
-  --color-surface:          #1c1b1b;
-  --color-surface-dim:      #161515;
-  --color-surface-container:#2a2929;
-  --color-surface-container-high:#333232;
-  --color-surface-container-highest:#3d3b3b;
+  /* --- Core palette (dark mode = Aureate Noir Obsidian) --- */
+  --color-bg:               #0c0b0b;    /* ultra deep obsidian charcoal */
+  --color-bg-elevated:      #141313;    /* elevated dark surface */
+  --color-bg-card:          #181717;    /* rich card surface */
+  --color-bg-hover:         #222020;    /* hover state */
+  --color-surface:          #0c0b0b;
+  --color-surface-dim:      #070707;
+  --color-surface-container:#181717;
+  --color-surface-container-high:#201e1e;
+  --color-surface-container-highest:#282626;
 
   /* --- Product Card & Wishlist Button (Dark Mode Defaults) --- */
-  --color-product-image-bg: var(--color-surface-container);
-  --color-wishlist-bg:      rgba(28, 27, 27, 0.55);
+  --color-product-image-bg: #141313;
+  --color-wishlist-bg:      rgba(12, 11, 11, 0.7);
   --color-wishlist-border:  var(--color-border);
   --color-wishlist-color:   var(--color-on-surface);
   --color-wishlist-hover-bg: var(--color-gold-muted);
-  --color-wishlist-active-bg: rgba(233, 195, 73, 0.14);
-  --color-badge-text:       #1c1b1b;
-
+  --color-wishlist-active-bg: rgba(233, 195, 73, 0.18);
+  --color-badge-text:       #0c0b0b;
 
   /* --- Text colors (on dark) --- */
   --color-on-surface:       #fbf9f8;    /* pearl white — primary text */
-  --color-on-surface-sub:   rgba(251, 249, 248, 0.7); /* muted text */
+  --color-on-surface-sub:   rgba(251, 249, 248, 0.72); /* clear muted text */
   --color-on-surface-muted: rgba(251, 249, 248, 0.45); /* very muted */
   --color-on-surface-variant:#c4c7c7;
 
   /* --- Gold accent (secondary in Stitch) --- */
-  --color-gold:             #e9c349;    /* secondary-fixed-dim, bright gold */
-  --color-gold-bright:      #ffe088;    /* secondary-fixed */
+  --color-gold:             #e9c349;    /* radiant champagne gold */
+  --color-gold-bright:      #ffe088;    /* bright highlight gold */
   --color-gold-dim:         #b5960a;    /* deeper gold */
   --color-gold-muted:       rgba(233, 195, 73, 0.15);
   --color-gold-border:      rgba(233, 195, 73, 0.3);
@@ -55,13 +52,13 @@ html.theme-dark,
   /* --- Brand aliases --- */
   --color-primary:          var(--color-bg);
   --color-secondary:        var(--color-gold);
-  --color-charcoal:         #1c1b1b;
+  --color-charcoal:         #0c0b0b;
   --color-ivory:            #fbf9f8;
 
   /* --- Outline / borders --- */
   --color-outline:          #5a5b5b;
   --color-outline-variant:  #3d3b3b;
-  --color-border:           rgba(233, 195, 73, 0.2);
+  --color-border:           rgba(233, 195, 73, 0.22);
   --color-border-subtle:    rgba(251, 249, 248, 0.08);
 
   /* --- Functional --- */
@@ -75,74 +72,71 @@ html.theme-dark,
   --color-info-bg:          rgba(96, 165, 250, 0.12);
 
   /* --- Admin panel (always dark, Aureate Noir) --- */
-  --admin-sidebar:          #141313;
-  --admin-sidebar-hover:    #1c1b1b;
-  --admin-sidebar-active:   rgba(233, 195, 73, 0.12);
-  --admin-bg:               #0f0e0e;
-  --admin-card:             #1c1b1b;
-  --admin-card-hover:       #242323;
-  --admin-border:           rgba(233, 195, 73, 0.15);
+  --admin-sidebar:          #100f0f;
+  --admin-sidebar-hover:    #181717;
+  --admin-sidebar-active:   rgba(233, 195, 73, 0.15);
+  --admin-bg:               #090808;
+  --admin-card:             #141313;
+  --admin-card-hover:       #1c1b1b;
+  --admin-border:           rgba(233, 195, 73, 0.18);
   --admin-text:             #fbf9f8;
-  --admin-text-sub:         rgba(251, 249, 248, 0.6);
+  --admin-text-sub:         rgba(251, 249, 248, 0.65);
 
   /* --- Scrollbar track color --- */
-  --scrollbar-track:        #1c1b1b;
-  --scrollbar-thumb:        #3d3b3b;
+  --scrollbar-track:        #0c0b0b;
+  --scrollbar-thumb:        #282626;
   --scrollbar-thumb-hover:  var(--color-gold);
 
   /* --- Modal / overlay --- */
-  --color-overlay:          rgba(0, 0, 0, 0.75);
+  --color-overlay:          rgba(0, 0, 0, 0.82);
 
   /* --- Input / form --- */
-  --color-input-bg:         #242323;
+  --color-input-bg:         #181717;
   --color-input-border:     rgba(233, 195, 73, 0.3);
   --color-input-focus:      var(--color-gold);
   --color-input-placeholder:rgba(251, 249, 248, 0.4);
 
   /* --- Navigation header --- */
-  --header-bg:              rgba(28, 27, 27, 0.85);
-  --header-bg-scrolled:     rgba(28, 27, 27, 0.95);
-  --header-border:          rgba(233, 195, 73, 0.2);
+  --header-bg:              rgba(12, 11, 11, 0.88);
+  --header-bg-scrolled:     rgba(12, 11, 11, 0.96);
+  --header-border:          rgba(233, 195, 73, 0.22);
 
   /* --- Selection --- */
-  --selection-bg:           rgba(233, 195, 73, 0.25);
+  --selection-bg:           rgba(233, 195, 73, 0.28);
   --selection-color:        #fbf9f8;
 }
 
 /* =============================================
    LIGHT MODE — Pearl & Gold
-   Inverted: light ivory/cream background, dark charcoal text,
-   champagne gold accents preserved
    ============================================= */
 html.theme-light {
-  /* --- Core palette (light mode — Modern Eastern Elegance) --- */
-  --color-bg:               #f9f9f9;    /* Pearl White / Soft Gray background */
-  --color-bg-elevated:      #ffffff;    /* pure white cards (surface-container-lowest) */
+  /* --- Core palette (light mode) --- */
+  --color-bg:               #f9f9f9;
+  --color-bg-elevated:      #ffffff;
   --color-bg-card:          #ffffff;
-  --color-bg-hover:         #f3f3f4;    /* surface-container-low */
+  --color-bg-hover:         #f3f3f4;
   --color-surface:          #f9f9f9;
-  --color-surface-dim:      #dadada;    /* surface-dim */
-  --color-surface-container:#eeeeee;    /* surface-container */
-  --color-surface-container-high:#e8e8e8; /* surface-container-high */
-  --color-surface-container-highest:#e2e2e2; /* surface-container-highest */
+  --color-surface-dim:      #dadada;
+  --color-surface-container:#eeeeee;
+  --color-surface-container-high:#e8e8e8;
+  --color-surface-container-highest:#e2e2e2;
 
   /* --- Product Card & Wishlist Button (Light Mode) --- */
-  --color-product-image-bg: #f5f3ee;    /* warm pearl-ivory shade for card placeholder background */
-  --color-wishlist-bg:      rgba(255, 255, 255, 0.85); /* clean light background with blur */
+  --color-product-image-bg: #f5f3ee;
+  --color-wishlist-bg:      rgba(255, 255, 255, 0.88);
   --color-wishlist-border:  rgba(94, 96, 77, 0.15);
   --color-wishlist-color:   var(--color-on-surface);
   --color-wishlist-hover-bg: rgba(94, 96, 77, 0.08);
   --color-wishlist-active-bg: rgba(94, 96, 77, 0.15);
-  --color-badge-text:       #ffffff;    /* high contrast white text on gold/olive-sage badge */
-
+  --color-badge-text:       #ffffff;
 
   /* --- Text colors (on light) --- */
-  --color-on-surface:       #1a1c1c;    /* primary text */
-  --color-on-surface-sub:   #444748;    /* secondary/muted text (on-surface-variant) */
+  --color-on-surface:       #1a1c1c;
+  --color-on-surface-sub:   #444748;
   --color-on-surface-muted: rgba(26, 28, 28, 0.45);
   --color-on-surface-variant:#444748;
 
-  /* --- Accent color (Stitch Secondary: Olive Sage Luxury Gold) --- */
+  /* --- Accent color --- */
   --color-gold:             #5e604d;    
   --color-gold-bright:      #7a7c68;
   --color-gold-dim:         #444638;
@@ -172,8 +166,8 @@ html.theme-light {
   --color-info-bg:          #dbeafe;
 
   /* --- Admin panel --- */
-  --admin-sidebar:          #1c1b1b;
-  --admin-sidebar-hover:    #2a2929;
+  --admin-sidebar:          #100f0f;
+  --admin-sidebar-hover:    #181717;
   --admin-sidebar-active:   rgba(154, 120, 0, 0.15);
   --admin-bg:               #f5f3ee;
   --admin-card:             #ffffff;
@@ -212,21 +206,37 @@ html.theme-light {
 :root {
   /* Typography */
   --font-headline:  var(--font-playfair), 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --font-body:      var(--font-montserrat), 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-body:      var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  /* Font Sizes — Desktop */
-  --text-display-lg: 48px;
-  --text-display-md: 32px;
-  --text-headline-lg: 32px;
-  --text-headline-md: 24px;
-  --text-headline-sm: 20px;
-  --text-title-lg: 22px;
-  --text-title-md: 18px;
-  --text-body-lg: 18px;
-  --text-body-md: 16px;
-  --text-body-sm: 14px;
-  --text-label: 14px;
-  --text-label-sm: 12px;
+  /* Font Scale — Strict Standard Scale: 12, 14, 16, 18, 20, 22, 24, 28, 32, 40px (+ 48px display) */
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-md: 18px;
+  --text-lg: 20px;
+  --text-xl: 22px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+  --text-4xl: 32px;
+  --text-5xl: 40px;
+  --text-display: 48px;
+
+  /* Legacy semantic aliases mapped to exact type scale */
+  --text-label-sm: var(--text-xs);
+  --text-label: var(--text-sm);
+  --text-body-xs: var(--text-xs);
+  --text-body-sm: var(--text-sm);
+  --text-body-md: var(--text-base);
+  --text-body-lg: var(--text-md);
+  --text-title-sm: var(--text-base);
+  --text-title-md: var(--text-md);
+  --text-title-lg: var(--text-xl);
+  --text-headline-sm: var(--text-lg);
+  --text-headline-md: var(--text-2xl);
+  --text-headline-lg: var(--text-4xl);
+  --text-display-md: var(--text-4xl);
+  --text-display-lg: var(--text-display);
 
   /* Font Weights */
   --weight-regular: 400;
@@ -237,16 +247,16 @@ html.theme-light {
   /* Letter Spacing */
   --tracking-tight: -0.02em;
   --tracking-normal: 0;
-  --tracking-wide: 0.05em;
-  --tracking-wider: 0.1em;
-  --tracking-widest: 0.15em;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.08em;
+  --tracking-widest: 0.14em;
 
   /* Line Heights */
   --leading-none: 1;
-  --leading-tight: 1.1;
+  --leading-tight: 1.15;
   --leading-snug: 1.25;
   --leading-normal: 1.5;
-  --leading-relaxed: 1.6;
+  --leading-relaxed: 1.65;
   --leading-loose: 1.8;
 
   /* Spacing (8px base grid) */
@@ -265,29 +275,31 @@ html.theme-light {
   --space-32: 128px;
   --space-40: 160px;
 
-  /* Layout */
-  --container-max: 1440px;
-  --container-content: 1200px;
-  --margin-desktop: 64px;
-  --margin-tablet: 40px;
-  --margin-mobile: 20px;
-  --gutter: 32px;
+  /* Layout — Unified 1180px Max Width */
+  --container-max: 1200px;
+  --container-content: 1180px;
+  --margin-desktop: 48px;
+  --margin-tablet: 32px;
+  --margin-mobile: 16px;
+  --gutter: 24px;
 
-  /* Radii */
+  /* Border Radii Rules (Editorial Sharp: No radius on cards/sections, small 4px on buttons) */
   --radius-none: 0px;
   --radius-sm: 4px;
+  --radius-btn: 4px;
+  --radius-img: 8px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* Shadows — themed */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2);
-  --shadow-gold: 0 4px 20px rgba(233, 195, 73, 0.25);
+  /* Natural Top-Down Downward Ambient Shadows */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 20px 48px rgba(0, 0, 0, 0.65);
+  --shadow-gold: 0 4px 20px rgba(233, 195, 73, 0.22);
 
   /* Transitions */
   --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);

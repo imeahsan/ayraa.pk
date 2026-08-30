@@ -37,8 +37,6 @@ export const metadata: Metadata = {
   },
 };
 
-// No fallback mock products or categories
-
 const PAKISTANI_EDIT_PROFILES = [
   {
     keys: ["lawn", "print", "unstitched"],
@@ -106,8 +104,6 @@ const VALUE_PILLARS = [
   },
 ];
 
-// No fallback hero slides
-
 const getCachedHeroSlides = unstable_cache(
   async () => {
     const supabase = createCacheClient();
@@ -125,17 +121,43 @@ const getCachedHeroSlides = unstable_cache(
 const getCachedFeaturedProducts = unstable_cache(
   async () => {
     const supabase = createCacheClient();
-    const { data, error } = await supabase
+    const { data: featuredData } = await supabase
       .from("products")
       .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
       .eq("is_featured", true)
       .eq("is_active", true)
       .gt("variants.stock_quantity", 0)
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    return data as Product[];
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    if (featuredData && featuredData.length >= 4) {
+      return featuredData as Product[];
+    }
+
+    // Fallback: If 0 or few items marked featured, automatically use suitable available in-stock products
+    const featuredIds = new Set((featuredData || []).map((p) => p.id));
+    const { data: fallbackData } = await supabase
+      .from("products")
+      .select("*, category:categories(*), images:product_images(*), variants:product_variants!inner(*)")
+      .eq("is_active", true)
+      .gt("variants.stock_quantity", 0)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    const merged = [...(featuredData || [])];
+    if (fallbackData) {
+      for (const item of fallbackData) {
+        if (!featuredIds.has(item.id)) {
+          merged.push(item as Product);
+          featuredIds.add(item.id);
+        }
+        if (merged.length >= 8) break;
+      }
+    }
+
+    return merged as Product[];
   },
-  ["featured-products"],
+  ["featured-products-v2"],
   { revalidate: 300, tags: ["products"] }
 );
 
@@ -237,7 +259,7 @@ export default async function Home() {
     // Fallback
   }
 
-  // ── Featured products ──────────────────────────────
+  // ── Featured products (never empty with fallback) ────
   let featuredProducts: Product[] = [];
   try {
     const data = await getCachedFeaturedProducts();
@@ -297,11 +319,7 @@ export default async function Home() {
       }
     );
   };
-  const wardrobeCategories = displayCategories.filter((cat) => {
-    const searchable = `${cat.slug} ${cat.name}`.toLowerCase();
-    return !["bed", "home"].some((key) => searchable.includes(key));
-  });
-  const pakistaniEditCategories = wardrobeCategories.length >= 3 ? wardrobeCategories : displayCategories;
+  const pakistaniEditCategories = displayCategories;
   const baseUrl = getSiteUrl();
 
   return (
@@ -341,20 +359,20 @@ export default async function Home() {
           </div>
 
           <div className={styles.wardrobeGrid}>
-            {pakistaniEditCategories.map((cat, i) => {
+            {pakistaniEditCategories.map((cat) => {
               const profile = getPakistaniEditProfile(cat);
               return (
               <Link
                 key={cat.id}
                 href={`/collections/${cat.slug}`}
-                className={`${styles.wardrobeCard} ${i === 0 ? styles.wardrobeCardHero : ""}`}
+                className={styles.wardrobeCard}
               >
                 <div className={styles.mosaicImgWrapper}>
                   <Image
                     src={getCatImg(cat)}
                     alt={cat.name}
                     fill
-                    sizes={i === 0 ? "(max-width:767px) 100vw, 50vw" : "(max-width:767px) 100vw, 25vw"}
+                    sizes="(max-width:640px) 100vw, (max-width:1024px) 50vw, 25vw"
                     className={styles.mosaicImg}
                   />
                 </div>
@@ -365,8 +383,15 @@ export default async function Home() {
                   <p className={styles.mosaicMeta}>
                     {profile.description}
                   </p>
-                  <span className={styles.occasionPill}>{profile.occasion}</span>
-                  <span className={styles.mosaicCta}>Explore →</span>
+                  <span className={styles.occasionTag}>{profile.occasion}</span>
+                  <div className={styles.mosaicFooter}>
+                    <span className={styles.mosaicCta}>
+                      Explore Collection
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
+                    </span>
+                  </div>
                 </div>
               </Link>
               );

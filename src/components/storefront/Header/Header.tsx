@@ -200,7 +200,7 @@ export const Header: React.FC = () => {
           </button>
 
           <Link href="/" className={styles.logo} onClick={() => trackNavClick("AYRAA", "/")}>
-            AYRAA
+            AYRAA<span className={styles.logoDot} />
           </Link>
 
           <nav className={styles.nav} aria-label="Primary navigation">
@@ -296,11 +296,49 @@ export const Header: React.FC = () => {
               </Link>
             )}
 
+            {wishlistReady ? (
+              <button
+                className={styles.iconBtn}
+                onClick={handleWishlistClick}
+                aria-label={`Open wishlist with ${wishlistCount} items`}
+                id="wishlist-toggle-btn"
+                title="Wishlist"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 22l7.78-8.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+                </svg>
+                {wishlistCount > 0 && <span className={styles.wishlistBadge}>{wishlistCount}</span>}
+              </button>
+            ) : (
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "2rem" }}>
+                <span className={styles.miniSpinner} aria-hidden="true" />
+              </span>
+            )}
+
+            <button
+              className={styles.iconBtn}
+              onClick={() => setCartOpen(true)}
+              aria-label={`Open shopping cart with ${totalItemCount} items`}
+              id="cart-toggle-btn"
+            >
+              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              {totalItemCount > 0 && <span className={styles.cartBadge}>{totalItemCount}</span>}
+            </button>
+
+            {/* Far-Right Login CTA / Profile Avatar */}
             {authReady ? (
               profile ? (
                 <div className={styles.profileMenu}>
                   <button className={styles.profileBtn} aria-label="User Profile Menu" id="user-profile-btn">
-                    {profile.full_name?.split(" ")[0] || "Account"}
+                    <span className={styles.avatarInitial}>
+                      {(profile.full_name || profile.email || "U").charAt(0).toUpperCase()}
+                    </span>
+                    <span className={styles.profileName}>{profile.full_name?.split(" ")[0] || "Account"}</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
                   </button>
                   <div className={styles.profileDropdown}>
                     <div className={styles.dropdownMenu}>
@@ -319,46 +357,20 @@ export const Header: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <Link href={`/login?redirectTo=${encodeURIComponent(pathname)}`} className="premium-underline" id="login-link" onClick={() => trackEvent("login_start", { method: "password", source: "header" })}>
+                <Link
+                  href={`/login?redirectTo=${encodeURIComponent(pathname)}`}
+                  className={styles.loginCtaBtn}
+                  id="login-link"
+                  onClick={() => trackEvent("login_start", { method: "password", source: "header" })}
+                >
                   Login
                 </Link>
               )
             ) : (
-              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "2.5rem" }}>
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "3.5rem" }}>
                 <span className={styles.miniSpinner} aria-hidden="true" />
               </span>
             )}
-
-            {wishlistReady ? (
-              <button
-                className={styles.iconBtn}
-                onClick={handleWishlistClick}
-                aria-label={`Open wishlist with ${wishlistCount} items`}
-                id="wishlist-toggle-btn"
-                title="Wishlist"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 22l7.78-8.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
-                </svg>
-                {wishlistCount > 0 && <span className={styles.wishlistBadge}>{wishlistCount}</span>}
-              </button>
-            ) : (
-              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "2.5rem" }}>
-                <span className={styles.miniSpinner} aria-hidden="true" />
-              </span>
-            )}
-
-            <button
-              className={styles.iconBtn}
-              onClick={() => setCartOpen(true)}
-              aria-label={`Open shopping cart with ${totalItemCount} items`}
-              id="cart-toggle-btn"
-            >
-              <svg width="22" height="22" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-              </svg>
-              {totalItemCount > 0 && <span className={styles.cartBadge}>{totalItemCount}</span>}
-            </button>
           </div>
         </div>
       </header>
@@ -373,7 +385,7 @@ export const Header: React.FC = () => {
             trackNavClick("AYRAA", "/", "mobile_menu");
             setIsMobileMenuOpen(false);
           }}>
-            AYRAA
+            AYRAA<span className={styles.logoDot} />
           </Link>
           <button className={styles.iconBtn} onClick={() => setIsMobileMenuOpen(false)} aria-label="Close navigation">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -472,10 +484,11 @@ export const Header: React.FC = () => {
             </Link>
           </li>
           {authReady && !profile && (
-            <li className={styles.mobileMenuItem}>
+            <li className={styles.mobileMenuItem} style={{ marginTop: "12px" }}>
               <Link
                 href={`/login?redirectTo=${encodeURIComponent(pathname)}`}
-                className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`}
+                className={styles.loginCtaBtn}
+                style={{ width: "100%", justifyContent: "center" }}
                 onClick={() => {
                   trackEvent("login_start", { method: "password", source: "mobile_menu" });
                   setIsMobileMenuOpen(false);

@@ -1,9 +1,10 @@
-/* Always dark for brand consistency — matches the ticker strip */
+/* Always dark for brand consistency — matches the luxury noir theme */
 .section {
-  background-color: #141313;
-  padding-block: 96px;
+  background-color: var(--color-bg-elevated);
+  padding-block: 80px;
   position: relative;
   overflow: hidden;
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 /* Subtle radial glow in background */
@@ -16,7 +17,7 @@
 }
 
 html.theme-light .section {
-  background-color: #1c1b1b;
+  background-color: #141313;
 }
 
 .inner {
@@ -32,39 +33,39 @@ html.theme-light .section {
   display: block;
   width: 48px;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #e9c349, transparent);
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
   margin-inline: auto;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .overline {
   display: block;
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: var(--text-xs, 12px);
   font-weight: 700;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #e9c349;
-  margin-bottom: 16px;
+  color: var(--color-gold);
+  margin-bottom: 12px;
 }
 
 .title {
   font-family: var(--font-headline);
-  font-size: clamp(26px, 4vw, 40px);
+  font-size: clamp(26px, 3.5vw, var(--text-5xl, 40px));
   font-weight: 600;
   color: #fbf9f8;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  margin-bottom: 16px;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  margin-bottom: 14px;
 }
 
 .desc {
   font-family: var(--font-body);
-  font-size: 15px;
-  color: rgba(251, 249, 248, 0.65);
-  line-height: 1.65;
-  margin-bottom: 40px;
-  max-width: 440px;
+  font-size: var(--text-base, 16px);
+  color: rgba(251, 249, 248, 0.7);
+  line-height: var(--leading-relaxed);
+  margin-bottom: 36px;
+  max-width: 480px;
   margin-inline: auto;
 }
 
@@ -73,48 +74,53 @@ html.theme-light .section {
   gap: 0;
   max-width: 460px;
   margin-inline: auto;
-  border: 1px solid rgba(233, 195, 73, 0.35);
-  transition: border-color 200ms ease;
+  border: 1px solid var(--color-gold-border);
+  border-radius: var(--radius-btn, 4px);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
 .form:focus-within {
-  border-color: rgba(233, 195, 73, 0.8);
-  box-shadow: 0 0 0 3px rgba(233, 195, 73, 0.12);
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(233, 195, 73, 0.18);
 }
 
 .input {
   flex: 1;
-  padding: 14px 20px;
+  padding: 14px 18px;
   background-color: rgba(255, 255, 255, 0.04);
   color: #fbf9f8;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: var(--text-sm, 14px);
   border: none;
   outline: none;
 }
 
 .input::placeholder {
-  color: rgba(251, 249, 248, 0.35);
+  color: rgba(251, 249, 248, 0.4);
 }
 
 .btn {
   flex-shrink: 0;
   padding: 14px 28px;
-  background-color: #e9c349;
-  color: #1c1b1b;
+  background-color: var(--color-gold);
+  color: #0c0b0b;
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: var(--text-xs, 12px);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   border: none;
   cursor: pointer;
-  transition: background-color 200ms ease, opacity 200ms ease;
+  transition: all var(--duration-normal) var(--ease-out);
   white-space: nowrap;
 }
 
 .btn:hover:not(:disabled) {
-  background-color: #ffe088;
+  background-color: var(--color-gold-bright);
+  color: #000000;
+  box-shadow: 0 0 12px rgba(233, 195, 73, 0.35);
 }
 
 .btn:disabled {
@@ -124,9 +130,9 @@ html.theme-light .section {
 
 .disclaimer {
   font-family: var(--font-body);
-  font-size: 11px;
-  color: rgba(251, 249, 248, 0.3);
-  margin-top: 16px;
+  font-size: var(--text-2xs, 11px);
+  color: rgba(251, 249, 248, 0.4);
+  margin-top: 14px;
   margin-bottom: 0;
 }
 
@@ -135,10 +141,11 @@ html.theme-light .section {
   align-items: center;
   gap: 10px;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: var(--text-sm, 14px);
   color: #4ade80;
   background-color: rgba(74, 222, 128, 0.1);
   border: 1px solid rgba(74, 222, 128, 0.25);
+  border-radius: var(--radius-btn, 4px);
   padding: 14px 28px;
   margin-bottom: 16px;
 }
@@ -148,15 +155,19 @@ html.theme-light .section {
     flex-direction: column;
     border: none;
     gap: 12px;
+    background: transparent;
+    box-shadow: none;
   }
 
   .input {
-    border: 1px solid rgba(233, 195, 73, 0.35);
+    border: 1px solid var(--color-gold-border);
+    border-radius: var(--radius-btn, 4px);
     width: 100%;
   }
 
   .btn {
     width: 100%;
-    padding: 16px;
+    padding: 14px;
+    border-radius: var(--radius-btn, 4px);
   }
 }

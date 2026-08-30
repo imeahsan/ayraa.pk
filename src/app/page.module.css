@@ -147,41 +147,37 @@
 .wardrobeGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
-  max-width: 1400px;
+  gap: 16px;
+  max-width: var(--container-content, 1180px);
   margin-inline: auto;
-  padding-inline: var(--margin-mobile);
+  padding-inline: var(--space-4);
 }
 
-@media (min-width: 600px) {
+@media (min-width: 640px) {
   .wardrobeGrid {
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    padding-inline: var(--margin-tablet);
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding-inline: var(--space-6);
   }
 }
 
 @media (min-width: 1024px) {
   .wardrobeGrid {
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 300px;
-    gap: 18px;
-    padding-inline: var(--margin-desktop);
-  }
-
-  .wardrobeCardHero {
-    grid-column: span 2;
-    grid-row: span 2;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    padding-inline: var(--space-6);
   }
 }
 
 .wardrobeCard {
   position: relative;
-  display: block;
-  height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 380px;
   overflow: hidden;
   border: 1px solid var(--color-border-subtle);
-  border-radius: 22px;
+  border-radius: var(--radius-none, 0px);
   background-color: var(--color-bg-card);
   box-shadow: var(--shadow-md);
   text-decoration: none;
@@ -190,35 +186,34 @@
               box-shadow var(--duration-normal) var(--ease-out);
 }
 
-@media (min-width: 600px) {
-  .wardrobeCard { height: 300px; }
-}
-
-@media (min-width: 1024px) {
-  .wardrobeCard { height: 100%; }
+@media (min-width: 640px) {
+  .wardrobeCard {
+    min-height: 420px;
+  }
 }
 
 .wardrobeCard:hover {
   border-color: var(--color-gold);
-  transform: translateY(-6px);
+  transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
 }
 
 .mosaicImgWrapper {
-  position: relative;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
 
 .mosaicImg {
   object-fit: cover;
-  opacity: 0.86;
-  filter: saturate(0.88) contrast(1.02);
+  opacity: 0.88;
+  filter: saturate(0.92) contrast(1.02);
   transition: transform 900ms var(--ease-out), opacity 400ms var(--ease-out), filter 400ms var(--ease-out);
 }
 
 .wardrobeCard:hover .mosaicImg {
-  transform: scale(1.08);
+  transform: scale(1.06);
   opacity: 1;
   filter: saturate(1.05) contrast(1.05);
 }
@@ -227,100 +222,123 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(28, 27, 27, 0.92) 0%, rgba(28, 27, 27, 0.22) 56%, transparent 100%),
-    radial-gradient(circle at 18% 16%, rgba(233, 195, 73, 0.18), transparent 30%);
+    linear-gradient(to top, rgba(12, 11, 11, 0.95) 0%, rgba(12, 11, 11, 0.45) 45%, rgba(12, 11, 11, 0.15) 75%, transparent 100%),
+    radial-gradient(circle at 18% 16%, rgba(233, 195, 73, 0.15), transparent 30%);
   z-index: 10;
   transition: background var(--duration-normal) var(--ease-out);
 }
 
 .wardrobeCard:hover .mosaicOverlay {
   background:
-    linear-gradient(to top, rgba(28, 27, 27, 0.78) 0%, rgba(28, 27, 27, 0.12) 58%, transparent 100%),
-    radial-gradient(circle at 18% 16%, rgba(233, 195, 73, 0.24), transparent 34%);
+    linear-gradient(to top, rgba(12, 11, 11, 0.92) 0%, rgba(12, 11, 11, 0.35) 48%, rgba(12, 11, 11, 0.1) 75%, transparent 100%),
+    radial-gradient(circle at 18% 16%, rgba(233, 195, 73, 0.22), transparent 34%);
 }
 
 .mosaicContent {
-  position: absolute;
-  bottom: 26px;
-  left: 26px;
-  right: 26px;
+  position: relative;
   z-index: 20;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .mosaicNumber {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
-  margin-bottom: 18px;
-  padding: 8px 14px;
+  width: fit-content;
+  min-height: 26px;
+  margin-bottom: 12px;
+  padding: 4px 10px;
   border: 1px solid rgba(233, 195, 73, 0.45);
-  border-radius: 999px;
-  color: #e9c349;
+  border-radius: var(--radius-btn, 4px);
+  color: var(--color-gold);
   font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-size: var(--text-2xs, 11px);
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  background-color: rgba(28, 27, 27, 0.38);
+  background-color: rgba(12, 11, 11, 0.6);
   backdrop-filter: blur(10px);
 }
 
 .mosaicTitle {
   font-family: var(--font-headline);
-  font-size: clamp(22px, 2.5vw, 34px);
+  font-size: clamp(22px, 2.2vw, 30px);
   font-weight: 600;
   color: #fbf9f8;
-  margin-bottom: 8px;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+  line-height: 1.15;
+  letter-spacing: var(--tracking-tight);
 }
 
 .mosaicMeta {
-  max-width: 300px;
-  margin-bottom: 14px;
+  max-width: 320px;
+  margin-bottom: 12px;
   font-family: var(--font-body);
-  font-size: 12px;
-  line-height: 1.55;
-  color: rgba(251, 249, 248, 0.72);
+  font-size: var(--text-xs, 12px);
+  line-height: 1.5;
+  color: rgba(251, 249, 248, 0.75);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.occasionPill {
+.occasionTag {
   display: inline-flex;
+  align-items: center;
   width: fit-content;
-  margin: 0 0 16px;
-  padding: 7px 10px;
-  border-left: 2px solid #e9c349;
+  margin-bottom: 14px;
+  padding: 4px 10px;
+  border-left: 2px solid var(--color-gold);
+  border-radius: var(--radius-btn, 4px);
   background-color: rgba(251, 249, 248, 0.08);
-  color: rgba(251, 249, 248, 0.82);
+  color: rgba(251, 249, 248, 0.88);
   font-family: var(--font-body);
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+.mosaicFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .mosaicCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: var(--text-xs, 12px);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: #e9c349;
-  opacity: 0.82;
-  transform: translateY(0);
-  display: inline-block;
-  transition: opacity 250ms var(--ease-out), transform 250ms var(--ease-out), letter-spacing 250ms var(--ease-out);
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  background: rgba(233, 195, 73, 0.12);
+  border: 1px solid rgba(233, 195, 73, 0.35);
+  border-radius: var(--radius-btn, 4px);
+  padding: 7px 14px;
+  transition: all var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
 }
 
 .wardrobeCard:hover .mosaicCta {
-  opacity: 1;
-  letter-spacing: 0.2em;
+  background: var(--color-gold);
+  color: #0c0b0b;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 14px rgba(233, 195, 73, 0.35);
+  transform: translateX(4px);
 }
 
 /* ── BRAND STORY ─────────────────────────────────────────────────────── */
 .brandSection {
-  padding: 24px clamp(16px, 3vw, 40px);
+  padding: 48px clamp(16px, 3vw, 40px);
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--color-bg) 92%, #000), var(--color-bg));
   transition: background-color var(--duration-slow) var(--ease-out);
@@ -330,14 +348,14 @@
 .brandGrid {
   display: grid;
   grid-template-columns: 1fr;
-  min-height: 540px;
-  max-width: calc(var(--container-max) - 48px);
+  min-height: 520px;
+  max-width: var(--container-content, 1180px);
   margin-inline: auto;
   border: 1px solid var(--color-border-subtle);
-  border-radius: 28px;
+  border-radius: var(--radius-none, 0px);
   overflow: hidden;
   background-color: var(--color-bg-elevated);
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-lg);
 }
 
 @media (min-width: 768px) {
