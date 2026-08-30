@@ -330,12 +330,6 @@ function AdminProductsContent() {
     searchTerm || statusFilter !== "all" || categoryFilter !== "all" || stockFilter !== "all"
   );
 
-  const resetAllFilters = () => {
-    setSearchTerm("");
-    setStatusFilter("all");
-    setCategoryFilter("all");
-    setStockFilter("all");
-  };
 
   return (
     <div className={styles.pageLayout}>
