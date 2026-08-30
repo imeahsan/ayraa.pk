@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
@@ -49,6 +49,12 @@ export default function AdminHomepageEditor() {
 
   const [editingSlideId, setEditingSlideId] = useState<string | null>(null);
   const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
+
+  // Hero Slide Image Upload state
+  const [slideImageFile, setSlideImageFile] = useState<File | null>(null);
+  const [slideImagePreview, setSlideImagePreview] = useState<string>("");
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Action loading states
   const [submittingAnnouncement, setSubmittingAnnouncement] = useState(false);
@@ -179,21 +185,94 @@ export default function AdminHomepageEditor() {
     }
   };
 
+  // Image Upload Handlers
+  const handleImageFilePick = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (JPG, PNG, WebP, AVIF).");
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("Image file size must be less than 15MB.");
+      return;
+    }
+    setSlideImageFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setSlideImagePreview(objectUrl);
+    setNewSlide((p) => ({ ...p, image_url: objectUrl }));
+  };
+
+  const handleRemoveImage = () => {
+    setSlideImageFile(null);
+    setSlideImagePreview("");
+    setNewSlide((p) => ({ ...p, image_url: "" }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const resetSlideForm = () => {
+    setEditingSlideId(null);
+    setSlideImageFile(null);
+    setSlideImagePreview("");
+    setNewSlide({
+      image_url: "",
+      badge: "",
+      title: "",
+      subtitle: "",
+      button_text: "",
+      button_link: "",
+      sort_order: 0,
+      is_active: true,
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   // Hero Slides CRUD
   const handleSlideSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSlide.image_url.trim() || !newSlide.title.trim()) {
-      toast.warning("Image URL and Title are required.");
+    if (!newSlide.title.trim()) {
+      toast.warning("Slide Title is required.");
+      return;
+    }
+    if (!slideImageFile && !newSlide.image_url.trim()) {
+      toast.warning("Please upload an image file or provide an Image URL.");
       return;
     }
     setSubmittingSlide(true);
 
     try {
+      let finalImageUrl = newSlide.image_url.trim();
+
+      // Upload file to Supabase Storage if a new local file was selected
+      if (slideImageFile) {
+        const fileExt = slideImageFile.name.split(".").pop() || "jpg";
+        const fileName = `hero-slides/${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("products")
+          .upload(fileName, slideImageFile, { cacheControl: "31536000", upsert: true });
+
+        if (uploadError) {
+          throw new Error(`Storage upload failed: ${uploadError.message}`);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from("products")
+          .getPublicUrl(fileName);
+
+        if (publicUrlData?.publicUrl) {
+          finalImageUrl = publicUrlData.publicUrl;
+        }
+      }
+
+      const slidePayload = {
+        ...newSlide,
+        image_url: finalImageUrl,
+      };
+
       if (editingSlideId) {
         // Update
         const { error } = await supabase
           .from("hero_slides")
-          .update(newSlide)
+          .update(slidePayload)
           .eq("id", editingSlideId);
 
         if (error) throw error;
@@ -202,29 +281,19 @@ export default function AdminHomepageEditor() {
         // Create
         const { error } = await supabase
           .from("hero_slides")
-          .insert([newSlide]);
+          .insert([slidePayload]);
 
         if (error) throw error;
         toast.success("Hero slide added successfully.");
       }
 
-      setNewSlide({
-        image_url: "",
-        badge: "",
-        title: "",
-        subtitle: "",
-        button_text: "",
-        button_link: "",
-        sort_order: 0,
-        is_active: true,
-      });
-      setEditingSlideId(null);
+      resetSlideForm();
       await fetch("/api/revalidate?tag=hero-slides").catch(() => {});
       await fetch("/api/revalidate?path=/").catch(() => {});
       fetchSlides();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error("Failed to save hero slide.");
+      toast.error(err?.message || "Failed to save hero slide.");
     } finally {
       setSubmittingSlide(false);
     }
@@ -232,6 +301,8 @@ export default function AdminHomepageEditor() {
 
   const handleEditSlide = (slide: HeroSlide) => {
     setEditingSlideId(slide.id);
+    setSlideImageFile(null);
+    setSlideImagePreview(slide.image_url);
     setNewSlide({
       image_url: slide.image_url,
       badge: slide.badge || "",
@@ -405,17 +476,191 @@ export default function AdminHomepageEditor() {
             <h3 className={styles.formCardTitle}>
               {editingSlideId ? "Edit Hero Slide" : "Add Hero Slide"}
             </h3>
-            <form onSubmit={handleSlideSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <form onSubmit={handleSlideSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+              
+              {/* Image Upload & Preview Section */}
               <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Image URL</label>
+                <label className={styles.formLabel}>
+                  Slide Banner Image <span style={{ color: "var(--color-gold)" }}>*</span>
+                </label>
+
+                {/* Hidden File Input */}
                 <input
-                  type="text"
-                  placeholder="https://images.unsplash.com/... or Supabase storage link"
-                  value={newSlide.image_url}
-                  onChange={(e) => setNewSlide(p => ({ ...p, image_url: e.target.value }))}
-                  className={styles.formInput}
-                  required
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      handleImageFilePick(e.target.files[0]);
+                    }
+                  }}
                 />
+
+                {slideImagePreview ? (
+                  <div
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      height: "190px",
+                      borderRadius: "var(--radius-sm)",
+                      overflow: "hidden",
+                      border: "1px solid var(--color-gold-border)",
+                      backgroundColor: "#000",
+                    }}
+                  >
+                    <img
+                      src={slideImagePreview}
+                      alt="Banner Preview"
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                    
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "10px",
+                        left: "10px",
+                        backgroundColor: "rgba(12, 11, 11, 0.75)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid var(--color-gold-border)",
+                        borderRadius: "var(--radius-sm)",
+                        padding: "3px 8px",
+                        fontSize: "11px",
+                        color: "var(--color-gold)",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {slideImageFile ? "Selected File Ready" : "Current Slide Banner"}
+                    </div>
+
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "10px",
+                        right: "10px",
+                        display: "flex",
+                        gap: "8px",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className={styles.topbarButton}
+                        style={{
+                          backgroundColor: "rgba(12, 11, 11, 0.85)",
+                          backdropFilter: "blur(8px)",
+                          color: "var(--color-gold)",
+                          borderColor: "var(--color-gold-border)",
+                          padding: "6px 12px",
+                          fontSize: "12px",
+                        }}
+                      >
+                        Change Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className={styles.topbarButton}
+                        style={{
+                          backgroundColor: "rgba(12, 11, 11, 0.85)",
+                          backdropFilter: "blur(8px)",
+                          color: "#f87171",
+                          borderColor: "rgba(248, 113, 113, 0.3)",
+                          padding: "6px 12px",
+                          fontSize: "12px",
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragging(true);
+                    }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragging(false);
+                      if (e.dataTransfer.files?.[0]) {
+                        handleImageFilePick(e.dataTransfer.files[0]);
+                      }
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "28px 16px",
+                      border: isDragging ? "2px dashed var(--color-gold)" : "1px dashed var(--color-gold-border)",
+                      borderRadius: "var(--radius-sm)",
+                      backgroundColor: isDragging ? "rgba(233, 195, 73, 0.08)" : "var(--admin-sidebar-hover)",
+                      cursor: "pointer",
+                      transition: "all var(--duration-fast) var(--ease-out)",
+                      textAlign: "center",
+                      gap: "10px",
+                    }}
+                  >
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--color-gold)"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <div>
+                      <span style={{ fontSize: "14px", fontWeight: "600", color: "var(--admin-text)", display: "block" }}>
+                        Click to upload hero banner image
+                      </span>
+                      <span style={{ fontSize: "12px", color: "var(--admin-text-sub)", display: "block", marginTop: "2px" }}>
+                        or drag and drop here (JPG, PNG, WebP — up to 15MB)
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "5px 12px",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        color: "var(--color-gold)",
+                        border: "1px solid var(--color-gold-border)",
+                        borderRadius: "var(--radius-sm)",
+                        marginTop: "4px",
+                      }}
+                    >
+                      Browse Computer
+                    </span>
+                  </div>
+                )}
+
+                {/* Direct Image URL input fallback */}
+                <div style={{ marginTop: "10px" }}>
+                  <span style={{ fontSize: "11px", color: "var(--admin-text-sub)", display: "block", marginBottom: "4px" }}>
+                    Or paste direct Image URL (e.g. Unsplash, CDN link):
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="https://images.unsplash.com/... or storage URL"
+                    value={newSlide.image_url.startsWith("blob:") ? "" : newSlide.image_url}
+                    onChange={(e) => {
+                      const url = e.target.value;
+                      setNewSlide((p) => ({ ...p, image_url: url }));
+                      setSlideImageFile(null);
+                      setSlideImagePreview(url);
+                    }}
+                    className={styles.formInput}
+                  />
+                </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
@@ -423,6 +668,7 @@ export default function AdminHomepageEditor() {
                   <label className={styles.formLabel}>Badge Text (e.g. Summer 2025)</label>
                   <input
                     type="text"
+                    placeholder="e.g. Summer 2025"
                     value={newSlide.badge}
                     onChange={(e) => setNewSlide(p => ({ ...p, badge: e.target.value }))}
                     className={styles.formInput}
@@ -456,6 +702,7 @@ export default function AdminHomepageEditor() {
                 <label className={styles.formLabel}>Subtitle</label>
                 <textarea
                   value={newSlide.subtitle}
+                  placeholder="e.g. Discover timeless Pakistani craftsmanship in pure summer lawn."
                   onChange={(e) => setNewSlide(p => ({ ...p, subtitle: e.target.value }))}
                   className={styles.formTextarea}
                   rows={2}
@@ -499,25 +746,13 @@ export default function AdminHomepageEditor() {
 
               <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
                 <Button type="submit" variant="primary" style={{ flexGrow: 1 }} disabled={submittingSlide}>
-                  {submittingSlide ? "Saving..." : editingSlideId ? "Update Hero Slide" : "Add Hero Slide"}
+                  {submittingSlide ? "Saving & Uploading..." : editingSlideId ? "Update Hero Slide" : "Add Hero Slide"}
                 </Button>
                 {editingSlideId && (
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      setEditingSlideId(null);
-                      setNewSlide({
-                        image_url: "",
-                        badge: "",
-                        title: "",
-                        subtitle: "",
-                        button_text: "",
-                        button_link: "",
-                        sort_order: 0,
-                        is_active: true,
-                      });
-                    }}
+                    onClick={resetSlideForm}
                   >
                     Cancel
                   </Button>
@@ -543,7 +778,7 @@ export default function AdminHomepageEditor() {
                       <img
                         src={slide.image_url}
                         alt="Slide preview"
-                        style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.8 }}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
                       />
                     </div>
 

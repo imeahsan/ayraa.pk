@@ -31,7 +31,7 @@ Always follow these design rules and guidelines across all storefront pages, lay
   - Card Surfaces: `--color-bg-card: #181717;`
   - Hover States: `--color-bg-hover: #222020;`
   - High-Contrast Text: `--color-on-surface: #fbf9f8;`
-  - Brand Accents: Champagne Gold `--color-gold: #e9c349;` / `--color-gold-bright: #f0cf65;`
+  - Brand Accents: Champagne Gold `--color-gold: #e9c349;` / Hover Glow `--color-gold-bright: #ffe088;` / Border `--color-gold-border: rgba(233, 195, 73, 0.28);`
 
 ## 3. Border Radius & Editorial Sharpness
 - **Consistent Rule**: Prefer `border-radius: 0` on cards, containers, and sections for a sharp, luxury editorial magazine look.

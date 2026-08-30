@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { Product } from "@/types";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { Breadcrumb } from "@/components/storefront/Breadcrumb/Breadcrumb";
@@ -32,17 +33,93 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   categoryName,
   categorySlug,
 }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Read initial states from URL search params
+  const initialSearch = searchParams.get("q") || "";
+  const initialFabrics = searchParams.get("fabric")
+    ? searchParams.get("fabric")!.split(",").filter(Boolean)
+    : [];
+  const initialSizes = searchParams.get("size")
+    ? searchParams.get("size")!.split(",").filter(Boolean)
+    : [];
+  const initialInStock = searchParams.get("inStock") === "true";
+  const initialSort = searchParams.get("sort") || "newest";
+  const initialPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+  const initialPerPage = Math.max(1, parseInt(searchParams.get("perPage") || "12", 10) || 12);
+
   const { layout, setLayout } = useListingLayoutPreference();
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [selectedFabrics, setSelectedFabrics] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
-  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
-  const [sortBy, setSortBy] = useState<string>("newest");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(12);
+  const [searchTerm, setSearchTerm] = useState<string>(initialSearch);
+  const [selectedFabrics, setSelectedFabrics] = useState<string[]>(initialFabrics);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(initialSizes);
+  const [inStockOnly, setInStockOnly] = useState<boolean>(initialInStock);
+  const [sortBy, setSortBy] = useState<string>(initialSort);
+  const [currentPage, setCurrentPage] = useState<number>(initialPage);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(initialPerPage);
   const [isMobileFiltersExpanded, setIsMobileFiltersExpanded] = useState<boolean>(false);
 
   const gridSectionRef = useRef<HTMLDivElement | null>(null);
+
+  // Sync state if user navigates with browser Back / Forward buttons
+  useEffect(() => {
+    const qParam = searchParams.get("q") || "";
+    const fabricParam = searchParams.get("fabric")
+      ? searchParams.get("fabric")!.split(",").filter(Boolean)
+      : [];
+    const sizeParam = searchParams.get("size")
+      ? searchParams.get("size")!.split(",").filter(Boolean)
+      : [];
+    const inStockParam = searchParams.get("inStock") === "true";
+    const sortParam = searchParams.get("sort") || "newest";
+    const pageParam = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const perPageParam = Math.max(1, parseInt(searchParams.get("perPage") || "12", 10) || 12);
+
+    setSearchTerm(qParam);
+    setSelectedFabrics(fabricParam);
+    setSelectedSizes(sizeParam);
+    setInStockOnly(inStockParam);
+    setSortBy(sortParam);
+    setCurrentPage(pageParam);
+    setItemsPerPage(perPageParam);
+  }, [searchParams]);
+
+  // Update URL search parameters without triggering a scroll jump
+  const updateUrlParams = useCallback(
+    (updates: {
+      q?: string;
+      fabric?: string[];
+      size?: string[];
+      inStock?: boolean;
+      sort?: string;
+      page?: number;
+      perPage?: number;
+    }) => {
+      const params = new URLSearchParams();
+
+      const nextSearch = updates.q !== undefined ? updates.q : searchTerm;
+      const nextFabrics = updates.fabric !== undefined ? updates.fabric : selectedFabrics;
+      const nextSizes = updates.size !== undefined ? updates.size : selectedSizes;
+      const nextInStock = updates.inStock !== undefined ? updates.inStock : inStockOnly;
+      const nextSort = updates.sort !== undefined ? updates.sort : sortBy;
+      const nextPage = updates.page !== undefined ? updates.page : currentPage;
+      const nextPerPage = updates.perPage !== undefined ? updates.perPage : itemsPerPage;
+
+      if (nextSearch.trim()) params.set("q", nextSearch.trim());
+      if (nextFabrics.length > 0) params.set("fabric", nextFabrics.join(","));
+      if (nextSizes.length > 0) params.set("size", nextSizes.join(","));
+      if (nextInStock) params.set("inStock", "true");
+      if (nextSort && nextSort !== "newest") params.set("sort", nextSort);
+      if (nextPage > 1) params.set("page", String(nextPage));
+      if (nextPerPage !== 12) params.set("perPage", String(nextPerPage));
+
+      const queryStr = params.toString();
+      const targetUrl = queryStr ? `${pathname}?${queryStr}` : pathname;
+      router.replace(targetUrl, { scroll: false });
+    },
+    [pathname, router, searchTerm, selectedFabrics, selectedSizes, inStockOnly, sortBy, currentPage, itemsPerPage]
+  );
 
   // Available fabric filters from products
   const fabrics = useMemo(() => {
@@ -59,15 +136,39 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   const sizes = ["XS", "S", "M", "L", "XL"];
 
   const toggleFabric = (fabric: string) => {
-    setSelectedFabrics((prev) =>
-      prev.includes(fabric) ? prev.filter((f) => f !== fabric) : [...prev, fabric]
-    );
+    const next = selectedFabrics.includes(fabric)
+      ? selectedFabrics.filter((f) => f !== fabric)
+      : [...selectedFabrics, fabric];
+    setSelectedFabrics(next);
+    setCurrentPage(1);
+    updateUrlParams({ fabric: next, page: 1 });
   };
 
   const toggleSize = (size: string) => {
-    setSelectedSizes((prev) =>
-      prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]
-    );
+    const next = selectedSizes.includes(size)
+      ? selectedSizes.filter((s) => s !== size)
+      : [...selectedSizes, size];
+    setSelectedSizes(next);
+    setCurrentPage(1);
+    updateUrlParams({ size: next, page: 1 });
+  };
+
+  const handleInStockChange = (val: boolean) => {
+    setInStockOnly(val);
+    setCurrentPage(1);
+    updateUrlParams({ inStock: val, page: 1 });
+  };
+
+  const handleSortChange = (val: string) => {
+    setSortBy(val);
+    setCurrentPage(1);
+    updateUrlParams({ sort: val, page: 1 });
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val);
+    setCurrentPage(1);
+    updateUrlParams({ q: val, page: 1 });
   };
 
   const clearFilters = () => {
@@ -76,12 +177,14 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
     setSelectedSizes([]);
     setInStockOnly(false);
     setCurrentPage(1);
+    updateUrlParams({
+      q: "",
+      fabric: [],
+      size: [],
+      inStock: false,
+      page: 1,
+    });
   };
-
-  // Reset to page 1 whenever any filter or search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedFabrics, selectedSizes, inStockOnly, sortBy, itemsPerPage]);
 
   // Cached Filter & Sort Logic
   const filteredProducts = useMemo(() => {
@@ -179,9 +282,16 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
   const handlePageChange = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
     setCurrentPage(newPage);
+    updateUrlParams({ page: newPage });
     if (gridSectionRef.current) {
       gridSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  };
+
+  const handlePerPageChange = (newPerPage: number) => {
+    setItemsPerPage(newPerPage);
+    setCurrentPage(1);
+    updateUrlParams({ perPage: newPerPage, page: 1 });
   };
 
   useEffect(() => {
@@ -242,13 +352,13 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
               type="text"
               placeholder={`Search in ${categoryName}...`}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className={styles.searchInput}
             />
             {searchTerm && (
               <button
                 type="button"
-                onClick={() => setSearchTerm("")}
+                onClick={() => handleSearchChange("")}
                 className={styles.searchClear}
                 aria-label="Clear search"
               >
@@ -290,7 +400,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
                 <input
                   type="checkbox"
                   checked={inStockOnly}
-                  onChange={(e) => setInStockOnly(e.target.checked)}
+                  onChange={(e) => handleInStockChange(e.target.checked)}
                   className={styles.checkbox}
                 />
                 <span className="leading-none">In Stock Only</span>
@@ -359,7 +469,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
               id="sort-select"
               className={styles.sortSelectInline}
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => handleSortChange(e.target.value)}
             >
               <option value="best-sellers">Best Sellers</option>
               <option value="newest">Newest Arrivals</option>
@@ -453,7 +563,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
                     <select
                       id="per-page"
                       value={itemsPerPage}
-                      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                      onChange={(e) => handlePerPageChange(Number(e.target.value))}
                       className={styles.perPageSelect}
                     >
                       <option value={12}>12</option>

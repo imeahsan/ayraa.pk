@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
@@ -12,24 +13,98 @@ import styles from "../admin.module.css";
 
 const adminProductSearchCache = new Map<string, Product[]>();
 
-export default function AdminProductsPage() {
+function AdminProductsContent() {
   const supabase = createClient();
   const toast = useToast();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Read initial states from URL query parameters
+  const initialSearch = searchParams.get("q") || "";
+  const initialStatus = (searchParams.get("status") as "all" | "active" | "draft") || "all";
+  const initialCategory = searchParams.get("category") || "all";
+  const initialStock = (searchParams.get("stock") as "all" | "in_stock" | "low_stock" | "out_of_stock") || "all";
+  const initialSortField = (searchParams.get("sort") as "name" | "price" | "stock" | "created_at") || "created_at";
+  const initialSortOrder = (searchParams.get("order") as "asc" | "desc") || "desc";
+  const initialPage = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+  const initialPerPage = Math.max(1, parseInt(searchParams.get("perPage") || "15", 10) || 15);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "draft">("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [stockFilter, setStockFilter] = useState<"all" | "in_stock" | "low_stock" | "out_of_stock">("all");
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "draft">(initialStatus);
+  const [categoryFilter, setCategoryFilter] = useState<string>(initialCategory);
+  const [stockFilter, setStockFilter] = useState<"all" | "in_stock" | "low_stock" | "out_of_stock">(initialStock);
   const [loading, setLoading] = useState(true);
 
   // Sorting state
-  const [sortField, setSortField] = useState<"name" | "price" | "stock" | "created_at">("created_at");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortField, setSortField] = useState<"name" | "price" | "stock" | "created_at">(initialSortField);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(initialSortOrder);
 
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(15);
+  const [currentPage, setCurrentPage] = useState(initialPage);
+  const [itemsPerPage, setItemsPerPage] = useState(initialPerPage);
+
+  // Sync state if user clicks browser back/forward buttons
+  useEffect(() => {
+    const qParam = searchParams.get("q") || "";
+    const statusParam = (searchParams.get("status") as "all" | "active" | "draft") || "all";
+    const categoryParam = searchParams.get("category") || "all";
+    const stockParam = (searchParams.get("stock") as "all" | "in_stock" | "low_stock" | "out_of_stock") || "all";
+    const sortParam = (searchParams.get("sort") as "name" | "price" | "stock" | "created_at") || "created_at";
+    const orderParam = (searchParams.get("order") as "asc" | "desc") || "desc";
+    const pageParam = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const perPageParam = Math.max(1, parseInt(searchParams.get("perPage") || "15", 10) || 15);
+
+    setSearchTerm(qParam);
+    setStatusFilter(statusParam);
+    setCategoryFilter(categoryParam);
+    setStockFilter(stockParam);
+    setSortField(sortParam);
+    setSortOrder(orderParam);
+    setCurrentPage(pageParam);
+    setItemsPerPage(perPageParam);
+  }, [searchParams]);
+
+  // Update URL search parameters without page scroll jump
+  const updateUrlParams = useCallback(
+    (updates: {
+      q?: string;
+      status?: "all" | "active" | "draft";
+      category?: string;
+      stock?: "all" | "in_stock" | "low_stock" | "out_of_stock";
+      sort?: "name" | "price" | "stock" | "created_at";
+      order?: "asc" | "desc";
+      page?: number;
+      perPage?: number;
+    }) => {
+      const params = new URLSearchParams();
+
+      const nextSearch = updates.q !== undefined ? updates.q : searchTerm;
+      const nextStatus = updates.status !== undefined ? updates.status : statusFilter;
+      const nextCategory = updates.category !== undefined ? updates.category : categoryFilter;
+      const nextStock = updates.stock !== undefined ? updates.stock : stockFilter;
+      const nextSort = updates.sort !== undefined ? updates.sort : sortField;
+      const nextOrder = updates.order !== undefined ? updates.order : sortOrder;
+      const nextPage = updates.page !== undefined ? updates.page : currentPage;
+      const nextPerPage = updates.perPage !== undefined ? updates.perPage : itemsPerPage;
+
+      if (nextSearch.trim()) params.set("q", nextSearch.trim());
+      if (nextStatus !== "all") params.set("status", nextStatus);
+      if (nextCategory !== "all") params.set("category", nextCategory);
+      if (nextStock !== "all") params.set("stock", nextStock);
+      if (nextSort !== "created_at") params.set("sort", nextSort);
+      if (nextOrder !== "desc") params.set("order", nextOrder);
+      if (nextPage > 1) params.set("page", String(nextPage));
+      if (nextPerPage !== 15) params.set("perPage", String(nextPerPage));
+
+      const queryStr = params.toString();
+      const targetUrl = queryStr ? `${pathname}?${queryStr}` : pathname;
+      router.replace(targetUrl, { scroll: false });
+    },
+    [pathname, router, searchTerm, statusFilter, categoryFilter, stockFilter, sortField, sortOrder, currentPage, itemsPerPage]
+  );
 
   const getProductStock = (p: Product) => {
     if (!p.variants || p.variants.length === 0) return 0;
@@ -69,11 +144,6 @@ export default function AdminProductsPage() {
     fetchProductsAndCategories();
   }, [supabase]);
 
-  // Reset pagination on search/filter/sort changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter, categoryFilter, stockFilter, sortField, sortOrder, itemsPerPage]);
-
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this product?")) return;
 
@@ -96,12 +166,60 @@ export default function AdminProductsPage() {
   };
 
   const handleSort = (field: "name" | "price" | "stock" | "created_at") => {
+    let nextOrder: "asc" | "desc" = "desc";
     if (sortField === field) {
-      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+      nextOrder = sortOrder === "asc" ? "desc" : "asc";
     } else {
-      setSortField(field);
-      setSortOrder(field === "name" ? "asc" : "desc");
+      nextOrder = field === "name" ? "asc" : "desc";
     }
+    setSortField(field);
+    setSortOrder(nextOrder);
+    setCurrentPage(1);
+    updateUrlParams({ sort: field, order: nextOrder, page: 1 });
+  };
+
+  const handleSearchChange = (val: string) => {
+    setSearchTerm(val);
+    setCurrentPage(1);
+    updateUrlParams({ q: val, page: 1 });
+  };
+
+  const handleStatusChange = (val: "all" | "active" | "draft") => {
+    setStatusFilter(val);
+    setCurrentPage(1);
+    updateUrlParams({ status: val, page: 1 });
+  };
+
+  const handleCategoryChange = (val: string) => {
+    setCategoryFilter(val);
+    setCurrentPage(1);
+    updateUrlParams({ category: val, page: 1 });
+  };
+
+  const handleStockChange = (val: "all" | "in_stock" | "low_stock" | "out_of_stock") => {
+    setStockFilter(val);
+    setCurrentPage(1);
+    updateUrlParams({ stock: val, page: 1 });
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    updateUrlParams({ page: newPage });
+  };
+
+  const resetAllFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    setStockFilter("all");
+    setCurrentPage(1);
+    updateUrlParams({
+      q: "",
+      status: "all",
+      category: "all",
+      stock: "all",
+      page: 1,
+    });
   };
 
   // Cached Filter & Sort Logic
@@ -327,13 +445,13 @@ export default function AdminProductsPage() {
             type="text"
             placeholder="Search by product name, SKU, barcode, fabric..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className={styles.searchInput}
           />
           {searchTerm && (
             <button
               type="button"
-              onClick={() => setSearchTerm("")}
+              onClick={() => handleSearchChange("")}
               style={{
                 background: "none",
                 border: "none",
@@ -357,7 +475,7 @@ export default function AdminProductsPage() {
             <span className={styles.filterLabel}>Stock:</span>
             <select
               value={stockFilter}
-              onChange={(e) => setStockFilter(e.target.value as any)}
+              onChange={(e) => handleStockChange(e.target.value as any)}
               className={styles.filterSelect}
             >
               <option value="all" className={styles.filterOption}>All Inventory</option>
@@ -373,7 +491,7 @@ export default function AdminProductsPage() {
               <span className={styles.filterLabel}>Collection:</span>
               <select
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className={styles.filterSelect}
               >
                 <option value="all" className={styles.filterOption}>All Collections</option>
@@ -391,7 +509,7 @@ export default function AdminProductsPage() {
             <span className={styles.filterLabel}>Status:</span>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
+              onChange={(e) => handleStatusChange(e.target.value as any)}
               className={styles.filterSelect}
             >
               <option value="all" className={styles.filterOption}>All Statuses</option>
@@ -781,7 +899,7 @@ export default function AdminProductsPage() {
                 <button
                   type="button"
                   className={styles.topbarButton}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
                   style={{ opacity: currentPage === 1 ? 0.4 : 1, cursor: currentPage === 1 ? "not-allowed" : "pointer" }}
                 >
@@ -799,7 +917,7 @@ export default function AdminProductsPage() {
                         )}
                         <button
                           type="button"
-                          onClick={() => setCurrentPage(pageNum)}
+                          onClick={() => handlePageChange(pageNum)}
                           style={{
                             padding: "6px 12px",
                             fontSize: "12px",
@@ -820,7 +938,7 @@ export default function AdminProductsPage() {
                 <button
                   type="button"
                   className={styles.topbarButton}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
                   style={{ opacity: currentPage === totalPages ? 0.4 : 1, cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}
                 >
@@ -832,5 +950,13 @@ export default function AdminProductsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AdminProductsPage() {
+  return (
+    <React.Suspense fallback={<div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>Loading catalog...</div>}>
+      <AdminProductsContent />
+    </React.Suspense>
   );
 }

@@ -42,12 +42,12 @@ html.theme-dark,
   --color-on-surface-muted: rgba(251, 249, 248, 0.45); /* very muted */
   --color-on-surface-variant:#c4c7c7;
 
-  /* --- Gold accent (secondary in Stitch) --- */
-  --color-gold:             #e9c349;    /* radiant champagne gold */
-  --color-gold-bright:      #ffe088;    /* bright highlight gold */
-  --color-gold-dim:         #b5960a;    /* deeper gold */
-  --color-gold-muted:       rgba(233, 195, 73, 0.15);
-  --color-gold-border:      rgba(233, 195, 73, 0.3);
+  /* --- Brand Gold (Unified Single-Token System) --- */
+  --color-gold:             #e9c349;    /* Radiant Champagne Gold — Primary Brand Accent */
+  --color-gold-bright:      #ffe088;    /* 10% Brighter Gold for Hover & Glow */
+  --color-gold-hover:       #ffe088;    /* Hover State Alias */
+  --color-gold-muted:       rgba(233, 195, 73, 0.15); /* Pill & Badge Background */
+  --color-gold-border:      rgba(233, 195, 73, 0.28); /* Hairline Luxury Borders */
 
   /* --- Brand aliases --- */
   --color-primary:          var(--color-bg);

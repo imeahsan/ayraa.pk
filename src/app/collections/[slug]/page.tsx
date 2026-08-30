@@ -458,8 +458,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     } catch { /* ignore */ }
   }
 
-
-
   // Fetch active product category IDs
   const activeCategoryIds = new Set<string>();
   try {
@@ -567,7 +565,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         products = productsData as Product[];
       }
     }
-
   } catch (err) {
     console.error("Error loading category page:", err);
   }
@@ -585,11 +582,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       />
       <Header />
       <main className="grow pt-20 md:pt-16">
-        <CollectionClient
-          initialProducts={products}
-          categoryName={categoryName}
-          categorySlug={slug}
-        />
+        <React.Suspense fallback={<div className="min-h-screen" />}>
+          <CollectionClient
+            initialProducts={products}
+            categoryName={categoryName}
+            categorySlug={slug}
+          />
+        </React.Suspense>
       </main>
       <Footer />
     </div>
