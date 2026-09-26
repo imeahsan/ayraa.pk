@@ -5,13 +5,13 @@ import { CartProvider } from "@/context/CartContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { WishlistProvider } from "@/context/WishlistContext";
-import { CartDrawer } from "@/components/storefront/CartDrawer/CartDrawer";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
-import { WhatsAppFAB } from "@/components/storefront/WhatsAppFAB";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { AnalyticsConsentBanner } from "@/components/analytics/AnalyticsConsentBanner";
 import { WebVitals } from "@/components/analytics/WebVitals";
 import { DisableNumberScroll } from "@/components/common/DisableNumberScroll";
+import { CartDrawer } from "@/components/storefront/CartDrawer/CartDrawer";
+import { WhatsAppFAB } from "@/components/storefront/WhatsAppFAB";
 import { DEFAULT_OG_IMAGE, DEFAULT_SEO_DESCRIPTION, DEFAULT_SEO_TITLE, SITE_NAME, absoluteUrl, getSiteUrl } from "@/lib/seo";
 import { WebSiteJsonLd } from "@/components/seo/WebSiteJsonLd";
 
@@ -98,7 +98,10 @@ export default function RootLayout({
       className={`${playfair.variable} ${inter.variable} theme-dark`}
       suppressHydrationWarning
     >
-      <head />
+      <head>
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://sqidwtxualtmelvjgxir.supabase.co" crossOrigin="anonymous" />
+      </head>
       <body>
         <ThemeProvider>
           <ToastProvider>

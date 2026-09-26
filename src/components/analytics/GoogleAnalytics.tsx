@@ -71,7 +71,7 @@ export function GoogleAnalytics() {
       <Script
         id="ga4-script"
         src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
       />
       {mounted && (
         <Suspense fallback={null}>

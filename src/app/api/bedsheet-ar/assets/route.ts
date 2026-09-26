@@ -33,7 +33,14 @@ export async function POST(request: Request) {
     }
 
     // 3. Parse formData
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (formErr: any) {
+      console.error('[AR Assets] Failed to parse formData:', formErr);
+      return NextResponse.json({ error: 'Invalid form data' }, { status: 400 });
+    }
+
     const file = formData.get('file') as File | null;
     
     // Validate inputs
@@ -46,6 +53,7 @@ export async function POST(request: Request) {
     });
 
     if (!validatedFields.success) {
+      console.error('[AR Assets] Validation failed:', validatedFields.error.flatten());
       return NextResponse.json(
         { error: 'Validation failed', details: validatedFields.error.flatten() },
         { status: 400 }
@@ -62,9 +70,9 @@ export async function POST(request: Request) {
     }
 
     let textureUrl: string;
-    let defaultTexturePath: string | null;
-    let width: number;
-    let height: number;
+    let defaultTexturePath: string | null = null;
+    let width: number = 0;
+    let height: number = 0;
     let previousAsset: { texture_storage_path?: string | null } | null = null;
 
     if (hasFile) {
@@ -85,9 +93,11 @@ export async function POST(request: Request) {
       const fileBuffer = Buffer.from(arrayBuffer);
 
       // 4. Process image using Sharp
+      console.log('[AR Assets] Processing texture, size:', fileBuffer.length);
       const { original, sizes, width: w, height: h } = await processTexture(fileBuffer);
       width = w;
       height = h;
+      console.log('[AR Assets] Texture processed:', { width, height });
 
       const bucketName = 'product-ar-assets';
       const version = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
@@ -150,11 +160,12 @@ export async function POST(request: Request) {
 
       textureUrl = existingAsset.texture_url;
       defaultTexturePath = existingAsset.texture_storage_path;
-      width = existingAsset.texture_width;
-      height = existingAsset.texture_height;
+      width = existingAsset.texture_width ?? 0;
+      height = existingAsset.texture_height ?? 0;
     }
 
     // 6. Save or update asset record in the database
+    console.log('[AR Assets] Upserting asset record for product:', productId);
     const { data: assetData, error: dbError } = await supabase
       .from('bedsheet_ar_assets')
       .upsert(
@@ -195,23 +206,24 @@ export async function POST(request: Request) {
       const folder = `bedsheets/${productId}`;
       const { data: files } = await supabase.storage.from(bucketName).list(folder);
       const stalePaths = (files || [])
-        .map((file) => `${folder}/${file.name}`)
+        .map((f) => `${folder}/${f.name}`)
         .filter((path) => path !== defaultTexturePath);
 
       if (stalePaths.length > 0) {
         const { error: cleanupError } = await supabase.storage.from(bucketName).remove(stalePaths);
         if (cleanupError) {
-          console.warn('Failed to remove superseded AR assets:', cleanupError.message);
+          console.warn('[AR Assets] Failed to remove superseded AR assets:', cleanupError.message);
         }
       }
     }
 
+    console.log('[AR Assets] Save successful for product:', productId);
     return NextResponse.json({
       success: true,
       asset: assetData,
     });
   } catch (error: any) {
-    console.error('Error in AR assets route:', error);
+    console.error('[AR Assets] Error in AR assets route:', error?.message, error?.stack);
     return NextResponse.json(
       { error: error.message || 'Internal Server Error' },
       { status: 500 }

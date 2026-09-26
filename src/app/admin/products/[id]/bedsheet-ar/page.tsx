@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import styles from "../../../admin.module.css";
 import { Button } from "@/components/storefront/Button/Button";
@@ -12,10 +12,29 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-export default function BedsheetARConfigPage({ params }: Props) {
+function BedsheetARConfigContent({ params }: Props) {
   const { id: productId } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  const getReturnUrl = useCallback(() => {
+    const queryStr = searchParams.toString();
+    if (queryStr) {
+      return `/admin/products?${queryStr}`;
+    }
+    try {
+      if (typeof window !== "undefined") {
+        const saved = sessionStorage.getItem("ayra_admin_products_params");
+        if (saved) {
+          return `/admin/products?${saved}`;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return "/admin/products";
+  }, [searchParams]);
 
   const [product, setProduct] = useState<any>(null);
   const [asset, setAsset] = useState<any>(null);
@@ -159,9 +178,14 @@ export default function BedsheetARConfigPage({ params }: Props) {
   return (
     <div className={styles.pageLayout}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Link href="/admin/products" className={styles.backLink}>
+        <button
+          type="button"
+          onClick={() => router.push(getReturnUrl())}
+          className={styles.backLink}
+          style={{ background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", padding: 0 }}
+        >
           ← Back to Products
-        </Link>
+        </button>
       </div>
 
       <div style={{ borderBottom: "1px solid var(--admin-border)", paddingBottom: "16px" }}>
@@ -343,5 +367,13 @@ export default function BedsheetARConfigPage({ params }: Props) {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function BedsheetARConfigPage({ params }: Props) {
+  return (
+    <React.Suspense fallback={<p className="font-body text-sm text-admin-text-sub text-center py-12">Loading AR configuration...</p>}>
+      <BedsheetARConfigContent params={params} />
+    </React.Suspense>
   );
 }

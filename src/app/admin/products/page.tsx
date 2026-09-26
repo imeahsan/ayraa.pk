@@ -65,6 +65,20 @@ function AdminProductsContent() {
     setSortOrder(orderParam);
     setCurrentPage(pageParam);
     setItemsPerPage(perPageParam);
+
+    // Save to sessionStorage as a fallback across form submissions and cancellations
+    try {
+      const queryStr = searchParams.toString();
+      if (typeof window !== "undefined") {
+        if (queryStr) {
+          sessionStorage.setItem("ayra_admin_products_params", queryStr);
+        } else {
+          sessionStorage.removeItem("ayra_admin_products_params");
+        }
+      }
+    } catch {
+      // ignore storage access errors
+    }
   }, [searchParams]);
 
   // Update URL search parameters without page scroll jump
@@ -344,7 +358,7 @@ function AdminProductsContent() {
           </p>
         </div>
 
-        <Link href="/admin/products/new">
+        <Link href={searchParams.toString() ? `/admin/products/new?${searchParams.toString()}` : "/admin/products/new"}>
           <Button variant="luxury">+ Add New Product</Button>
         </Link>
       </div>
@@ -831,7 +845,7 @@ function AdminProductsContent() {
                             Preview ↗
                           </a>
                           <Link
-                            href={`/admin/products/${p.id}`}
+                            href={searchParams.toString() ? `/admin/products/${p.id}?${searchParams.toString()}` : `/admin/products/${p.id}`}
                             className={styles.tableLink}
                             style={{ fontSize: "12px", whiteSpace: "nowrap" }}
                           >
@@ -839,7 +853,7 @@ function AdminProductsContent() {
                           </Link>
                           {isBeddingProduct(p, categories) && (
                             <Link
-                              href={`/admin/products/${p.id}/bedsheet-ar`}
+                              href={searchParams.toString() ? `/admin/products/${p.id}/bedsheet-ar?${searchParams.toString()}` : `/admin/products/${p.id}/bedsheet-ar`}
                               className={styles.tableLink}
                               style={{ color: "var(--color-gold)", fontSize: "12px", whiteSpace: "nowrap" }}
                             >

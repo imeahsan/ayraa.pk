@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
@@ -16,9 +16,28 @@ interface ProductFormProps {
 
 export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
   const toast = useToast();
   const isEditing = !!productId;
+
+  const getReturnUrl = useCallback(() => {
+    const queryStr = searchParams.toString();
+    if (queryStr) {
+      return `/admin/products?${queryStr}`;
+    }
+    try {
+      if (typeof window !== "undefined") {
+        const saved = sessionStorage.getItem("ayra_admin_products_params");
+        if (saved) {
+          return `/admin/products?${saved}`;
+        }
+      }
+    } catch {
+      // ignore storage access errors
+    }
+    return "/admin/products";
+  }, [searchParams]);
 
   const [loading, setLoading] = useState(isEditing);
   const [saving, setSaving] = useState(false);
@@ -467,7 +486,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       await fetch("/api/revalidate?tag=categories").catch(() => {});
 
       toast.success("Product saved successfully!");
-      router.push("/admin/products");
+      router.push(getReturnUrl());
       router.refresh();
     } catch (err: any) {
       console.error("Failed to save product:", err);
@@ -576,6 +595,16 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
 
   return (
     <form onSubmit={handleSubmit} className={styles.pageLayout}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+        <button
+          type="button"
+          onClick={() => router.push(getReturnUrl())}
+          className={styles.backLink}
+          style={{ background: "none", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", padding: 0 }}
+        >
+          ← Back to Products
+        </button>
+      </div>
       <div className={styles.twoColLayout}>
         {/* Left Side: General Info */}
         <div className={styles.mainFormCol}>
@@ -1002,7 +1031,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                 size="lg"
                 fullWidth
                 style={{ borderColor: "var(--color-gold)", color: "var(--color-gold)" }}
-                onClick={() => router.push(`/admin/products/${productId}/bedsheet-ar`)}
+                onClick={() => {
+                  const queryStr = searchParams.toString();
+                  router.push(queryStr ? `/admin/products/${productId}/bedsheet-ar?${queryStr}` : `/admin/products/${productId}/bedsheet-ar`);
+                }}
               >
                 🛏️ Configure AR & Texture
               </Button>
@@ -1022,7 +1054,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               variant="outline"
               size="lg"
               fullWidth
-              onClick={() => router.push("/admin/products")}
+              onClick={() => router.push(getReturnUrl())}
             >
               Cancel
             </Button>

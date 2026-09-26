@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { getClientTickerMessages } from "@/lib/storefront-client";
 import styles from "./AnnouncementTicker.module.css";
 
 const FALLBACK_MESSAGES = [
@@ -12,31 +13,35 @@ const FALLBACK_MESSAGES = [
   "Authentic Eastern Craftsmanship",
 ];
 
-export const AnnouncementTicker: React.FC = () => {
-  const [messages, setMessages] = useState<string[]>(FALLBACK_MESSAGES);
+interface AnnouncementTickerProps {
+  initialMessages?: string[];
+}
+
+export const AnnouncementTicker: React.FC<AnnouncementTickerProps> = ({
+  initialMessages,
+}) => {
+  const [messages, setMessages] = useState<string[]>(
+    () => initialMessages && initialMessages.length > 0 ? initialMessages : FALLBACK_MESSAGES
+  );
 
   useEffect(() => {
+    if (initialMessages && initialMessages.length > 0) return;
     let active = true;
 
-    const fetchAnnouncements = async () => {
-      try {
-        const response = await fetch("/api/storefront/ticker");
-        if (!response.ok) return;
-
-        const data = (await response.json()) as string[];
-        if (active && data.length > 0) {
+    getClientTickerMessages()
+      .then((data) => {
+        if (active && data && data.length > 0) {
           setMessages(data);
         }
-      } catch (err) {
+      })
+      .catch((err) => {
         console.error("Failed to fetch ticker announcements:", err);
-      }
-    };
+      });
 
-    fetchAnnouncements();
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialMessages]);
 
   // Duplicate so the marquee loops seamlessly
   const items = [...messages, ...messages];

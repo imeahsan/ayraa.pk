@@ -8,7 +8,9 @@ export const metadata = {
 export default function NewProductPage() {
   return (
     <div>
-      <ProductForm />
+      <React.Suspense fallback={<p className="font-body text-sm text-admin-text-sub text-center py-12">Loading product form...</p>}>
+        <ProductForm />
+      </React.Suspense>
     </div>
   );
 }

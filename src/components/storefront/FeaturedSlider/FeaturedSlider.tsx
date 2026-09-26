@@ -100,7 +100,12 @@ export const FeaturedSlider: React.FC<FeaturedSliderProps> = ({
       <div ref={sliderRef} className={styles.sliderTrack}>
         {products.map((product, index) => (
           <div key={product.id} className={styles.slideItem}>
-            <ProductCard product={product} listName={title || "Featured slider"} index={index} />
+            <ProductCard
+              product={product}
+              listName={title || "Featured slider"}
+              index={index}
+              priority={false}
+            />
           </div>
         ))}
       </div>

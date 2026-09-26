@@ -60,6 +60,8 @@ export const HeroSlider: React.FC<HeroSliderProps> = ({ slides }) => {
             alt={slide.title}
             fill
             priority={index === 0}
+            fetchPriority={index === 0 ? "high" : "auto"}
+            loading={index === 0 ? "eager" : "lazy"}
             sizes="100vw"
             className={styles.heroImg}
           />

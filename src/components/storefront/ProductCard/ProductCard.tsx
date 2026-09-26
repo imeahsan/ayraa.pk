@@ -13,6 +13,7 @@ interface ProductCardProps {
   index?: number;
   onProductClick?: () => void;
   layout?: ListingLayout;
+  priority?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -21,6 +22,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   index,
   onProductClick,
   layout = "compact-grid",
+  priority,
 }) => {
   const { isWishlisted, toggleWishlist } = useWishlist();
   const primaryImage =
@@ -39,7 +41,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const displayImage = primaryFailed && alternateImage ? alternateImage : primaryImage;
   const hoverImage =
     alternateImage && alternateImage.url !== displayImage?.url ? alternateImage : null;
-  const shouldPrioritize = index !== undefined && index < 4;
+  const shouldPrioritize = priority ?? false;
   const imageSizes =
     layout === "featured-grid"
       ? "(max-width: 767px) 50vw, (max-width: 1023px) 50vw, 50vw"

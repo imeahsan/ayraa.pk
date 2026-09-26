@@ -107,6 +107,7 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
             listName="All products"
             index={index}
             layout={layout}
+            priority={index < 4}
           />
         ))}
       </div>

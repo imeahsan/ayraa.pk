@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { trackEvent } from "@/lib/analytics";
+import { getClientNavigationCategories } from "@/lib/storefront-client";
 import styles from "./Footer.module.css";
 
 const FALLBACK_COLLECTION_LINKS = [
@@ -12,46 +13,58 @@ const FALLBACK_COLLECTION_LINKS = [
   { label: "Home", href: "/collections" },
 ];
 
-export const Footer: React.FC = () => {
-  const [collections, setCollections] = useState<Array<{ label: string; href: string }>>(FALLBACK_COLLECTION_LINKS);
+const mapFooterCollections = (
+  data: Array<{
+    name: string;
+    slug: string;
+    parent_id: string | null;
+    header_label?: string | null;
+    show_in_header?: boolean | null;
+  }>
+) => {
+  return data
+    .filter((category) => category.parent_id === null)
+    .filter((category) => category.show_in_header || category.name)
+    .slice(0, 4)
+    .map((category) => ({
+      label: category.header_label?.trim() || category.name,
+      href: `/collections/${category.slug}`,
+    }));
+};
+
+interface FooterProps {
+  initialCategories?: any[];
+}
+
+export const Footer: React.FC<FooterProps> = ({ initialCategories }) => {
+  const [collections, setCollections] = useState<Array<{ label: string; href: string }>>(() => {
+    if (initialCategories && initialCategories.length > 0) {
+      const mapped = mapFooterCollections(initialCategories);
+      if (mapped.length > 0) return mapped;
+    }
+    return FALLBACK_COLLECTION_LINKS;
+  });
 
   useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) return;
     let active = true;
 
-    const loadCollections = async () => {
-      try {
-        const response = await fetch("/api/storefront/navigation");
-        if (!response.ok || !active) return;
-
-        const data = (await response.json()) as Array<{
-          name: string;
-          slug: string;
-          parent_id: string | null;
-          header_label?: string | null;
-          show_in_header?: boolean | null;
-        }>;
-        const mapped = data
-          .filter((category) => category.parent_id === null)
-          .filter((category) => category.show_in_header || category.name)
-          .slice(0, 4)
-          .map((category) => ({
-            label: category.header_label?.trim() || category.name,
-            href: `/collections/${category.slug}`,
-          }));
-
+    getClientNavigationCategories()
+      .then((data) => {
+        if (!active || !data || data.length === 0) return;
+        const mapped = mapFooterCollections(data);
         if (mapped.length > 0) {
           setCollections(mapped);
         }
-      } catch {
+      })
+      .catch(() => {
         // Keep fallback links.
-      }
-    };
+      });
 
-    loadCollections();
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialCategories]);
 
   return (
     <footer className={styles.footer}>

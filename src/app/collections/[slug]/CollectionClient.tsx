@@ -506,6 +506,7 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
                     listName={categoryName}
                     index={startIndex + index}
                     layout={layout}
+                    priority={index < 4}
                   />
                 ))}
               </div>

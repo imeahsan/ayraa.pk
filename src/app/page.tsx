@@ -13,6 +13,7 @@ import { HeroSlider } from "@/components/storefront/HeroSlider/HeroSlider";
 import { unstable_cache } from "next/cache";
 import { DEFAULT_OG_IMAGE, DEFAULT_SEO_DESCRIPTION, DEFAULT_SEO_TITLE, absoluteUrl, getSiteUrl } from "@/lib/seo";
 import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
+import { getCachedNavigationCategories, getCachedTickerMessages } from "@/lib/server/storefront-cache";
 
 export const revalidate = 300;
 
@@ -290,6 +291,18 @@ export default async function Home() {
     if (data && data.length > 0) displayCategories = data;
   } catch { /* ignore */ }
 
+  // ── Navigation & Ticker pre-fetch ────────────────
+  let navCategories: any[] = [];
+  let tickerMessages: string[] = [];
+  try {
+    const [nav, ticker] = await Promise.all([
+      getCachedNavigationCategories().catch(() => []),
+      getCachedTickerMessages().catch(() => []),
+    ]);
+    navCategories = nav || [];
+    tickerMessages = ticker || [];
+  } catch { /* ignore */ }
+
   // ── Testimonials / recent reviews ─────────────────
   let testimonials: HomeTestimonial[] = [];
   try {
@@ -340,7 +353,7 @@ export default async function Home() {
           url: `/product/${product.slug}`,
         }))}
       />
-      <Header />
+      <Header initialCategories={navCategories} initialTickerMessages={tickerMessages} />
 
       <main className={`${styles.main} grow pt-20 md:pt-16`}>
 
@@ -563,7 +576,7 @@ export default async function Home() {
 
       </main>
 
-      <Footer />
+      <Footer initialCategories={navCategories} />
     </div>
   );
 }

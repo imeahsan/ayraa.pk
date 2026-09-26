@@ -16,7 +16,9 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
 
   return (
     <div>
-      <ProductForm productId={id} />
+      <React.Suspense fallback={<p className="font-body text-sm text-admin-text-sub text-center py-12">Loading product details...</p>}>
+        <ProductForm productId={id} />
+      </React.Suspense>
     </div>
   );
 }

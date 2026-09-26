@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { UserProfile, Category } from "@/types";
 import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
 import { trackEvent } from "@/lib/analytics";
+import { getClientNavigationCategories } from "@/lib/storefront-client";
 import styles from "./Header.module.css";
 
 interface NavCategory {
@@ -28,7 +29,34 @@ const isActiveHref = (pathname: string, href: string) => {
   return pathname === href || pathname.startsWith(`${href}/`);
 };
 
-export const Header: React.FC = () => {
+const mapNavCategories = (allCats: any[]): NavCategory[] => {
+  if (!allCats || allCats.length === 0) return [];
+  const parents = allCats.filter((c) => c.parent_id === null);
+
+  return parents.map((parent) => {
+    const subs = allCats.filter((c) => c.parent_id === parent.id && c.is_active);
+    return {
+      id: parent.id,
+      label: getCategoryNavLabel(parent),
+      href: `/collections/${parent.slug}`,
+      showInHeader: Boolean(parent.show_in_header),
+      sub: subs.map((sub: any) => ({
+        label: sub.name,
+        href: `/collections/${sub.slug}`,
+      })),
+    };
+  });
+};
+
+interface HeaderProps {
+  initialCategories?: any[];
+  initialTickerMessages?: string[];
+}
+
+export const Header: React.FC<HeaderProps> = ({
+  initialCategories,
+  initialTickerMessages,
+}) => {
   const { cart, setCartOpen } = useCart();
   const { wishlistCount, wishlistReady, isLoggedIn, openLoginModal } = useWishlist();
   const { theme, toggleTheme } = useTheme();
@@ -37,7 +65,11 @@ export const Header: React.FC = () => {
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [menuCategories, setMenuCategories] = useState<NavCategory[]>([]);
+  const [menuCategories, setMenuCategories] = useState<NavCategory[]>(() =>
+    initialCategories && initialCategories.length > 0
+      ? mapNavCategories(initialCategories)
+      : []
+  );
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -88,7 +120,7 @@ export const Header: React.FC = () => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event: unknown, session: any) => {
       try {
         if (!session?.user) {
           setProfile(null);
@@ -114,42 +146,22 @@ export const Header: React.FC = () => {
   }, [supabase]);
 
   useEffect(() => {
+    if (initialCategories && initialCategories.length > 0) return;
     let active = true;
 
-    const fetchCategories = async () => {
-      try {
-        const response = await fetch("/api/storefront/navigation");
-        if (!response.ok) return;
-
-        const allCats = (await response.json()) as Category[];
-        if (!active || allCats.length === 0) return;
-        const parents = allCats.filter((c) => c.parent_id === null);
-
-        const mapped = parents.map((parent) => {
-          const subs = allCats.filter((c) => c.parent_id === parent.id && c.is_active);
-          return {
-            id: parent.id,
-            label: getCategoryNavLabel(parent),
-            href: `/collections/${parent.slug}`,
-            showInHeader: Boolean(parent.show_in_header),
-            sub: subs.map((sub) => ({
-              label: sub.name,
-              href: `/collections/${sub.slug}`,
-            })),
-          };
-        });
-
-        setMenuCategories(mapped);
-      } catch (err) {
+    getClientNavigationCategories()
+      .then((allCats) => {
+        if (!active || !allCats || allCats.length === 0) return;
+        setMenuCategories(mapNavCategories(allCats));
+      })
+      .catch((err) => {
         console.error("Failed to load navigation categories:", err);
-      }
-    };
+      });
 
-    fetchCategories();
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialCategories]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -188,7 +200,7 @@ export const Header: React.FC = () => {
   return (
     <>
       <header className={`${styles.header} ${isScrolled ? styles.scrolled : ""}`}>
-        <AnnouncementTicker />
+        <AnnouncementTicker initialMessages={initialTickerMessages} />
         <div className={styles.container}>
           <button
             className={styles.mobileMenuToggle}
