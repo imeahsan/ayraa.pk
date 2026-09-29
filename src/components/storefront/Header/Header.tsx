@@ -266,11 +266,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </li>
               ))}
 
-              <li className={styles.navItem}>
-                <Link href="/about" className={pathname === "/about" ? "premium-underline-active" : "premium-underline"} onClick={() => trackNavClick("About", "/about")}>
-                  About
-                </Link>
-              </li>
+
               <li className={styles.navItem}>
                 <Link href="/contact" className={pathname === "/contact" ? "premium-underline-active" : "premium-underline"} onClick={() => trackNavClick("Contact", "/contact")}>
                   Contact
@@ -479,14 +475,7 @@ export const Header: React.FC<HeaderProps> = ({
             );
           })}
 
-          <li className={styles.mobileMenuItem}>
-            <Link href="/about" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => {
-              trackNavClick("About", "/about", "mobile_menu");
-              setIsMobileMenuOpen(false);
-            }}>
-              About
-            </Link>
-          </li>
+
           <li className={styles.mobileMenuItem}>
             <Link href="/contact" className={`${styles.mobileMenuLink} ${styles.mobileMenuLinkInactive}`} onClick={() => {
               trackNavClick("Contact", "/contact", "mobile_menu");

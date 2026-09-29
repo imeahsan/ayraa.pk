@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
+import { saveSalesSettings } from "@/app/actions/sales";
 import styles from "../admin.module.css";
 
 export default function AdminSalesPage() {
@@ -49,7 +50,9 @@ export default function AdminSalesPage() {
         } else {
           const cleanData = (prodData as Product[]).map((p) => ({
             ...p,
-            is_on_sale: p.is_on_sale || false,
+            is_on_sale:
+              Boolean(p.is_on_sale) ||
+              Boolean(p.compare_at_price && p.compare_at_price > p.price),
           }));
           setProducts(cleanData);
           setOriginalProducts(JSON.parse(JSON.stringify(cleanData)));
@@ -309,45 +312,31 @@ export default function AdminSalesPage() {
 
   const hasUnsavedChanges = modifiedProducts.length > 0;
 
-  // Save changes to Database and revalidate Next.js cache
+  // Save changes to Database via Server Action and revalidate Next.js cache
   const handleSaveChanges = async () => {
     if (modifiedProducts.length === 0) return;
     setSaving(true);
 
     try {
-      const updatePromises = modifiedProducts.map(async (p) => {
-        return supabase
-          .from("products")
-          .update({
-            is_on_sale: p.is_on_sale,
-            price: p.price,
-            compare_at_price: p.compare_at_price,
-            is_active: p.is_active,
-          })
-          .eq("id", p.id);
-      });
+      const payload = modifiedProducts.map((p) => ({
+        id: p.id,
+        price: p.price,
+        compare_at_price: p.compare_at_price,
+        is_on_sale: Boolean(p.is_on_sale),
+        is_active: p.is_active,
+      }));
 
-      const results = await Promise.all(updatePromises);
-      const errors = results.filter((r) => r.error);
+      const res = await saveSalesSettings(payload);
 
-      if (errors.length > 0) {
-        console.error("Errors saving some products:", errors);
-        toast.error(`Failed to save some changes: ${errors[0].error?.message}`);
+      if (!res.success) {
+        toast.error(`Failed to save changes: ${res.error}`);
       } else {
-        // Revalidate Next.js cache so storefront updates immediately
-        await Promise.allSettled([
-          fetch("/api/revalidate?tag=products"),
-          fetch("/api/revalidate?tag=categories"),
-          fetch("/api/revalidate?path=/"),
-          fetch("/api/revalidate?path=/collections"),
-        ]);
-
-        toast.success(`Sales settings saved for ${modifiedProducts.length} product(s)!`);
+        toast.success(`Sales settings saved for ${res.count} product(s)! Storefront updated.`);
         setOriginalProducts(JSON.parse(JSON.stringify(products)));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Save failed:", err);
-      toast.error("An error occurred while saving. Unsaved state is kept.");
+      toast.error(`An error occurred while saving: ${err.message || err}`);
     } finally {
       setSaving(false);
     }
