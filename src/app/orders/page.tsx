@@ -9,6 +9,7 @@ import { Footer } from "@/components/storefront/Footer/Footer";
 import { Button } from "@/components/storefront/Button/Button";
 import { Breadcrumb } from "@/components/storefront/Breadcrumb/Breadcrumb";
 import { useToast } from "@/context/ToastContext";
+import Loading from "@/app/loading";
 import { requestCustomerReturn } from "@/app/actions/returns";
 import { OrderReturnRequest, ReturnRequestType } from "@/types";
 import styles from "./orders.module.css";
@@ -203,17 +204,7 @@ export default function CustomerOrdersPage() {
           <h1 className={styles.pageTitle}>My Orders</h1>
 
           {loading ? (
-            <p
-              style={{
-                fontStyle: "italic",
-                fontSize: "14px",
-                color: "var(--color-on-surface-sub)",
-                textAlign: "center",
-                paddingBlock: "48px",
-              }}
-            >
-              Loading your orders history...
-            </p>
+            <Loading />
           ) : isLoggedIn === false ? (
             <div className={styles.emptyState}>
               <p className={styles.emptyText}>Please sign in to view your orders history.</p>

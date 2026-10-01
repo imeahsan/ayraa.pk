@@ -9,6 +9,7 @@ import { Button } from "@/components/storefront/Button/Button";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { useWishlist } from "@/context/WishlistContext";
 import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
+import Loading from "@/app/loading";
 import styles from "./wishlist.module.css";
 
 export default function WishlistPage() {
@@ -49,7 +50,7 @@ export default function WishlistPage() {
           </div>
 
           {!wishlistReady ? (
-            <p className={styles.stateText}>Loading your wishlist...</p>
+            <Loading />
           ) : !isLoggedIn ? (
             <div className={styles.emptyState}>
               <p className={styles.stateText}>Sign in to view and manage your wishlist.</p>

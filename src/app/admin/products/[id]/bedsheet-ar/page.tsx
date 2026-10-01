@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import styles from "../../../admin.module.css";
 import { Button } from "@/components/storefront/Button/Button";
+import Loading from "@/app/loading";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -372,7 +373,7 @@ function BedsheetARConfigContent({ params }: Props) {
 
 export default function BedsheetARConfigPage({ params }: Props) {
   return (
-    <React.Suspense fallback={<p className="font-body text-sm text-admin-text-sub text-center py-12">Loading AR configuration...</p>}>
+    <React.Suspense fallback={<Loading />}>
       <BedsheetARConfigContent params={params} />
     </React.Suspense>
   );

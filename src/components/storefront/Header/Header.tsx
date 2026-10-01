@@ -11,6 +11,7 @@ import { UserProfile, Category } from "@/types";
 import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
 import { trackEvent } from "@/lib/analytics";
 import { getClientNavigationCategories } from "@/lib/storefront-client";
+import Loading from "@/app/loading";
 import styles from "./Header.module.css";
 
 interface NavCategory {
@@ -65,6 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [isNavigatingWishlist, setIsNavigatingWishlist] = useState(false);
   const [menuCategories, setMenuCategories] = useState<NavCategory[]>(() =>
     initialCategories && initialCategories.length > 0
       ? mapNavCategories(initialCategories)
@@ -169,14 +171,35 @@ export const Header: React.FC<HeaderProps> = ({
     router.refresh();
   };
 
+  useEffect(() => {
+    if (pathname === "/wishlist") {
+      setIsNavigatingWishlist(false);
+    }
+  }, [pathname]);
+
   const handleWishlistClick = () => {
-    if (!wishlistReady) return;
     if (isLoggedIn) {
+      setIsNavigatingWishlist(true);
       router.push("/wishlist");
+      return;
+    }
+    if (!wishlistReady) {
+      setIsNavigatingWishlist(true);
       return;
     }
     openLoginModal();
   };
+
+  useEffect(() => {
+    if (isNavigatingWishlist && wishlistReady) {
+      if (isLoggedIn) {
+        router.push("/wishlist");
+      } else {
+        setIsNavigatingWishlist(false);
+        openLoginModal();
+      }
+    }
+  }, [isNavigatingWishlist, wishlistReady, isLoggedIn, openLoginModal, router]);
 
   const trackNavClick = (label: string, href: string, location: "header" | "mobile_menu" | "profile_menu" = "header") => {
     trackEvent("nav_click", {
@@ -199,6 +222,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
+      {isNavigatingWishlist && <Loading />}
       <header className={`${styles.header} ${isScrolled ? styles.scrolled : ""}`}>
         <AnnouncementTicker initialMessages={initialTickerMessages} />
         <div className={styles.container}>

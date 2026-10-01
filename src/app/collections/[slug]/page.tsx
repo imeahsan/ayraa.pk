@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
+import Loading from "@/app/loading";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { createCacheClient } from "@/lib/supabase/cache-client";
@@ -582,7 +583,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       />
       <Header />
       <main className="grow pt-20 md:pt-16">
-        <React.Suspense fallback={<div className="min-h-screen" />}>
+        <React.Suspense fallback={<Loading />}>
           <CollectionClient
             initialProducts={products}
             categoryName={categoryName}

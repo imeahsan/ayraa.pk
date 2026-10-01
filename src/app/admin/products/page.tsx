@@ -9,6 +9,7 @@ import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import { isBeddingProduct } from "@/lib/bedsheet-ar/is-bedding";
+import Loading from "@/app/loading";
 import styles from "../admin.module.css";
 
 const adminProductSearchCache = new Map<string, Product[]>();
@@ -541,9 +542,7 @@ function AdminProductsContent() {
 
       {/* Main Table Card */}
       {loading ? (
-        <div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>
-          <p className="font-body text-sm text-admin-text-sub">Loading products...</p>
-        </div>
+        <Loading />
       ) : filteredProducts.length === 0 ? (
         <div className={styles.tableCard} style={{ padding: "56px 24px", textAlign: "center" }}>
           <div style={{ fontSize: "36px", marginBottom: "12px" }}>📦</div>
@@ -963,7 +962,7 @@ function AdminProductsContent() {
 
 export default function AdminProductsPage() {
   return (
-    <React.Suspense fallback={<div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>Loading catalog...</div>}>
+    <React.Suspense fallback={<Loading />}>
       <AdminProductsContent />
     </React.Suspense>
   );

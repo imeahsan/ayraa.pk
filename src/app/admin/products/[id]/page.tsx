@@ -1,5 +1,6 @@
 import React from "react";
 import { ProductForm } from "../ProductForm";
+import Loading from "@/app/loading";
 
 interface EditProductPageProps {
   params: Promise<{
@@ -16,7 +17,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
 
   return (
     <div>
-      <React.Suspense fallback={<p className="font-body text-sm text-admin-text-sub text-center py-12">Loading product details...</p>}>
+      <React.Suspense fallback={<Loading />}>
         <ProductForm productId={id} />
       </React.Suspense>
     </div>

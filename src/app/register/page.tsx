@@ -8,6 +8,7 @@ import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { Button } from "@/components/storefront/Button/Button";
 import { trackEvent } from "@/lib/analytics";
+import Loading from "@/app/loading";
 import styles from "./auth.module.css";
 
 function RegisterContent() {
@@ -149,11 +150,7 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-bg text-on-surface font-body">
-        Loading Register...
-      </div>
-    }>
+    <Suspense fallback={<Loading />}>
       <RegisterContent />
     </Suspense>
   );
