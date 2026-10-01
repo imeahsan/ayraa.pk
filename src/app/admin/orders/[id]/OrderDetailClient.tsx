@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -85,6 +85,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
   // Edit Order Modal States
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
+  const hasAutoOpenedRef = useRef(false);
   const [editStatus, setEditStatus] = useState<OrderStatus>("pending");
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
@@ -220,12 +221,38 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
     setIsEditModalOpen(true);
   }, [order]);
 
-  // Open modal automatically if URL contains ?edit=true
+  const closeEditModal = useCallback(() => {
+    if (savingOrder) return;
+    setIsEditModalOpen(false);
+    setShowAddProductRow(false);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("edit")) {
+        url.searchParams.delete("edit");
+        window.history.replaceState(null, "", url.pathname + (url.search ? url.search : ""));
+      }
+    }
+  }, [savingOrder]);
+
+  // Open modal automatically if URL contains ?edit=true on initial load
   useEffect(() => {
-    if (searchParams.get("edit") === "true" && order && !isEditModalOpen) {
+    if (searchParams.get("edit") === "true" && order && !hasAutoOpenedRef.current) {
+      hasAutoOpenedRef.current = true;
       openEditModal();
     }
-  }, [searchParams, order, openEditModal, isEditModalOpen]);
+  }, [searchParams, order, openEditModal]);
+
+  // Close on Escape key press
+  useEffect(() => {
+    if (!isEditModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeEditModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isEditModalOpen, closeEditModal]);
 
   // Load catalog products for order item additions
   useEffect(() => {
@@ -383,7 +410,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
         toast.error(res.error || "Failed to update order");
       } else {
         toast.success(`Order #${order.id} updated successfully!`);
-        setIsEditModalOpen(false);
+        closeEditModal();
         setCodAmount(calculatedTotal);
         await loadOrder();
       }
@@ -1330,6 +1357,8 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
       {/* EDIT ORDER MODAL */}
       {isEditModalOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
           style={{
             position: "fixed",
             inset: 0,
@@ -1340,8 +1369,13 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
             alignItems: "center",
             justifyContent: "center",
             padding: "20px",
+            cursor: "pointer",
           }}
-          onClick={() => !savingOrder && setIsEditModalOpen(false)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeEditModal();
+            }
+          }}
         >
           <div
             style={{
@@ -1355,6 +1389,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
               padding: "28px",
               boxShadow: "0 24px 48px rgba(0,0,0,0.8)",
               position: "relative",
+              cursor: "default",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1391,7 +1426,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
               </div>
               <button
                 type="button"
-                onClick={() => !savingOrder && setIsEditModalOpen(false)}
+                onClick={closeEditModal}
                 disabled={savingOrder}
                 style={{
                   background: "none",
@@ -2015,7 +2050,7 @@ export const OrderDetailClient: React.FC<OrderDetailClientProps> = ({ orderId })
               >
                 <button
                   type="button"
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={closeEditModal}
                   disabled={savingOrder}
                   style={{
                     padding: "10px 18px",
