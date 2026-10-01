@@ -62,7 +62,7 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({ stats, expense
       <div className={styles.waterfallCard} style={{ margin: 0 }}>
         <div className={styles.cardTitle}>Inflow vs Total Outflow Comparison</div>
         <div className={styles.cardSubtitle}>
-          Realized Net Revenue vs (COGS + Operating Expenses + Shipping Losses) for {stats.period.label}.
+          Realized Net Revenue vs (Sold COGS + Gift Stock + Operating Expenses + Shipping Losses) for {stats.period.label}.
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginTop: "24px" }}>
@@ -88,7 +88,7 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({ stats, expense
           {/* Outflow Bar */}
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
-              <span style={{ fontWeight: 600, color: "#f87171" }}>🔴 Total Outflow (COGS + OPEX + Losses)</span>
+              <span style={{ fontWeight: 600, color: "#f87171" }}>🔴 Total Outflow (COGS + Gifts + OPEX + Losses)</span>
               <strong style={{ color: "#ffffff" }}>{formatPKR(totalOutflow)}</strong>
             </div>
             <div style={{ width: "100%", height: "24px", backgroundColor: "rgba(255,255,255,0.05)", borderRadius: "4px", overflow: "hidden" }}>

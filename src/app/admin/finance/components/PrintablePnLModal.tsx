@@ -132,8 +132,20 @@ export const PrintablePnLModal: React.FC<PrintablePnLModalProps> = ({ stats, exp
             </tr>
 
             <tr>
-              <td style={{ padding: "8px 8px 8px 24px", color: "#333" }}>Less: Cost of Goods Sold (COGS - Fabric & Sourcing)</td>
-              <td style={{ padding: "8px", textAlign: "right", color: "#b91c1c" }}>- {formatPKR(stats.cogsAmount)}</td>
+              <td style={{ padding: "6px 8px 6px 24px", color: "#333" }}>Less: Sold Merchandise Fabric &amp; Sourcing COGS</td>
+              <td style={{ padding: "6px 8px", textAlign: "right", color: "#b91c1c" }}>- {formatPKR(Math.max(0, stats.cogsAmount - stats.giftCogsCost))}</td>
+            </tr>
+            <tr>
+              <td style={{ padding: "6px 8px 6px 24px", color: "#b45309", fontWeight: 500 }}>
+                Less: Customer Gifts &amp; PR Samples (Stock COGS)
+              </td>
+              <td style={{ padding: "6px 8px", textAlign: "right", color: stats.giftCogsCost > 0 ? "#b45309" : "#555" }}>
+                - {formatPKR(stats.giftCogsCost)} {stats.giftItemsCount > 0 ? `(${stats.giftItemsCount} units)` : ""}
+              </td>
+            </tr>
+            <tr style={{ backgroundColor: "#f9f9f9", fontStyle: "italic", fontSize: "12px" }}>
+              <td style={{ padding: "4px 8px 4px 32px", color: "#666" }}>Total COGS Deducted (Commercial + Gifts)</td>
+              <td style={{ padding: "4px 8px", textAlign: "right", color: "#b91c1c" }}>- {formatPKR(stats.cogsAmount)}</td>
             </tr>
             <tr style={{ borderTop: "1px solid #111", borderBottom: "1px solid #111", fontWeight: 800, backgroundColor: "#f0fdf4" }}>
               <td style={{ padding: "8px", color: "#166534" }}>3. Gross Profit (Margin: {stats.grossProfitMargin.toFixed(1)}%)</td>
@@ -144,13 +156,15 @@ export const PrintablePnLModal: React.FC<PrintablePnLModalProps> = ({ stats, exp
               <td style={{ padding: "8px" }} colSpan={2}>4. Operating Expenses (OPEX)</td>
             </tr>
             <tr>
-              <td style={{ padding: "6px 8px 6px 24px", color: "#555" }}>Marketing & Paid Ad Spend (Meta/Google)</td>
+              <td style={{ padding: "6px 8px 6px 24px", color: "#555" }}>Marketing &amp; Paid Ad Spend (Meta/Google)</td>
               <td style={{ padding: "6px 8px", textAlign: "right" }}>{formatPKR(stats.marketingExpenses)}</td>
             </tr>
             <tr>
-              <td style={{ padding: "6px 8px 6px 24px", color: "#555" }}>Customer Gifts & PR Samples (Stock COGS)</td>
-              <td style={{ padding: "6px 8px", textAlign: "right", color: stats.giftCogsCost > 0 ? "#b45309" : "#555" }}>
-                {formatPKR(stats.giftCogsCost)} ({stats.giftItemsCount} units)
+              <td style={{ padding: "6px 8px 6px 24px", color: "#888", fontStyle: "italic" }}>
+                Customer Gifts &amp; PR Samples (Accounted in COGS above: {formatPKR(stats.giftCogsCost)})
+              </td>
+              <td style={{ padding: "6px 8px", textAlign: "right", color: "#888", fontStyle: "italic" }}>
+                [In COGS]
               </td>
             </tr>
             <tr>

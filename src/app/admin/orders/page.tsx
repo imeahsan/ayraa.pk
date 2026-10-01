@@ -232,9 +232,31 @@ export default function AdminOrdersPage() {
                         {formatDate(order.created_at)}
                       </td>
                       <td className={styles.tableTd}>
-                        <Link href={`/admin/orders/${order.id}`} className={styles.tableLink}>
-                          Manage Order &rarr;
-                        </Link>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <Link href={`/admin/orders/${order.id}`} className={styles.tableLink}>
+                            Manage &rarr;
+                          </Link>
+                          <Link
+                            href={`/admin/orders/${order.id}?edit=true`}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "2px 8px",
+                              backgroundColor: "rgba(233, 195, 73, 0.08)",
+                              color: "var(--color-gold)",
+                              border: "1px solid rgba(233, 195, 73, 0.25)",
+                              borderRadius: "var(--radius-sm, 4px)",
+                              fontSize: "11px",
+                              fontWeight: 600,
+                              textDecoration: "none",
+                              transition: "all 0.15s",
+                            }}
+                            title="Edit Order"
+                          >
+                            <span>✏️</span> Edit
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );

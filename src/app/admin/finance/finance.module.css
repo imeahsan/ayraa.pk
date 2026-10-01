@@ -197,23 +197,41 @@
 }
 
 .waterfallSteps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 8px;
+  justify-content: space-between;
 }
 
 .waterfallItem {
+  flex: 1 1 115px;
+  min-width: 110px;
   background-color: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 6px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   text-align: center;
+  transition: all 0.2s ease;
+}
+
+.waterfallItem:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(233, 195, 73, 0.2);
 }
 
 .waterfallItemHighlight {
   background-color: rgba(233, 195, 73, 0.08);
   border: 1px solid rgba(233, 195, 73, 0.3);
+}
+
+.waterfallConnector {
+  flex: 0 0 auto;
+  text-align: center;
+  color: var(--admin-text-sub);
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.6;
 }
 
 .waterfallStepLabel {
@@ -225,7 +243,7 @@
 }
 
 .waterfallStepVal {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   color: #ffffff;
 }
