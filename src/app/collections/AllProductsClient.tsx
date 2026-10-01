@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { ListingLayoutSelector } from "@/components/storefront/ListingLayoutSelector/ListingLayoutSelector";
 import { useListingLayoutPreference } from "@/components/storefront/useListingLayoutPreference";
 import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
+import { LuxuryLoader } from "@/components/common/LuxuryLoader";
 import styles from "./AllProductsClient.module.css";
 
 interface AllProductsClientProps {
@@ -113,22 +114,8 @@ export const AllProductsClient: React.FC<AllProductsClientProps> = ({
       </div>
 
       {hasMore && (
-        <div
-          ref={sentinelRef}
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            paddingBlock: "48px",
-            color: "var(--color-gold)",
-            fontFamily: "var(--font-body)",
-            fontSize: "13px",
-            letterSpacing: "2px",
-            textTransform: "uppercase",
-          }}
-        >
-          <span className="pulse-loader">
-            Loading More Products...
-          </span>
+        <div ref={sentinelRef} style={{ width: "100%", paddingBlock: "48px" }}>
+          <LuxuryLoader label="Loading More Pieces..." size="sm" variant="inline" />
         </div>
       )}
     </>

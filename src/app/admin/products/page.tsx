@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
+import { LuxuryLoader } from "@/components/common/LuxuryLoader";
 import { isBeddingProduct } from "@/lib/bedsheet-ar/is-bedding";
 import styles from "../admin.module.css";
 
@@ -542,7 +543,7 @@ function AdminProductsContent() {
       {/* Main Table Card */}
       {loading ? (
         <div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>
-          <p className="font-body text-sm text-admin-text-sub">Loading products...</p>
+          <LuxuryLoader label="Loading products..." size="sm" variant="inline" />
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className={styles.tableCard} style={{ padding: "56px 24px", textAlign: "center" }}>
@@ -963,7 +964,7 @@ function AdminProductsContent() {
 
 export default function AdminProductsPage() {
   return (
-    <React.Suspense fallback={<div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>Loading catalog...</div>}>
+    <React.Suspense fallback={<div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}><LuxuryLoader label="Loading catalog..." size="sm" variant="inline" /></div>}>
       <AdminProductsContent />
     </React.Suspense>
   );

@@ -7,6 +7,8 @@ import { Footer } from "@/components/storefront/Footer/Footer";
 import { Breadcrumb } from "@/components/storefront/Breadcrumb/Breadcrumb";
 import { Button } from "@/components/storefront/Button/Button";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
+import { LuxuryLoader } from "@/components/common/LuxuryLoader";
+import { ProductCardSkeleton } from "@/components/common/ProductCardSkeleton";
 import { useWishlist } from "@/context/WishlistContext";
 import { productToAnalyticsItem, trackEcommerceEvent } from "@/lib/analytics";
 import styles from "./wishlist.module.css";
@@ -49,7 +51,12 @@ export default function WishlistPage() {
           </div>
 
           {!wishlistReady ? (
-            <p className={styles.stateText}>Loading your wishlist...</p>
+            <div className={styles.loadingWrapper}>
+              <div style={{ marginBottom: "28px" }}>
+                <LuxuryLoader label="Loading your wishlist..." size="md" variant="inline" />
+              </div>
+              <ProductCardSkeleton count={4} />
+            </div>
           ) : !isLoggedIn ? (
             <div className={styles.emptyState}>
               <p className={styles.stateText}>Sign in to view and manage your wishlist.</p>
