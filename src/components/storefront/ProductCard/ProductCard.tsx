@@ -32,12 +32,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [primaryLoaded, setPrimaryLoaded] = React.useState(false);
   const [primaryFailed, setPrimaryFailed] = React.useState(false);
   const [secondaryLoaded, setSecondaryLoaded] = React.useState(false);
-  const [isWishlistUpdating, setIsWishlistUpdating] = React.useState(false);
   const wishlisted = isWishlisted(product.id);
   const isOutOfStock = Boolean(
     product.variants &&
-      product.variants.length > 0 &&
-      product.variants.every((v) => v.stock_quantity <= 0 || !v.is_available)
+    product.variants.length > 0 &&
+    product.variants.every((v) => v.stock_quantity <= 0 || !v.is_available)
   );
   const displayImage = primaryFailed && alternateImage ? alternateImage : primaryImage;
   const hoverImage =
@@ -58,10 +57,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const formattedComparePrice = product.compare_at_price
     ? Intl.NumberFormat("en-PK", {
-        style: "currency",
-        currency: "PKR",
-        maximumFractionDigits: 0,
-      }).format(product.compare_at_price)
+      style: "currency",
+      currency: "PKR",
+      maximumFractionDigits: 0,
+    }).format(product.compare_at_price)
     : null;
 
   const handleProductClick = () => {
@@ -168,26 +167,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className={`${styles.wishlistButton} ${wishlisted ? styles.wishlistButtonActive : ""}`}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          disabled={isWishlistUpdating}
           onClick={async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            if (isWishlistUpdating) return;
-            setIsWishlistUpdating(true);
-            try {
-              await toggleWishlist(product);
-            } finally {
-              setIsWishlistUpdating(false);
-            }
+            await toggleWishlist(product);
           }}
         >
-          {isWishlistUpdating ? (
-            <span className={styles.cardMiniSpinner} aria-hidden="true" />
-          ) : (
-            <svg width="17" height="17" viewBox="0 0 24 24" fill={wishlisted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 22l7.78-8.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
-            </svg>
-          )}
+          <svg width="17" height="17" viewBox="0 0 24 24" fill={wishlisted ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78l1.06 1.06L12 22l7.78-8.55 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z" />
+          </svg>
         </button>
       </div>
 

@@ -11,7 +11,6 @@ import { UserProfile, Category } from "@/types";
 import { AnnouncementTicker } from "../AnnouncementTicker/AnnouncementTicker";
 import { trackEvent } from "@/lib/analytics";
 import { getClientNavigationCategories } from "@/lib/storefront-client";
-import { emitNavigationStart } from "@/components/common/NavigationProgressBar";
 import styles from "./Header.module.css";
 
 interface NavCategory {
@@ -66,7 +65,6 @@ export const Header: React.FC<HeaderProps> = ({
   const [expandedMobile, setExpandedMobile] = useState<string | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [isNavigatingWishlist, setIsNavigatingWishlist] = useState(false);
   const [menuCategories, setMenuCategories] = useState<NavCategory[]>(() =>
     initialCategories && initialCategories.length > 0
       ? mapNavCategories(initialCategories)
@@ -171,37 +169,14 @@ export const Header: React.FC<HeaderProps> = ({
     router.refresh();
   };
 
-  useEffect(() => {
-    if (pathname === "/wishlist") {
-      setIsNavigatingWishlist(false);
-    }
-  }, [pathname]);
-
   const handleWishlistClick = () => {
-    if (!wishlistReady) {
-      setIsNavigatingWishlist(true);
-      return;
-    }
+    if (!wishlistReady) return;
     if (isLoggedIn) {
-      setIsNavigatingWishlist(true);
-      emitNavigationStart();
       router.push("/wishlist");
       return;
     }
     openLoginModal();
   };
-
-  useEffect(() => {
-    if (isNavigatingWishlist && wishlistReady) {
-      if (isLoggedIn) {
-        emitNavigationStart();
-        router.push("/wishlist");
-      } else {
-        setIsNavigatingWishlist(false);
-        openLoginModal();
-      }
-    }
-  }, [isNavigatingWishlist, wishlistReady, isLoggedIn, openLoginModal, router]);
 
   const trackNavClick = (label: string, href: string, location: "header" | "mobile_menu" | "profile_menu" = "header") => {
     trackEvent("nav_click", {
@@ -329,18 +304,7 @@ export const Header: React.FC<HeaderProps> = ({
               </Link>
             )}
 
-            {!wishlistReady || isNavigatingWishlist ? (
-              <button
-                className={styles.iconBtn}
-                aria-label="Loading Wishlist"
-                id="wishlist-toggle-btn"
-                title="Loading Wishlist"
-                disabled
-                style={{ opacity: 0.85, cursor: "wait" }}
-              >
-                <span className={styles.miniSpinner} aria-hidden="true" />
-              </button>
-            ) : (
+            {wishlistReady ? (
               <button
                 className={styles.iconBtn}
                 onClick={handleWishlistClick}
@@ -353,6 +317,10 @@ export const Header: React.FC<HeaderProps> = ({
                 </svg>
                 {wishlistCount > 0 && <span className={styles.wishlistBadge}>{wishlistCount}</span>}
               </button>
+            ) : (
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "2rem" }}>
+                <span className={styles.miniSpinner} aria-hidden="true" />
+              </span>
             )}
 
             <button
@@ -377,7 +345,7 @@ export const Header: React.FC<HeaderProps> = ({
                     </span>
                     <span className={styles.profileName}>{profile.full_name?.split(" ")[0] || "Account"}</span>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="m6 9 6 6 6-6"/>
+                      <path d="m6 9 6 6 6-6" />
                     </svg>
                   </button>
                   <div className={styles.profileDropdown}>

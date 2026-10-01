@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { UserProfile } from "@/types";
-import { LuxuryLoader } from "@/components/common/LuxuryLoader";
 import styles from "../admin.module.css";
 
 // Fallback Mock Customers
@@ -168,9 +167,7 @@ export default function AdminCustomersPage() {
       </div>
 
       {loading ? (
-        <div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>
-          <LuxuryLoader label="Loading customers..." size="sm" variant="inline" />
-        </div>
+        <p className="font-body text-sm text-admin-text-sub text-center py-12">Loading customers list...</p>
       ) : filteredCustomers.length === 0 ? (
         <div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>
           No customers found matching search.

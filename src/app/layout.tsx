@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
-import { Suspense } from "react";
-import { ThemeProvider } from "@/context/ThemeContext";
 import { CartProvider } from "@/context/CartContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { ToastProvider } from "@/context/ToastContext";
 import { WishlistProvider } from "@/context/WishlistContext";
-import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
 import { OrganizationJsonLd } from "@/components/seo/OrganizationJsonLd";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { AnalyticsConsentBanner } from "@/components/analytics/AnalyticsConsentBanner";
@@ -105,9 +103,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://sqidwtxualtmelvjgxir.supabase.co" crossOrigin="anonymous" />
       </head>
       <body>
-        <Suspense fallback={null}>
-          <NavigationProgressBar />
-        </Suspense>
         <ThemeProvider>
           <ToastProvider>
             <CartProvider>

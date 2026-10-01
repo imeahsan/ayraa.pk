@@ -4,14 +4,13 @@ import React, { Suspense } from "react";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { LuxuryLoader } from "@/components/common/LuxuryLoader";
 import styles from "./auth.module.css";
 
 function LoginContent() {
   return (
     <div className={styles.pageWrapper}>
       <Header />
-      
+
       <main className={styles.mainContent}>
         <LoginForm />
       </main>
@@ -23,7 +22,11 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<LuxuryLoader label="Loading Sign In..." size="lg" variant="fullscreen" />}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-bg text-on-surface font-body">
+        Loading Sign In...
+      </div>
+    }>
       <LoginContent />
     </Suspense>
   );

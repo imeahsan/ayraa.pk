@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
-import { LuxuryLoader } from "@/components/common/LuxuryLoader";
 import { isBeddingProduct } from "@/lib/bedsheet-ar/is-bedding";
 import styles from "../admin.module.css";
 
@@ -167,8 +166,8 @@ function AdminProductsContent() {
       if (error) {
         toast.error(`Failed to delete: ${error.message}`);
       } else {
-        await fetch("/api/revalidate?tag=products").catch(() => {});
-        await fetch("/api/revalidate?tag=categories").catch(() => {});
+        await fetch("/api/revalidate?tag=products").catch(() => { });
+        await fetch("/api/revalidate?tag=categories").catch(() => { });
 
         setProducts((prev) => prev.filter((p) => p.id !== id));
         adminProductSearchCache.clear();
@@ -543,7 +542,7 @@ function AdminProductsContent() {
       {/* Main Table Card */}
       {loading ? (
         <div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>
-          <LuxuryLoader label="Loading products..." size="sm" variant="inline" />
+          <p className="font-body text-sm text-admin-text-sub">Loading products...</p>
         </div>
       ) : filteredProducts.length === 0 ? (
         <div className={styles.tableCard} style={{ padding: "56px 24px", textAlign: "center" }}>
@@ -760,20 +759,20 @@ function AdminProductsContent() {
                                 totalStock === 0
                                   ? "rgba(239, 68, 68, 0.15)"
                                   : totalStock <= 5
-                                  ? "rgba(245, 158, 11, 0.15)"
-                                  : "rgba(34, 197, 94, 0.15)",
+                                    ? "rgba(245, 158, 11, 0.15)"
+                                    : "rgba(34, 197, 94, 0.15)",
                               color:
                                 totalStock === 0
                                   ? "#ef4444"
                                   : totalStock <= 5
-                                  ? "#f59e0b"
-                                  : "#22c55e",
+                                    ? "#f59e0b"
+                                    : "#22c55e",
                               border:
                                 totalStock === 0
                                   ? "1px solid rgba(239, 68, 68, 0.3)"
                                   : totalStock <= 5
-                                  ? "1px solid rgba(245, 158, 11, 0.3)"
-                                  : "1px solid rgba(34, 197, 94, 0.3)",
+                                    ? "1px solid rgba(245, 158, 11, 0.3)"
+                                    : "1px solid rgba(34, 197, 94, 0.3)",
                               fontSize: "11px",
                               fontWeight: 600,
                               padding: "4px 8px",
@@ -794,8 +793,8 @@ function AdminProductsContent() {
                             {totalStock === 0
                               ? "Out of Stock"
                               : totalStock <= 5
-                              ? `${totalStock} units (Low)`
-                              : `${totalStock} in stock`}
+                                ? `${totalStock} units (Low)`
+                                : `${totalStock} in stock`}
                           </span>
                           {variantCount > 1 && (
                             <span style={{ fontSize: "10px", color: "var(--admin-text-sub)" }}>
@@ -964,7 +963,7 @@ function AdminProductsContent() {
 
 export default function AdminProductsPage() {
   return (
-    <React.Suspense fallback={<div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}><LuxuryLoader label="Loading catalog..." size="sm" variant="inline" /></div>}>
+    <React.Suspense fallback={<div className={styles.tableCard} style={{ padding: "48px", textAlign: "center" }}>Loading catalog...</div>}>
       <AdminProductsContent />
     </React.Suspense>
   );
