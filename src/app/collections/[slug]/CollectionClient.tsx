@@ -133,7 +133,38 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
     return Array.from(list).sort();
   }, [initialProducts]);
 
-  const sizes = ["XS", "S", "M", "L", "XL"];
+  // Available size filters from products in this collection
+  const availableSizes = useMemo(() => {
+    const list = new Set<string>();
+    initialProducts.forEach((p) => {
+      p.variants?.forEach((v) => {
+        if (v.size && v.size !== "Standard") {
+          list.add(v.size);
+        }
+      });
+    });
+    const standardOrder = [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL",
+      "2XL",
+      "Free Size",
+      "Single",
+      "Double",
+      "King",
+      "Super King",
+    ];
+    return Array.from(list).sort((a, b) => {
+      const idxA = standardOrder.indexOf(a);
+      const idxB = standardOrder.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }, [initialProducts]);
 
   const toggleFabric = (fabric: string) => {
     const next = selectedFabrics.includes(fabric)
@@ -396,14 +427,14 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
             {/* Availability Filter */}
             <div className={styles.filterGroupInline}>
               <span className={styles.filterGroupLabel}>Availability:</span>
-              <label className={styles.checkboxLabel}>
+              <label className={`${styles.checkboxLabel} ${inStockOnly ? styles.checkboxLabelActive : ""}`}>
                 <input
                   type="checkbox"
                   checked={inStockOnly}
                   onChange={(e) => handleInStockChange(e.target.checked)}
                   className={styles.checkbox}
                 />
-                <span className="leading-none">In Stock Only</span>
+                <span>In Stock Only</span>
               </label>
             </div>
 
@@ -415,14 +446,17 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
                   {fabrics.map((fabric) => {
                     const isChecked = selectedFabrics.includes(fabric);
                     return (
-                      <label key={fabric} className={styles.checkboxLabel}>
+                      <label
+                        key={fabric}
+                        className={`${styles.checkboxLabel} ${isChecked ? styles.checkboxLabelActive : ""}`}
+                      >
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleFabric(fabric)}
                           className={styles.checkbox}
                         />
-                        <span className="leading-none">{fabric}</span>
+                        <span>{fabric}</span>
                       </label>
                     );
                   })}
@@ -431,24 +465,26 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
             )}
 
             {/* Size Filter */}
-            <div className={styles.filterGroupInline}>
-              <span className={styles.filterGroupLabel}>Size:</span>
-              <div className={styles.sizeListInline}>
-                {sizes.map((size) => {
-                  const isActive = selectedSizes.includes(size);
-                  return (
-                    <button
-                      key={size}
-                      type="button"
-                      className={`${styles.sizeBtnInline} ${isActive ? styles.sizeBtnInlineActive : ""}`}
-                      onClick={() => toggleSize(size)}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
+            {availableSizes.length > 0 && (
+              <div className={styles.filterGroupInline}>
+                <span className={styles.filterGroupLabel}>Size:</span>
+                <div className={styles.sizeListInline}>
+                  {availableSizes.map((size) => {
+                    const isActive = selectedSizes.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        className={`${styles.sizeBtnInline} ${isActive ? styles.sizeBtnInlineActive : ""}`}
+                        onClick={() => toggleSize(size)}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Clear Filters Button */}
             {isFiltered && (
@@ -456,8 +492,9 @@ export const CollectionClient: React.FC<CollectionClientProps> = ({
                 onClick={clearFilters}
                 className={styles.clearBtnInline}
                 type="button"
+                title="Clear all active filters"
               >
-                Clear Filters
+                ✕ Clear Filters
               </button>
             )}
           </div>

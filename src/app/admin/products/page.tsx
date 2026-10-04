@@ -263,9 +263,21 @@ function AdminProductsContent() {
       result = result.filter((p) => !p.is_active);
     }
 
-    // Category filter
+    // Category filter (supports filtering by parent collection or specific sub-collection)
     if (categoryFilter !== "all") {
-      result = result.filter((p) => p.category_id === categoryFilter || p.category?.slug === categoryFilter);
+      const matchedCat = categories.find((c) => c.id === categoryFilter || c.slug === categoryFilter);
+      const activeId = matchedCat ? matchedCat.id : categoryFilter;
+      const childCategoryIds = categories
+        .filter((c) => c.parent_id === activeId)
+        .map((c) => c.id);
+      const targetCategoryIds = new Set([activeId, ...childCategoryIds]);
+
+      result = result.filter(
+        (p) =>
+          targetCategoryIds.has(p.category_id || "") ||
+          (p.category?.slug && (p.category.slug === categoryFilter || (matchedCat && p.category.slug === matchedCat.slug))) ||
+          (p.category?.parent_id && targetCategoryIds.has(p.category.parent_id))
+      );
     }
 
     // Stock filter
@@ -311,7 +323,7 @@ function AdminProductsContent() {
     adminProductSearchCache.set(cacheKey, result);
 
     return result;
-  }, [products, searchTerm, statusFilter, categoryFilter, stockFilter, sortField, sortOrder]);
+  }, [products, categories, searchTerm, statusFilter, categoryFilter, stockFilter, sortField, sortOrder]);
 
   // Pagination calculation
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
@@ -504,11 +516,23 @@ function AdminProductsContent() {
                 className={styles.filterSelect}
               >
                 <option value="all" className={styles.filterOption}>All Collections</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id} className={styles.filterOption}>
-                    {cat.name}
-                  </option>
-                ))}
+                {categories
+                  .filter((cat) => !cat.parent_id)
+                  .map((parent) => {
+                    const children = categories.filter((c) => c.parent_id === parent.id);
+                    return (
+                      <React.Fragment key={parent.id}>
+                        <option value={parent.id} className={styles.filterOption}>
+                          {parent.name} {children.length > 0 ? "(All)" : ""}
+                        </option>
+                        {children.map((child) => (
+                          <option key={child.id} value={child.id} className={styles.filterOption}>
+                            &nbsp;&nbsp;↳ {child.name}
+                          </option>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
               </select>
             </div>
           )}
@@ -721,14 +745,20 @@ function AdminProductsContent() {
                       <td className={styles.tableTd} style={{ whiteSpace: "nowrap" }}>
                         {p.category ? (
                           categoryParent ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
-                              <span style={{ fontSize: "11px", color: "var(--admin-text-sub)" }}>
-                                {categoryParent.name}
-                              </span>
+                            categoryParent.name.trim().toLowerCase() === p.category.name.trim().toLowerCase() ? (
                               <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--admin-text)" }}>
                                 {p.category.name}
                               </span>
-                            </div>
+                            ) : (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                                <span style={{ fontSize: "11px", color: "var(--admin-text-sub)" }}>
+                                  {categoryParent.name}
+                                </span>
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--admin-text)" }}>
+                                  {p.category.name}
+                                </span>
+                              </div>
+                            )
                           ) : (
                             <span style={{ fontSize: "12px", color: "var(--admin-text)" }}>
                               {p.category.name}

@@ -17,10 +17,10 @@ import {
 } from "@/lib/admin/sku-helper";
 
 const FABRIC_OPTIONS = [
+  "Cotton",
   "Cotton Satin",
   "Satin",
   "Satin Silk",
-  "100% Pure Cotton",
   "Egyptian Cotton",
   "Tencel / Lyocell",
   "Bamboo Cotton",
@@ -1305,7 +1305,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
                   .filter((cat) => cat.parent_id !== null)
                   .map((cat) => {
                     const parent = categories.find((c) => c.id === cat.parent_id);
-                    const displayName = parent ? `${parent.name} › ${cat.name}` : cat.name;
+                    const displayName =
+                      parent && parent.name.trim().toLowerCase() !== cat.name.trim().toLowerCase()
+                        ? `${parent.name} › ${cat.name}`
+                        : cat.name;
                     return (
                       <option key={cat.id} value={cat.id} className={styles.filterOption}>
                         {displayName}

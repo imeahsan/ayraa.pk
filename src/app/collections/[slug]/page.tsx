@@ -8,6 +8,7 @@ import { Footer } from "@/components/storefront/Footer/Footer";
 import { createCacheClient } from "@/lib/supabase/cache-client";
 import { Category, Product } from "@/types";
 import { CollectionClient } from "./CollectionClient";
+import subGridStyles from "./SubCategoryGrid.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { notFound } from "next/navigation";
 import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
@@ -30,7 +31,9 @@ export async function generateStaticParams() {
     "double-bed-sheets",
     "chiffon-hijabs",
     "printed-hijabs",
-    "night-wears"
+    "night-wears",
+    "lounge-wear",
+    "lounge-wear-collection"
   ];
   return slugs.map((slug) => ({ slug }));
 }
@@ -42,6 +45,10 @@ const CATEGORY_NAMES: Record<string, string> = {
   "garments": "Pret",
   "bedding": "Home",
   "hijab-collection": "Hijabs",
+  "lounge-wear": "Lounge Wear",
+  // Lounge wear sub-categories
+  "lounge-wear-collection": "Lounge Wear",
+  "night-wears": "Lounge Wear",
   // Lawn sub-categories
   "lawn-3-piece": "Lawn 3-Piece",
   "lawn-2-piece": "Lawn 2-Piece",
@@ -477,6 +484,31 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     subCategories = subCategories.filter((sub) => activeCategoryIds.has(sub.id));
   }
 
+  // Count active products per subcategory
+  const categoryProductCounts: Record<string, number> = {};
+  if (subCategories.length > 0) {
+    try {
+      const supabase = createCacheClient();
+      const subIds = subCategories.map((s) => s.id);
+      const { data: countData } = await supabase
+        .from("products")
+        .select("category_id")
+        .in("category_id", subIds)
+        .eq("is_active", true);
+
+      if (countData) {
+        countData.forEach((p) => {
+          if (p.category_id) {
+            categoryProductCounts[p.category_id] =
+              (categoryProductCounts[p.category_id] || 0) + 1;
+          }
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   // ── Parent category → show sub-category card grid ──────────────────────────
   if (subCategories.length > 0) {
     return (
@@ -491,64 +523,90 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           }))}
         />
         <Header />
-        <main className="grow pt-20 md:pt-16 pb-20">
-          <div className="container" style={{ maxWidth: "1400px", marginInline: "auto", paddingInline: "var(--space-8)" }}>
+        <main className="grow pt-24 md:pt-20 pb-20">
+          <div className={subGridStyles.container}>
             {/* Heading */}
-            <div style={{ textAlign: "center", marginBottom: "64px" }}>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-label)", fontWeight: "var(--weight-bold)", letterSpacing: "var(--tracking-widest)", textTransform: "uppercase", color: "var(--color-gold)", marginBottom: "var(--space-3)" }}>
-                Browse
-              </p>
-              <h1 style={{ fontFamily: "var(--font-headline)", fontSize: "clamp(28px, 5vw, 48px)", color: "var(--color-on-surface)", letterSpacing: "var(--tracking-tight)", marginBottom: "var(--space-4)" }}>
+            <div className={subGridStyles.headerSection}>
+              <span className={subGridStyles.eyebrow}>
+                Browse Collection
+              </span>
+              <h1 className={subGridStyles.title}>
                 {categoryName}
               </h1>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-body-md)", color: "var(--color-on-surface-sub)", maxWidth: "480px", marginInline: "auto" }}>
+              <p className={subGridStyles.description}>
                 {category?.description || `Select a style from our ${categoryName} range.`}
               </p>
+
+              {/* Sub-Collection Quick-Jump Navigation Pills */}
+              {subCategories.length > 1 && (
+                <div className={subGridStyles.pillNavWrapper}>
+                  {subCategories.map((sub) => {
+                    const count = categoryProductCounts[sub.id];
+                    return (
+                      <Link
+                        key={`pill-${sub.slug}`}
+                        href={`/collections/${sub.slug}`}
+                        className={subGridStyles.pillNavBtn}
+                      >
+                        <span>{sub.name}</span>
+                        {typeof count === "number" && count > 0 && (
+                          <span className={subGridStyles.pillCount}>{count}</span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {/* Sub-category card grid */}
-            <div style={{ display: "grid", gridTemplateColumns: `repeat(${subCategories.length}, 1fr)`, gap: "28px" }}
-              className="sub-category-grid">
-              {subCategories.map((sub) => (
-                <Link
-                  key={sub.slug}
-                  href={`/collections/${sub.slug}`}
-                  style={{
-                    position: "relative", display: "block", height: "480px",
-                    overflow: "hidden", border: "1px solid var(--color-border-subtle)",
-                    textDecoration: "none", transition: "border-color var(--duration-normal) var(--ease-out)",
-                  }}
-                  className="sub-category-card"
-                >
-                  <Image
-                    src={sub.image_url || "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&auto=format&fit=crop&q=80"}
-                    alt={sub.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    style={{ objectFit: "cover", transition: "transform 800ms ease-out" }}
-                    className="sub-cat-img"
-                  />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,27,27,0.92) 0%, rgba(28,27,27,0.1) 60%, transparent 100%)", zIndex: 10 }} />
-                  <div style={{ position: "absolute", bottom: "32px", left: "32px", right: "32px", zIndex: 20 }}>
-                    <h2 style={{ fontFamily: "var(--font-headline)", fontSize: "var(--text-title-lg)", color: "#e9c349", marginBottom: "var(--space-2)" }}>
-                      {sub.name}
-                    </h2>
-                    <span style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-label)", fontWeight: "var(--weight-bold)", textTransform: "uppercase", letterSpacing: "var(--tracking-widest)", color: "rgba(251,249,248,0.8)" }}>
-                      Shop Now →
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {/* Sub-category responsive editorial grid */}
+            <div className={subGridStyles.grid}>
+              {subCategories.map((sub, idx) => {
+                const count = categoryProductCounts[sub.id];
+                const indexNum = String(idx + 1).padStart(2, "0");
+                return (
+                  <Link
+                    key={sub.slug}
+                    href={`/collections/${sub.slug}`}
+                    className={subGridStyles.card}
+                  >
+                    <div className={subGridStyles.imageContainer}>
+                      <Image
+                        src={
+                          sub.image_url ||
+                          "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800&auto=format&fit=crop&q=80"
+                        }
+                        alt={sub.name}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className={subGridStyles.image}
+                        priority={idx < 3}
+                      />
+                      <div className={subGridStyles.overlay} />
+                    </div>
 
-            {/* Sub-category grid responsive styles injected inline */}
-            <style>{`
-              @media (max-width: 767px) {
-                .sub-category-grid { grid-template-columns: 1fr !important; }
-              }
-              .sub-category-card:hover { border-color: var(--color-gold) !important; }
-              .sub-category-card:hover .sub-cat-img { transform: scale(1.05); }
-            `}</style>
+                    <div className={subGridStyles.topBadge}>
+                      {indexNum}
+                    </div>
+
+                    <div className={subGridStyles.cardContent}>
+                      <h2 className={subGridStyles.categoryTitle}>
+                        {sub.name}
+                      </h2>
+                      {typeof count === "number" && count > 0 && (
+                        <p className={subGridStyles.productCountTag}>
+                          {count} {count === 1 ? "Product" : "Products"} Available
+                        </p>
+                      )}
+                      <div className={subGridStyles.ctaRow}>
+                        <span>Explore Collection</span>
+                        <span className={subGridStyles.ctaArrow}>→</span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </main>
         <Footer />
