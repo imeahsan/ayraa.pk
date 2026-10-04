@@ -20,6 +20,7 @@ export interface Category {
   meta_description?: string | null;
   created_at: string;
   children?: Category[];
+  parent?: Category | null;
   product_count?: number;
 }
 

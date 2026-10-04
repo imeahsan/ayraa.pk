@@ -8,12 +8,13 @@ import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
 import { SizeSelector } from "@/components/storefront/SizeSelector/SizeSelector";
 import { ImageGallery } from "@/components/storefront/ImageGallery/ImageGallery";
-import { Breadcrumb } from "@/components/storefront/Breadcrumb/Breadcrumb";
+import { Breadcrumb, BreadcrumbItem } from "@/components/storefront/Breadcrumb/Breadcrumb";
 import { ProductCard } from "@/components/storefront/ProductCard/ProductCard";
 import { submitQuestion } from "@/app/actions/qa";
 import { createClient } from "@/lib/supabase/client";
 import { checkPurchaseStatus, submitReview } from "@/app/actions/reviews";
 import { useWishlist } from "@/context/WishlistContext";
+import { isBeddingProduct } from "@/lib/bedsheet-ar/is-bedding";
 import {
   getProductSaleState,
   productToAnalyticsItem,
@@ -28,6 +29,7 @@ interface ProductDetailClientProps {
   relatedProducts: Product[];
   initialQuestions?: any[];
   initialReviews?: any[];
+  breadcrumbItems?: BreadcrumbItem[];
 }
 
 export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
@@ -35,6 +37,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
   relatedProducts,
   initialQuestions = [],
   initialReviews = [],
+  breadcrumbItems,
 }) => {
   const [product, setProduct] = useState<Product>(initialProduct);
   const { addItem } = useCart();
@@ -446,14 +449,50 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
     : null;
   const wishlisted = isWishlisted(product.id);
 
+  const computedBreadcrumbs = React.useMemo<BreadcrumbItem[]>(() => {
+    if (breadcrumbItems && breadcrumbItems.length > 0) {
+      return breadcrumbItems;
+    }
+
+    const items: BreadcrumbItem[] = [];
+    const category = product.category;
+    const parentCategory = category?.parent;
+
+    if (parentCategory && parentCategory.slug !== category?.slug) {
+      items.push({
+        label: parentCategory.name,
+        url: `/collections/${parentCategory.slug}`,
+      });
+    }
+
+    if (category) {
+      items.push({
+        label: category.name,
+        url: `/collections/${category.slug}`,
+      });
+    } else if (isBeddingProduct(product)) {
+      items.push({
+        label: "Bedding",
+        url: "/collections/bedding",
+      });
+    } else {
+      items.push({
+        label: "Collections",
+        url: "/collections",
+      });
+    }
+
+    items.push({
+      label: product.name,
+      url: `/product/${product.slug}`,
+    });
+
+    return items;
+  }, [breadcrumbItems, product]);
+
   return (
     <div className={styles.container}>
-      <Breadcrumb
-        items={[
-          { label: "Wardrobe", url: "/collections" },
-          { label: product.name, url: `/product/${product.slug}` },
-        ]}
-      />
+      <Breadcrumb items={computedBreadcrumbs} />
 
       <div className={styles.layout}>
         {/* Left Side: Images */}

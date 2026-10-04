@@ -1,7 +1,9 @@
 import React from "react";
 import { Metadata } from "next";
 import { createCacheClient } from "@/lib/supabase/cache-client";
-import { Product } from "@/types";
+import { Product, Category } from "@/types";
+import { BreadcrumbItem } from "@/components/storefront/Breadcrumb/Breadcrumb";
+import { isBeddingProduct } from "@/lib/bedsheet-ar/is-bedding";
 import { Header } from "@/components/storefront/Header/Header";
 import { Footer } from "@/components/storefront/Footer/Footer";
 import { ProductDetailClient } from "./ProductDetailClient";
@@ -37,7 +39,31 @@ const getCachedProduct = unstable_cache(
         .single();
 
       if (data && !error) {
-        return data as Product;
+        const prod = data as Product;
+
+        if (!prod.category && prod.category_id) {
+          const { data: catData } = await supabase
+            .from("categories")
+            .select("*")
+            .eq("id", prod.category_id)
+            .maybeSingle();
+          if (catData) {
+            prod.category = catData as Category;
+          }
+        }
+
+        if (prod.category?.parent_id) {
+          const { data: parentCat } = await supabase
+            .from("categories")
+            .select("*")
+            .eq("id", prod.category.parent_id)
+            .maybeSingle();
+          if (parentCat) {
+            prod.category.parent = parentCat as Category;
+          }
+        }
+
+        return prod;
       }
     } catch (err) {
       console.error("Error loading product detail from Supabase:", err);
@@ -194,21 +220,60 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
   }
 
   const baseUrl = getSiteUrl();
-  const breadcrumbItems = [
+  const parentCategory = product.category?.parent;
+
+  const breadcrumbItems: { name: string; item: string }[] = [
     { name: "Home", item: "/" },
-    { name: "Collections", item: "/collections" },
   ];
+  const clientBreadcrumbs: BreadcrumbItem[] = [];
+
+  if (parentCategory && parentCategory.slug !== product.category?.slug) {
+    breadcrumbItems.push({
+      name: parentCategory.name,
+      item: `/collections/${parentCategory.slug}`,
+    });
+    clientBreadcrumbs.push({
+      label: parentCategory.name,
+      url: `/collections/${parentCategory.slug}`,
+    });
+  }
 
   if (product.category) {
     breadcrumbItems.push({
       name: product.category.name,
       item: `/collections/${product.category.slug}`,
     });
+    clientBreadcrumbs.push({
+      label: product.category.name,
+      url: `/collections/${product.category.slug}`,
+    });
+  } else if (isBeddingProduct(product)) {
+    breadcrumbItems.push({
+      name: "Bedding",
+      item: "/collections/bedding",
+    });
+    clientBreadcrumbs.push({
+      label: "Bedding",
+      url: "/collections/bedding",
+    });
+  } else {
+    breadcrumbItems.push({
+      name: "Collections",
+      item: "/collections",
+    });
+    clientBreadcrumbs.push({
+      label: "Collections",
+      url: "/collections",
+    });
   }
 
   breadcrumbItems.push({
     name: product.name,
     item: `/product/${product.slug}`,
+  });
+  clientBreadcrumbs.push({
+    label: product.name,
+    url: `/product/${product.slug}`,
   });
 
   let questions: any[] = [];
@@ -242,10 +307,10 @@ export default async function ProductPage({ params, searchParams }: ProductPageP
           relatedProducts={relatedProducts}
           initialQuestions={questions}
           initialReviews={reviews}
+          breadcrumbItems={clientBreadcrumbs}
         />
       </main>
       <Footer />
     </div>
   );
 }
-
