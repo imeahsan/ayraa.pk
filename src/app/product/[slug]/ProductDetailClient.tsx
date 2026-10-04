@@ -643,7 +643,7 @@ export const ProductDetailClient: React.FC<ProductDetailClientProps> = ({
               </button>
               {activeTab === "care" && (
                 <div className={styles.accordionContent}>
-                  <p>
+                  <p style={{ whiteSpace: "pre-line" }}>
                     {product.care_instructions ||
                       "Dry clean only. Do not iron directly on embellishments. Store in a garment cover bag to prevent metallic tarnishing."}
                   </p>

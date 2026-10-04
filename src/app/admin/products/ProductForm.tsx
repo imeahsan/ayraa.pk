@@ -6,9 +6,75 @@ import { createClient } from "@/lib/supabase/client";
 import { Product, Category } from "@/types";
 import { useToast } from "@/context/ToastContext";
 import { Button } from "@/components/storefront/Button/Button";
-import { isBeddingProduct } from "@/lib/bedsheet-ar/is-bedding";
+import { isBeddingProduct, isBeddingCategory } from "@/lib/bedsheet-ar/is-bedding";
 import styles from "../admin.module.css";
 import { ImageUploader, ImageItem } from "./ImageUploader";
+import { ComboboxInput } from "./ComboboxInput";
+
+const FABRIC_OPTIONS = [
+  "Cotton Satin",
+  "Satin",
+  "Satin Silk",
+  "100% Pure Cotton",
+  "Egyptian Cotton",
+  "Tencel / Lyocell",
+  "Bamboo Cotton",
+  "Flannel",
+  "Premium Lawn",
+  "Swiss Lawn",
+  "Chiffon",
+  "Pure Silk",
+  "Raw Silk",
+  "Organza",
+  "Georgette",
+  "Linen",
+  "Velvet",
+  "Jacquard",
+  "Cambric",
+  "Jersey",
+  "Pashmina Wool",
+];
+
+const INCLUDES_OPTIONS = [
+  // Bedding combinations
+  "1 Bed Sheet & 2 Pillow Covers",
+  "1 Bed Sheet & 1 Pillow Cover",
+  "1 Flat Sheet & 2 Pillow Covers",
+  "1 Fitted Sheet & 2 Pillow Covers",
+  "1 Bed Sheet Only",
+  "1 Fitted Sheet Only",
+  "5-Piece: 1 Bed Sheet, 2 Pillow Covers, 2 Filled Cushions",
+  "5 Pcs (1 Bed Sheet, 2 Pillow Covers, 2 Filled Cushions)",
+  "7-Piece: 1 Quilt Cover, 1 Bed Sheet, 2 Pillow Covers, 2 Cushion Covers, 1 Cushion",
+  "7-Piece: 1 Quilt Cover, 1 Bed Sheet, 2 Pillow Covers, 2 Cushion Covers",
+  "7-Piece: 1 Quilt Cover, 1 Bed Sheet, 2 Pillow Covers, 2 Quilt Covers",
+  "7 Pcs (1 Quilt Cover, 1 Bed Sheet, 2 Pillow Covers, 2 Cushion Covers)",
+  "1 Duvet Cover, 1 Bed Sheet & 2 Pillow Covers",
+  "1 Duvet Cover & 2 Pillow Covers",
+  "1 Comforter, 1 Bed Sheet & 2 Pillow Covers",
+  "1 Comforter & 2 Pillow Covers",
+  "1 Quilt Cover & 2 Pillow Covers",
+  "2 Pillow Covers Only",
+  "4-Piece Bedding Set (Sheet, Duvet, 2 Pillow Covers)",
+  // Apparel & Pret
+  "3-Piece Suit (Shirt, Trouser, Dupatta)",
+  "2-Piece Suit (Shirt & Dupatta)",
+  "2-Piece Suit (Shirt & Trouser)",
+  "1-Piece (Shirt Only)",
+  // Hijabs
+  "Hijab Only",
+  "Hijab & Undercap",
+];
+
+const DEFAULT_BED_SHEET_CARE_INSTRUCTIONS = `- Check the care label before washing.
+- Machine wash with similar colors in cold or warm water.
+- Use a mild detergent; avoid bleach unless specifically recommended.
+- Do not overload the washing machine.
+- Tumble dry on low heat or line dry.
+- Remove promptly to reduce wrinkles.
+- Iron on a low setting if needed.
+- Store completely dry in a cool, dry place.
+- Wash sheets weekly, or more often if needed.`;
 
 interface ProductFormProps {
   productId?: string; // If editing
@@ -115,7 +181,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
         if (data && !error) {
           const p = data as Product;
           setName(p.name);
-          setSku(p.sku || "");
+          setSku((p.sku || "").toUpperCase());
           const { data: barcodeData } = await supabase
             .from("product_barcodes")
             .select("barcode")
@@ -252,6 +318,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     );
   };
 
+  const handleCategoryChange = (newCatId: string) => {
+    setCategoryId(newCatId);
+    const selectedCat = categories.find((c) => c.id === newCatId);
+    if (selectedCat && isBeddingCategory(selectedCat, categories)) {
+      if (!careInstructions.trim()) {
+        setCareInstructions(DEFAULT_BED_SHEET_CARE_INSTRUCTIONS);
+        toast.info("Auto-filled bed sheet care instructions.");
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !price || !categoryId) {
@@ -260,7 +337,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     }
 
     setSaving(true);
-    const slugBase = sku.trim() ? `${name}-${sku.trim()}` : name;
+    const normalizedSku = sku.trim().toUpperCase();
+    const slugBase = normalizedSku ? `${name}-${normalizedSku}` : name;
     const slug = slugBase
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -269,15 +347,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
     const productPayload = {
       name,
       slug,
-      sku: sku || null,
+      sku: normalizedSku || null,
       price,
       compare_at_price: compareAtPrice === "" ? null : compareAtPrice,
       cost_price: costPrice === "" ? null : Number(costPrice),
       category_id: categoryId || null,
-      fabric: fabric || null,
-      color: color || null,
-      includes: includes || null,
-      care_instructions: careInstructions || null,
+      fabric: fabric.trim() || null,
+      color: color.trim() || null,
+      includes: includes.trim() || null,
+      care_instructions: careInstructions.trim() || null,
       description: description || null,
       is_active: isActive,
       is_featured: isFeatured,
@@ -502,7 +580,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       return;
     }
 
-    const slugBase = sku.trim() ? `${name}-${sku.trim()}` : name;
+    const normalizedSku = sku.trim().toUpperCase();
+    const slugBase = normalizedSku ? `${name}-${normalizedSku}` : name;
     const calculatedSlug = slugBase
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -512,15 +591,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
       id: productId || "preview-id",
       name,
       slug: calculatedSlug,
-      sku: sku || null,
+      sku: normalizedSku || null,
       barcode: barcode || null,
       price,
       compare_at_price: compareAtPrice === "" ? null : Number(compareAtPrice),
       category_id: categoryId || null,
-      fabric: fabric || null,
-      color: color || null,
-      includes: includes || null,
-      care_instructions: careInstructions || null,
+      fabric: fabric.trim() || null,
+      color: color.trim() || null,
+      includes: includes.trim() || null,
+      care_instructions: careInstructions.trim() || null,
       description: description || null,
       is_active: isActive,
       is_featured: isFeatured,
@@ -627,8 +706,10 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               <input
                 type="text"
                 value={sku}
-                onChange={(e) => setSku(e.target.value)}
+                onChange={(e) => setSku(e.target.value.toUpperCase())}
+                placeholder="e.g. AYR-BED-001"
                 className={styles.formInput}
+                style={{ textTransform: "uppercase" }}
               />
             </div>
 
@@ -920,7 +1001,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
               <label className={styles.formLabel}>Sub-collection *</label>
               <select
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className={styles.formSelect}
                 required
               >
@@ -976,13 +1057,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
             <h3 className={styles.formCardTitle}>Product Details</h3>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Fabric</label>
-              <input
-                type="text"
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label className={styles.formLabel} htmlFor="product-fabric">Fabric</label>
+                <span style={{ fontSize: "11px", color: "var(--admin-text-sub)" }}>
+                  Dropdown or custom
+                </span>
+              </div>
+              <ComboboxInput
+                id="product-fabric"
                 value={fabric}
-                onChange={(e) => setFabric(e.target.value)}
-                placeholder="e.g. Pure Silk, Chiffon"
-                className={styles.formInput}
+                onChange={setFabric}
+                options={FABRIC_OPTIONS}
+                placeholder="e.g. Cotton Satin, Silk..."
               />
             </div>
 
@@ -998,24 +1084,51 @@ export const ProductForm: React.FC<ProductFormProps> = ({ productId }) => {
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Includes</label>
-              <input
-                type="text"
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label className={styles.formLabel} htmlFor="product-includes">Includes</label>
+                <span style={{ fontSize: "11px", color: "var(--admin-text-sub)" }}>
+                  Dropdown or custom
+                </span>
+              </div>
+              <ComboboxInput
+                id="product-includes"
                 value={includes}
-                onChange={(e) => setIncludes(e.target.value)}
-                placeholder="e.g. Kurta & Dupatta"
-                className={styles.formInput}
+                onChange={setIncludes}
+                options={INCLUDES_OPTIONS}
+                placeholder="e.g. 1 Bed Sheet & 2 Pillow Covers..."
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.formLabel}>Care Instructions</label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <label className={styles.formLabel}>Care Instructions</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCareInstructions(DEFAULT_BED_SHEET_CARE_INSTRUCTIONS);
+                    toast.info("Applied bed sheet care instructions.");
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--color-gold)",
+                    fontSize: "11px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    textDecoration: "underline",
+                    padding: "0 2px",
+                  }}
+                  title="Insert 9-point bed sheet care guidelines"
+                >
+                  ✨ Auto-fill Bedding Care
+                </button>
+              </div>
               <textarea
                 value={careInstructions}
                 onChange={(e) => setCareInstructions(e.target.value)}
-                placeholder="e.g. Dry clean only"
+                placeholder="Care guidelines..."
                 className={styles.formTextarea}
-                rows={2}
+                rows={10}
               />
             </div>
           </div>
