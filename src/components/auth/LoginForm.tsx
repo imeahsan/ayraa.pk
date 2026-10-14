@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/storefront/Button/Button";
 import { trackEvent } from "@/lib/analytics";
+import { generateNonce } from "@/lib/auth/nonce";
 import styles from "@/app/login/auth.module.css";
 
 interface LoginFormProps {
@@ -27,6 +29,104 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
   const queryRedirect = searchParams.get("redirectTo") || "/";
   const effectiveRedirectTo = redirectTo === undefined ? queryRedirect : redirectTo;
   const oauthRedirectTarget = effectiveRedirectTo || pathname || "/";
+
+  const googleBtnRef = useRef<HTMLDivElement>(null);
+  const rawNonceRef = useRef<string | null>(null);
+  const [gisLoaded, setGisLoaded] = useState(false);
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+  // Initialize Google Identity Services (GIS) for Google Sign-In with ID Token
+  useEffect(() => {
+    if (!googleClientId || typeof window === "undefined") return;
+
+    let isMounted = true;
+
+    async function initGIS() {
+      const google = (window as unknown as { google?: any }).google;
+      if (!google?.accounts?.id || !googleBtnRef.current) return;
+
+      try {
+        const { nonce, hashedNonce } = await generateNonce();
+        if (!isMounted) return;
+        rawNonceRef.current = nonce;
+
+        google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async (response: { credential?: string }) => {
+            if (!response.credential) {
+              setError("Google sign-in did not return valid credentials.");
+              return;
+            }
+
+            setIsLoading(true);
+            setError(null);
+            trackEvent("login_start", { method: "google_id_token", source: "login_form" });
+
+            try {
+              const { error: idTokenError } = await supabase.auth.signInWithIdToken({
+                provider: "google",
+                token: response.credential,
+                nonce: rawNonceRef.current || undefined,
+              });
+
+              if (idTokenError) {
+                trackEvent("login_failed", { method: "google_id_token", error_category: "auth_error" });
+                setError(idTokenError.message);
+                setIsLoading(false);
+                return;
+              }
+
+              trackEvent("login_success", { method: "google_id_token" });
+              if (effectiveRedirectTo) {
+                router.push(effectiveRedirectTo);
+                router.refresh();
+              } else {
+                onSuccess?.();
+              }
+            } catch (err: unknown) {
+              const message = err instanceof Error ? err.message : "Failed to sign in with Google.";
+              trackEvent("login_failed", { method: "google_id_token", error_category: "exception" });
+              setError(message);
+            } finally {
+              setIsLoading(false);
+            }
+          },
+          nonce: hashedNonce,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        if (googleBtnRef.current) {
+          googleBtnRef.current.innerHTML = "";
+          google.accounts.id.renderButton(googleBtnRef.current, {
+            type: "standard",
+            theme: "filled_black",
+            size: "large",
+            text: "continue_with",
+            shape: "rectangular",
+            logo_alignment: "left",
+            width: Math.min(380, googleBtnRef.current.offsetWidth || 340),
+          });
+          setGisLoaded(true);
+        }
+      } catch (err) {
+        console.error("GIS initialization error:", err);
+      }
+    }
+
+    const checkInterval = setInterval(() => {
+      const google = (window as unknown as { google?: any }).google;
+      if (google?.accounts?.id && googleBtnRef.current) {
+        clearInterval(checkInterval);
+        initGIS();
+      }
+    }, 150);
+
+    return () => {
+      isMounted = false;
+      clearInterval(checkInterval);
+    };
+  }, [googleClientId, effectiveRedirectTo, onSuccess, router, supabase]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,6 +251,24 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
       </div>
 
       <div className={styles.oauthContainer}>
+        {googleClientId && (
+          <Script
+            src="https://accounts.google.com/gsi/client"
+            strategy="afterInteractive"
+          />
+        )}
+        {googleClientId && (
+          <div
+            ref={googleBtnRef}
+            style={{
+              width: "100%",
+              display: gisLoaded ? "flex" : "none",
+              justifyContent: "center",
+              minHeight: "44px",
+            }}
+          />
+        )}
+        {(!googleClientId || !gisLoaded) && (
         <button
           onClick={handleGoogleLogin}
           className={styles.oauthButton}
@@ -164,6 +282,7 @@ function LoginFormInner({ redirectTo, onSuccess, onClose }: LoginFormProps) {
           </svg>
           Continue with Google
         </button>
+        )}
       </div>
 
       <div className={styles.trustStrip}>
