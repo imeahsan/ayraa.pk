@@ -37,9 +37,6 @@ interface ProductPageProps {
   params: Promise<{
     slug: string;
   }>;
-  searchParams: Promise<{
-    preview?: string;
-  }>;
 }
 
 const getCachedProduct = unstable_cache(
@@ -151,7 +148,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const title = product.meta_title || productSeoTitle(product.name);
   const description = truncateSeoText(
     product.meta_description || product.description,
-    `Shop ${product.name} at Ayraa Collection with COD and nationwide delivery in Pakistan.`
+    `Shop ${product.name} at Ayraa Collection. Premium quality fabric with cash on delivery and nationwide shipping across Pakistan.`
   );
   const primaryImage = product.images?.find((img) => img.is_primary)?.url || product.images?.[0]?.url || "";
   const canonical = `/product/${slug}`;
@@ -178,43 +175,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   };
 }
 
-export default async function ProductPage({ params, searchParams }: ProductPageProps) {
+export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const sParams = await searchParams;
-  const isPreview = sParams?.preview === "true";
 
-  let product = await getCachedProduct(slug);
-
-  if (!product && !isPreview) {
-    notFound();
-  }
-
-  if (!product && isPreview) {
-    product = {
-      id: "preview-id",
-      name: "Preview Product",
-      slug: slug,
-      description: null,
-      price: 0,
-      compare_at_price: null,
-      sku: "PREVIEW",
-      category_id: null,
-      is_active: true,
-      is_featured: false,
-      fabric: null,
-      color: null,
-      includes: null,
-      care_instructions: null,
-      meta_title: null,
-      meta_description: null,
-      created_at: new Date().toISOString(),
-      images: [],
-      variants: [],
-    };
-  }
+  const product = await getCachedProduct(slug);
 
   if (!product) {
-    return null;
+    notFound();
   }
 
   let relatedProducts: Product[] = [];

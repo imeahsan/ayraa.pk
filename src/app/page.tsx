@@ -489,7 +489,7 @@ export default async function Home() {
                   <div key={i} className={styles.pillar}>
                     <div className={styles.pillarIcon}>{pillar.icon}</div>
                     <div>
-                      <h4 className={styles.pillarTitle}>{pillar.title}</h4>
+                      <h3 className={styles.pillarTitle}>{pillar.title}</h3>
                       <p className={styles.pillarDesc}>{pillar.desc}</p>
                     </div>
                   </div>

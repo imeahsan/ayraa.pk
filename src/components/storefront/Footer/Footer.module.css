@@ -136,7 +136,7 @@
 
 .link {
   font-size: var(--text-body-sm);
-  color: var(--color-on-surface-muted);
+  color: var(--color-on-surface-sub);
   text-decoration: none;
   transition: all var(--duration-fast) var(--ease-out);
   display: inline-block;

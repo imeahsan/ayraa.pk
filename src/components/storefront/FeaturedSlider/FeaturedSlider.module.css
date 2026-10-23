@@ -106,6 +106,7 @@
 }
 
 .dot {
+  position: relative;
   width: 6px;
   height: 6px;
   border-radius: var(--radius-full);
@@ -114,6 +115,16 @@
   cursor: pointer;
   transition: all var(--duration-normal) var(--ease-out);
   padding: 0;
+}
+
+.dot::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .dot:hover {

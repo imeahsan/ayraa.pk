@@ -175,6 +175,7 @@
 }
 
 .dot {
+  position: relative;
   width: 28px;
   height: 8px;
   border-radius: 999px;
@@ -183,6 +184,16 @@
   cursor: pointer;
   padding: 0;
   transition: all var(--duration-normal) var(--ease-out);
+}
+
+.dot::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .dotActive {

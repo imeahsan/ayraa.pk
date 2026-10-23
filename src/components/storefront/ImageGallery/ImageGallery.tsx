@@ -71,12 +71,12 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ images, product }) =
                 type="button"
                 className={`${styles.thumbBtn} ${isActive ? styles.thumbActive : ""}`}
                 onClick={() => handleThumbnailClick(img, index)}
-                aria-label="View product image thumbnail"
+                aria-label={`View ${product?.name || "product"} image ${index + 1}`}
               >
                 <div className={styles.thumbImageWrapper}>
                   <Image
                     src={img.url}
-                    alt={img.alt_text || "Product image thumbnail"}
+                    alt={img.alt_text || `${product?.name || "Product"} image ${index + 1}`}
                     fill
                     sizes="120px"
                     className="object-cover"
@@ -97,10 +97,11 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ images, product }) =
         <div className={styles.zoomContainer} style={zoomStyle}>
           <Image
             src={currentImage.url}
-            alt={currentImage.alt_text || "Product image"}
+            alt={currentImage.alt_text || product?.name || "Product image"}
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover"
+            priority
             fetchPriority="high"
             loading="eager"
           />
