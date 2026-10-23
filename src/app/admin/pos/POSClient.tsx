@@ -44,10 +44,7 @@ const DRAFT_SALE_KEY = "ayra_pos_draft_sale";
 const OFFLINE_ORDERS_KEY = "ayra_pos_offline_orders";
 
 async function revalidateStorefrontCaches() {
-  await Promise.allSettled([
-    fetch("/api/revalidate?tag=products"),
-    fetch("/api/revalidate?tag=categories"),
-  ]);
+  // Handled server-side by recordPosOrder Server Action to avoid duplicate revalidations
 }
 
 export default function POSClient() {

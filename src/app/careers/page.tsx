@@ -7,7 +7,7 @@ import { getActiveJobOpenings } from "@/app/actions/careers";
 import { JobOpening } from "@/types";
 import styles from "./careers.module.css";
 
-export const revalidate = 60; // Revalidate every minute
+export const revalidate = 86400; // 24 hours (on-demand revalidated when admin updates careers)
 
 export const metadata: Metadata = {
   title: "Careers | Ayraa Collection",

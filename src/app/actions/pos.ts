@@ -173,11 +173,11 @@ export async function recordPosOrder(payload: PosOrderPayload): Promise<PosOrder
       }
     }
 
-    // 5. Purge Next.js Cache & Revalidate Storefront
+    // 5. Purge Next.js Cache & Revalidate Storefront (targeted products revalidation)
     try {
-      revalidateTag("products", "max");
-      revalidateTag("categories", "max");
-      revalidatePath("/", "layout");
+      revalidateTag("products");
+      revalidatePath("/");
+      revalidatePath("/collections");
     } catch (cacheErr) {
       console.warn("Failed to revalidate cache after POS sale:", cacheErr);
     }

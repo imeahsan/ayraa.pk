@@ -15,7 +15,7 @@ import { DEFAULT_OG_IMAGE, DEFAULT_SEO_DESCRIPTION, DEFAULT_SEO_TITLE, absoluteU
 import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
 import { getCachedNavigationCategories, getCachedTickerMessages } from "@/lib/server/storefront-cache";
 
-export const revalidate = 300;
+export const revalidate = 3600; // 1 hour
 
 export const metadata: Metadata = {
   title: DEFAULT_SEO_TITLE,
@@ -116,7 +116,7 @@ const getCachedHeroSlides = unstable_cache(
     return data || [];
   },
   ["hero-slides"],
-  { revalidate: 300, tags: ["hero-slides"] }
+  { revalidate: 3600, tags: ["hero-slides"] }
 );
 
 const getCachedFeaturedProducts = unstable_cache(
@@ -159,7 +159,7 @@ const getCachedFeaturedProducts = unstable_cache(
     return merged as Product[];
   },
   ["featured-products-v2"],
-  { revalidate: 300, tags: ["products"] }
+  { revalidate: 3600, tags: ["products"] }
 );
 
 const getCachedNewArrivals = unstable_cache(
@@ -175,7 +175,7 @@ const getCachedNewArrivals = unstable_cache(
     return (data || []) as Product[];
   },
   ["new-arrivals"],
-  { revalidate: 300, tags: ["products"] }
+  { revalidate: 3600, tags: ["products"] }
 );
 
 const getCachedSaleProducts = unstable_cache(
@@ -190,7 +190,7 @@ const getCachedSaleProducts = unstable_cache(
     return (data || []) as Product[];
   },
   ["sale-products"],
-  { revalidate: 300, tags: ["products"] }
+  { revalidate: 3600, tags: ["products"] }
 );
 
 const getCachedDisplayCategories = unstable_cache(
@@ -205,7 +205,7 @@ const getCachedDisplayCategories = unstable_cache(
     return (data || []) as Category[];
   },
   ["homepage-categories"],
-  { revalidate: 300, tags: ["categories"] }
+  { revalidate: 3600, tags: ["categories"] }
 );
 
 type HomeTestimonial = {
@@ -238,7 +238,7 @@ const getCachedTestimonials = unstable_cache(
     });
   },
   ["testimonials"],
-  { revalidate: 300, tags: ["reviews"] }
+  { revalidate: 3600, tags: ["reviews"] }
 );
 
 export default async function Home() {

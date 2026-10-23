@@ -28,7 +28,7 @@ export const getCachedNavigationCategories = unstable_cache(
     return (data || []) as NavigationCategory[];
   },
   ["storefront-navigation-categories"],
-  { revalidate: 300, tags: ["categories"] }
+  { revalidate: 3600, tags: ["categories"] }
 );
 
 export const getCachedTickerMessages = unstable_cache(
@@ -47,5 +47,5 @@ export const getCachedTickerMessages = unstable_cache(
     return (data || []).map((item) => item.message);
   },
   ["storefront-ticker-messages"],
-  { revalidate: 300, tags: ["ticker"] }
+  { revalidate: 3600, tags: ["ticker"] }
 );

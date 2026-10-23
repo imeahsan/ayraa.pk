@@ -380,11 +380,11 @@ export async function restockReturnItems(
       restockedCount++;
     }
 
-    // Purge caches immediately
+    // Purge caches immediately (targeted)
     try {
-      revalidateTag("products", "max");
-      revalidateTag("categories", "max");
-      revalidatePath("/", "layout");
+      revalidateTag("products");
+      revalidatePath("/");
+      revalidatePath("/collections");
       revalidatePath("/admin/inventory");
       revalidatePath("/admin/products");
       revalidatePath(`/admin/returns/${returnRequestId}`);

@@ -14,7 +14,7 @@ import { notFound } from "next/navigation";
 import { ItemListJsonLd } from "@/components/seo/ItemListJsonLd";
 import { absoluteUrl, collectionSeoTitle, getSiteUrl, truncateSeoText } from "@/lib/seo";
 
-export const revalidate = 300;
+export const revalidate = 3600; // 1 hour
 
 export async function generateStaticParams() {
   const slugs = [
@@ -117,7 +117,7 @@ const getCachedCategory = unstable_cache(
     return null;
   },
   ["category-by-slug"],
-  { revalidate: 300, tags: ["categories"] }
+  { revalidate: 3600, tags: ["categories"] }
 );
 
 const getCachedSubCategories = unstable_cache(
@@ -131,7 +131,7 @@ const getCachedSubCategories = unstable_cache(
     return dbSubs || [];
   },
   ["subcategories-by-parent-id"],
-  { revalidate: 300, tags: ["categories"] }
+  { revalidate: 3600, tags: ["categories"] }
 );
 
 const getCachedActiveCategoryIds = unstable_cache(
@@ -151,7 +151,7 @@ const getCachedActiveCategoryIds = unstable_cache(
     return Array.from(activeCategoryIds);
   },
   ["active-category-ids-list"],
-  { revalidate: 300, tags: ["categories", "products"] }
+  { revalidate: 3600, tags: ["categories", "products"] }
 );
 
 const getCachedCategoryProducts = unstable_cache(
@@ -165,7 +165,7 @@ const getCachedCategoryProducts = unstable_cache(
     return productsData || [];
   },
   ["category-products-by-id"],
-  { revalidate: 300, tags: ["categories", "products"] }
+  { revalidate: 3600, tags: ["categories", "products"] }
 );
 
 function CollectionComingSoon({

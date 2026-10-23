@@ -105,7 +105,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div className={cardClassName} id={`product-card-${product.id}`}>
       <div className={styles.media}>
-        <Link href={`/product/${product.slug}`} className={imageWrapperClassName} onClick={handleProductClick}>
+        <Link href={`/product/${product.slug}`} prefetch={false} className={imageWrapperClassName} onClick={handleProductClick}>
           {displayImage ? (
             <Image
               src={displayImage.url}
@@ -184,7 +184,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <span className={styles.category}>{product.category.name}</span>
         ) : null}
         <h3 className={titleClassName}>
-          <Link href={`/product/${product.slug}`} className={styles.titleLink} onClick={handleProductClick}>
+          <Link href={`/product/${product.slug}`} prefetch={false} className={styles.titleLink} onClick={handleProductClick}>
             {product.name}
           </Link>
         </h3>

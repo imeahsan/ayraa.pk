@@ -13,7 +13,7 @@ import styles from "./collections.module.css";
 import { unstable_cache } from "next/cache";
 import { DEFAULT_OG_IMAGE, absoluteUrl, getSiteUrl } from "@/lib/seo";
 
-export const revalidate = 300;
+export const revalidate = 3600; // 1 hour
 
 export const metadata: Metadata = {
   title: "All Collections | Ayraa Collection",
@@ -52,7 +52,7 @@ const getCachedCollectionsProducts = unstable_cache(
     return (data || []) as Product[];
   },
   ["collections-products-limit-12"],
-  { revalidate: 300, tags: ["products"] }
+  { revalidate: 3600, tags: ["products"] }
 );
 
 const getCachedCollectionsCategories = unstable_cache(
@@ -83,7 +83,7 @@ const getCachedCollectionsCategories = unstable_cache(
     return allCats.filter((cat) => cat.parent_id === null).filter((cat) => hasProductsRecursively(cat.id));
   },
   ["collections-categories-filtered"],
-  { revalidate: 300, tags: ["categories"] }
+  { revalidate: 3600, tags: ["categories"] }
 );
 
 export default async function CollectionsPage() {

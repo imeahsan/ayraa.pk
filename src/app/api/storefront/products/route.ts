@@ -22,7 +22,7 @@ const getCachedProductsPage = unstable_cache(
     return data || [];
   },
   ["storefront-products-page"],
-  { revalidate: 300, tags: ["products", "categories"] }
+  { revalidate: 3600, tags: ["products"] }
 );
 
 export async function GET(request: NextRequest) {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(data, {
     headers: {
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400",
+      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
     },
   });
 }

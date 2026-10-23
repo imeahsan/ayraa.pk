@@ -13,9 +13,23 @@ import { notFound } from "next/navigation";
 import { absoluteUrl, getSiteUrl, productSeoTitle, truncateSeoText } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 
-export const revalidate = 300;
+export const revalidate = 3600; // 1 hour (on-demand revalidated when product updates)
 
 export async function generateStaticParams() {
+  try {
+    const supabase = createCacheClient();
+    const { data: products } = await supabase
+      .from("products")
+      .select("slug")
+      .eq("is_active", true)
+      .limit(100);
+
+    if (products && products.length > 0) {
+      return products.map((p) => ({ slug: p.slug }));
+    }
+  } catch (err) {
+    console.error("Failed to generate static params for products:", err);
+  }
   return [{ slug: "single-bed-sheets-sbs-02" }];
 }
 
@@ -71,7 +85,7 @@ const getCachedProduct = unstable_cache(
     return null;
   },
   ["product-by-slug"],
-  { revalidate: 300, tags: ["products", "categories"] }
+  { revalidate: 3600, tags: ["products"] }
 );
 
 const getCachedRelatedProducts = unstable_cache(
@@ -87,7 +101,7 @@ const getCachedRelatedProducts = unstable_cache(
     return related || [];
   },
   ["related-products-by-category"],
-  { revalidate: 300, tags: ["products", "categories"] }
+  { revalidate: 3600, tags: ["products"] }
 );
 
 const getCachedProductQuestions = unstable_cache(
@@ -102,7 +116,7 @@ const getCachedProductQuestions = unstable_cache(
     return qData || [];
   },
   ["product-questions-by-id"],
-  { revalidate: 300, tags: ["questions"] }
+  { revalidate: 3600, tags: ["questions"] }
 );
 
 const getCachedProductReviews = unstable_cache(
@@ -117,7 +131,7 @@ const getCachedProductReviews = unstable_cache(
     return rData || [];
   },
   ["product-reviews-by-id"],
-  { revalidate: 300, tags: ["reviews"] }
+  { revalidate: 3600, tags: ["reviews"] }
 );
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {

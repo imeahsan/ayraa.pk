@@ -2,8 +2,7 @@ import { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
 import { getSiteUrl } from "@/lib/seo";
 
-export const revalidate = 0;
-export const dynamic = "force-dynamic";
+export const revalidate = 86400; // Cache sitemap for 24 hours
 
 type ProductSitemapRow = {
   slug: string;

@@ -41,14 +41,11 @@ export async function saveSalesSettings(updates: ProductSaleUpdate[]) {
     const results = await Promise.all(updatePromises);
     const updatedCount = results.filter((r) => r && r.length > 0).length;
 
-    // Purge Next.js caches immediately across storefront
+    // Purge Next.js caches immediately across storefront (targeted)
     try {
-      revalidateTag("products", "max");
-      revalidateTag("categories", "max");
-      revalidatePath("/", "layout");
-      revalidatePath("/collections", "layout");
-      revalidatePath("/collections/[slug]", "page");
-      revalidatePath("/product/[slug]", "page");
+      revalidateTag("products");
+      revalidatePath("/");
+      revalidatePath("/collections");
     } catch (cacheErr) {
       console.warn("Revalidation warning in saveSalesSettings:", cacheErr);
     }
@@ -94,8 +91,9 @@ export async function syncExistingSaleProducts() {
     await Promise.all(updatePromises);
 
     try {
-      revalidateTag("products", "max");
-      revalidatePath("/", "layout");
+      revalidateTag("products");
+      revalidatePath("/");
+      revalidatePath("/collections");
     } catch (e) {}
 
     return { success: true, count: toUpdate.length };
